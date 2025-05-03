@@ -36,7 +36,8 @@ export default function DashboardPage() {
 
   const handleWakaTimeAuth = async () => {
     try {
-      const baseUrl = process.env.BACKEND_URL ?? "http://localhost:8000";
+      const baseUrl =
+        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
       const token = localStorage.getItem("authToken") || "";
 
       // Make a GET request to the backend to get the WakaTime authorization URL
