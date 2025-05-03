@@ -9,9 +9,11 @@ export function getBaseUrl() {
 }
 
 export const endpoints = {
-  login: "/api/auth",
-  signup: "/api/users",
-  logout: "/api/logout",
+  login: "/login",
+  signup: "/signup",
+  logout: "/logout",
+  wakatimeAuthorize: "/wakatime/authorize",
+  wakatimeCallback: "/wakatime/callback",
 };
 
 export function makeUrl(path: keyof typeof endpoints) {

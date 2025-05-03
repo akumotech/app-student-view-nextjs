@@ -34,6 +34,37 @@ export default function DashboardPage() {
     }
   };
 
+  const handleWakaTimeAuth = async () => {
+    try {
+      const baseUrl = process.env.BACKEND_URL ?? "http://localhost:8000";
+      const token = localStorage.getItem("authToken") || "";
+
+      // Make a GET request to the backend to get the WakaTime authorization URL
+      const response = await fetch(
+        `${baseUrl}/wakatime/authorize?email=abdul@gmail.com`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to get WakaTime authorization URL");
+      }
+
+      // Get the URL from the response
+      const data = await response.json();
+
+      // Redirect the user to the WakaTime authorization URL
+      window.location.href = data;
+    } catch (error) {
+      console.error("Error initiating WakaTime authorization:", error);
+      toast.error("Failed to connect to WakaTime");
+    }
+  };
+
   if (!isAuthenticated) {
     return null;
   }
@@ -45,6 +76,9 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">
             Dashboard
           </h1>
+          <Button onClick={handleWakaTimeAuth} variant="outline">
+            WakaTime Auth
+          </Button>
           <Button onClick={handleLogout} variant="outline">
             Logout
           </Button>
