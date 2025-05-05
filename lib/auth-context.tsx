@@ -18,6 +18,7 @@ type User = {
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
+  loading: boolean;
   login: (email: string, password: string) => Promise<LoginResponse>;
   signup: (
     email: string,
@@ -32,12 +33,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     if (token) {
       setIsAuthenticated(true);
+      // Optionally, set the user too if stored or refetch user info
     }
+    setLoading(false); // ✅ Always mark done after check
   }, []);
 
   const login = async (
@@ -122,7 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, user, login, signup, logout }}
+      value={{ isAuthenticated, user, loading, login, signup, logout }}
     >
       {children}
     </AuthContext.Provider>

@@ -47,11 +47,14 @@ export default function DashboardPage() {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
 
       if (!response.ok) {
+        const error = await response.json();
+        console.log(error);
         throw new Error("Failed to get WakaTime authorization URL");
       }
 
