@@ -8,7 +8,7 @@ const CallbackPage = () => {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const token = searchParams.get("token");
+    const token = localStorage.getItem("authToken") || "";
 
     if (token) {
       // ✅ Store the token (localStorage, cookie, or pass to your backend)
