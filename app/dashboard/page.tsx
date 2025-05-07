@@ -10,8 +10,12 @@ import Dashboard from "./dashboard";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { isAuthenticated, logout, user } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const [hasWakaTimeAuth, setHasWakaTimeAuth] = useState<boolean>(false);
+  const [userData, setUserData] = useState<{
+    email: string;
+    wakatime_access_token_encrypted: string | null;
+  } | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -39,9 +43,11 @@ export default function DashboardPage() {
         }
 
         const userData: {
+          email: string;
           wakatime_access_token_encrypted: string | null;
         } = await userResponse.json();
 
+        setUserData(userData);
         setHasWakaTimeAuth(!!userData.wakatime_access_token_encrypted);
       } catch (error) {
         console.error("Error checking WakaTime auth status:", error);
@@ -65,17 +71,18 @@ export default function DashboardPage() {
   };
 
   const handleWakaTimeAuth = async () => {
+    console.log("init oauth");
     try {
       const baseUrl =
         process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
       const token = localStorage.getItem("authToken") || "";
 
-      if (!user || !user.email) {
+      if (!userData || !userData.email) {
         throw new Error("Missing user email for WakaTime authorization");
       }
 
       const wakatimeResponse = await fetch(
-        `${baseUrl}/wakatime/authorize?email=${encodeURIComponent(user.email)}`,
+        `${baseUrl}/wakatime/authorize?email=${encodeURIComponent(userData.email)}`,
         {
           method: "GET",
           headers: {
@@ -91,8 +98,8 @@ export default function DashboardPage() {
         throw new Error("Failed to get WakaTime authorization URL");
       }
 
-      const data: { auth_url: string } = await wakatimeResponse.json();
-      window.location.href = data.auth_url;
+      const url = await wakatimeResponse.json();
+      window.location.href = url;
     } catch (error) {
       console.error("Error initiating WakaTime authorization:", error);
       toast.error("Failed to connect to WakaTime");
