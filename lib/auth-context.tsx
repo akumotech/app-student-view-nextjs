@@ -10,9 +10,12 @@ import {
 import { makeUrl } from "./utils";
 
 type User = {
-  id: string;
+  id?: number;
   email: string;
   name: string;
+  disabled?: boolean;
+  password: string;
+  wakatime_access_token_encrypted?: string | null;
 };
 
 interface AuthContextType {

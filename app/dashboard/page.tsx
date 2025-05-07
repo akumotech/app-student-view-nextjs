@@ -4,14 +4,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-
 import { toast } from "sonner";
 import { Suspense } from "react";
 import Dashboard from "./dashboard";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
   const [hasWakaTimeAuth, setHasWakaTimeAuth] = useState<boolean>(false);
 
   useEffect(() => {
@@ -71,13 +70,20 @@ export default function DashboardPage() {
         process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
       const token = localStorage.getItem("authToken") || "";
 
-      const wakatimeResponse = await fetch(`${baseUrl}/wakatime/authorize`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      if (!user || !user.email) {
+        throw new Error("Missing user email for WakaTime authorization");
+      }
+
+      const wakatimeResponse = await fetch(
+        `${baseUrl}/wakatime/authorize?email=${encodeURIComponent(user.email)}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!wakatimeResponse.ok) {
         const error = await wakatimeResponse.json();
@@ -85,8 +91,8 @@ export default function DashboardPage() {
         throw new Error("Failed to get WakaTime authorization URL");
       }
 
-      const data = await wakatimeResponse.json();
-      window.location.href = data;
+      const data: { auth_url: string } = await wakatimeResponse.json();
+      window.location.href = data.auth_url;
     } catch (error) {
       console.error("Error initiating WakaTime authorization:", error);
       toast.error("Failed to connect to WakaTime");
