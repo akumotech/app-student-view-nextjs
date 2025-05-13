@@ -32,6 +32,9 @@ export interface TimeStats {
   text: string;
   hours: number;
   minutes: number;
+  seconds: number;
+  digital: string;
+  decimal: string;
 }
 
 // Language statistics
@@ -57,6 +60,7 @@ export interface OperatingSystem extends TimeStats {
 // Project statistics
 export interface Project extends TimeStats {
   name: string;
+  color: string | null;
 }
 
 // Category statistics
@@ -64,30 +68,64 @@ export interface Category extends TimeStats {
   name: string;
 }
 
-// Best day information
-export interface BestDay {
-  date: string;
+// Machine statistics
+export interface Machine extends TimeStats {
+  name: string;
+  machine_name_id: string;
+}
+
+// Grand total time summary
+export interface GrandTotal {
+  hours: number;
+  minutes: number;
   total_seconds: number;
+  digital: string;
+  decimal: string;
   text: string;
 }
 
-// Main dashboard data structure
-export interface DashboardData {
-  id: string;
-  user_id: string;
-  range: string;
+// Date range object
+export interface DateRange {
   start: string;
   end: string;
-  human_readable_total_including_other_language: string;
-  daily_average_including_other_language: number;
-  human_readable_daily_average_including_other_language: string;
-  categories: Category[];
+  date: string;
+  text: string;
+  timezone: string;
+}
+
+// Per-day dashboard data
+export interface DashboardEntry {
   languages: Language[];
   editors: Editor[];
-  dependencies: Dependency[];
   operating_systems: OperatingSystem[];
+  categories: Category[];
+  dependencies: Dependency[];
+  machines: Machine[];
   projects: Project[];
-  best_day: BestDay;
+  grand_total: GrandTotal;
+  range: DateRange;
+}
+
+// Main dashboard structure (response from backend)
+export interface DashboardData {
+  data: DashboardEntry[];
+  start: string;
+  end: string;
+  cumulative_total: {
+    seconds: number;
+    text: string;
+    digital: string;
+    decimal: string;
+  };
+  daily_average: {
+    holidays: number;
+    days_minus_holidays: number;
+    days_including_holidays: number;
+    seconds: number;
+    seconds_including_other_language: number;
+    text: string;
+    text_including_other_language: string;
+  };
 }
 
 export default function Dashboard() {
@@ -202,335 +240,164 @@ export default function Dashboard() {
               </TabsList>
 
               <TabsContent value="overview" className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
-                        Total Coding Time
-                      </CardTitle>
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">
-                        {dashboardData.categories[0].text}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Daily average:{" "}
-                        {
-                          dashboardData.human_readable_daily_average_including_other_language
-                        }
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
-                        Top Language
-                      </CardTitle>
-                      <Code2 className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">
-                        {dashboardData.languages[0].name}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {dashboardData.languages[0].text} (
-                        {dashboardData.languages[0].percent.toFixed(1)}%)
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
-                        Top Project
-                      </CardTitle>
-                      <FileCode className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold truncate">
-                        {dashboardData.projects[0].name}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {dashboardData.projects[0].text} (
-                        {dashboardData.projects[0].percent.toFixed(1)}%)
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
-                        Best Day
-                      </CardTitle>
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">
-                        {new Date(
-                          dashboardData.best_day.date
-                        ).toLocaleDateString("en-US", {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {dashboardData.best_day.text}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                  <Card className="col-span-4">
-                    <CardHeader>
-                      <CardTitle>Languages</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {dashboardData.languages.slice(0, 5).map((language) => (
-                          <div className="grid gap-2" key={language.name}>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">
-                                  {language.name}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm text-muted-foreground">
-                                  {language.text}
-                                </span>
-                                <span className="text-sm font-medium">
-                                  {language.percent.toFixed(1)}%
-                                </span>
-                              </div>
-                            </div>
-                            <Progress
-                              value={language.percent}
-                              className="h-2"
-                            />
+                {dashboardData.data.length > 0 && (
+                  <>
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                      <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                          <CardTitle className="text-sm font-medium">
+                            Total Coding Time
+                          </CardTitle>
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">
+                            {dashboardData.data[0].grand_total.text}
                           </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+                          <p className="text-xs text-muted-foreground">
+                            Daily average:{" "}
+                            {
+                              dashboardData.daily_average
+                                .text_including_other_language
+                            }
+                          </p>
+                        </CardContent>
+                      </Card>
 
-                  <Card className="col-span-3">
-                    <CardHeader>
-                      <CardTitle>Projects</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {dashboardData.projects.map((project) => (
-                          <div className="grid gap-2" key={project.name}>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium truncate max-w-[180px]">
-                                  {project.name}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm text-muted-foreground">
-                                  {project.text}
-                                </span>
-                              </div>
-                            </div>
-                            <Progress value={project.percent} className="h-2" />
+                      <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                          <CardTitle className="text-sm font-medium">
+                            Top Language
+                          </CardTitle>
+                          <Code2 className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">
+                            {dashboardData.data[0].languages[0]?.name || "-"}
                           </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+                          <p className="text-xs text-muted-foreground">
+                            {dashboardData.data[0].languages[0]?.text} (
+                            {dashboardData.data[0].languages[0]?.percent.toFixed(
+                              1
+                            )}
+                            %)
+                          </p>
+                        </CardContent>
+                      </Card>
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  <Card className="col-span-2">
-                    <CardHeader>
-                      <CardTitle>Top Dependencies</CardTitle>
-                      <CardDescription>
-                        {" Libraries and frameworks you've used the most"}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {dashboardData.dependencies
-                          .slice(0, 5)
-                          .map((dependency) => (
-                            <div className="grid gap-2" key={dependency.name}>
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <Package className="h-4 w-4 text-muted-foreground" />
-                                  <span className="font-medium">
-                                    {dependency.name}
-                                  </span>
+                      <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                          <CardTitle className="text-sm font-medium">
+                            Top Project
+                          </CardTitle>
+                          <FileCode className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold truncate">
+                            {dashboardData.data[0].projects[0]?.name || "-"}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {dashboardData.data[0].projects[0]?.text} (
+                            {dashboardData.data[0].projects[0]?.percent.toFixed(
+                              1
+                            )}
+                            %)
+                          </p>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                          <CardTitle className="text-sm font-medium">
+                            Coding Day
+                          </CardTitle>
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">
+                            {new Date(
+                              dashboardData.data[0].range.date
+                            ).toLocaleDateString("en-US", {
+                              weekday: "short",
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {dashboardData.data[0].range.text}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+                      <Card className="col-span-4">
+                        <CardHeader>
+                          <CardTitle>Languages</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            {dashboardData.data[0].languages
+                              .slice(0, 5)
+                              .map((language) => (
+                                <div className="grid gap-2" key={language.name}>
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium">
+                                        {language.name}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm text-muted-foreground">
+                                        {language.text}
+                                      </span>
+                                      <span className="text-sm font-medium">
+                                        {language.percent.toFixed(1)}%
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <Progress
+                                    value={language.percent}
+                                    className="h-2"
+                                  />
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm text-muted-foreground">
-                                    {dependency.text}
-                                  </span>
+                              ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="col-span-3">
+                        <CardHeader>
+                          <CardTitle>Projects</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            {dashboardData.data[0].projects.map((project) => (
+                              <div className="grid gap-2" key={project.name}>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium truncate max-w-[180px]">
+                                      {project.name}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm text-muted-foreground">
+                                      {project.text}
+                                    </span>
+                                  </div>
                                 </div>
+                                <Progress
+                                  value={project.percent}
+                                  className="h-2"
+                                />
                               </div>
-                              <Progress
-                                value={dependency.percent}
-                                max={10}
-                                className="h-2"
-                              />
-                            </div>
-                          ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>System Info</CardTitle>
-                      <CardDescription>
-                        Your development environment
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                          <Laptop className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">Operating System</span>
-                          <span className="ml-auto text-sm text-muted-foreground">
-                            {dashboardData.operating_systems[0].name}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Cpu className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">Editor</span>
-                          <span className="ml-auto text-sm text-muted-foreground">
-                            {dashboardData.editors[0].name}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <BarChart className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">Categories</span>
-                          <span className="ml-auto text-sm text-muted-foreground">
-                            {dashboardData.categories[0].name}
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="languages" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Language Breakdown</CardTitle>
-                    <CardDescription>
-                      Time spent coding in different languages
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-6">
-                      {dashboardData.languages.map((language) => (
-                        <div className="grid gap-2" key={language.name}>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <Code2 className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium">
-                                {language.name}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm text-muted-foreground">
-                                {language.text}
-                              </span>
-                              <span className="text-sm font-medium">
-                                {language.percent.toFixed(1)}%
-                              </span>
-                            </div>
+                            ))}
                           </div>
-                          <Progress value={language.percent} className="h-2" />
-                        </div>
-                      ))}
+                        </CardContent>
+                      </Card>
                     </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="projects" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Project Breakdown</CardTitle>
-                    <CardDescription>
-                      Time spent on different projects
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-6">
-                      {dashboardData.projects.map((project) => (
-                        <div className="grid gap-2" key={project.name}>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <FileCode className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium">
-                                {project.name}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm text-muted-foreground">
-                                {project.text}
-                              </span>
-                              <span className="text-sm font-medium">
-                                {project.percent.toFixed(1)}%
-                              </span>
-                            </div>
-                          </div>
-                          <Progress value={project.percent} className="h-2" />
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="dependencies" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Top Dependencies</CardTitle>
-                    <CardDescription>
-                      {"Libraries and frameworks you've used the most"}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-6">
-                      {dashboardData.dependencies
-                        .slice(0, 10)
-                        .map((dependency) => (
-                          <div className="grid gap-2" key={dependency.name}>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <Package className="h-4 w-4 text-muted-foreground" />
-                                <span className="font-medium">
-                                  {dependency.name}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm text-muted-foreground">
-                                  {dependency.text}
-                                </span>
-                                <span className="text-sm font-medium">
-                                  {dependency.percent.toFixed(1)}%
-                                </span>
-                              </div>
-                            </div>
-                            <Progress
-                              value={dependency.percent}
-                              max={10}
-                              className="h-2"
-                            />
-                          </div>
-                        ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                  </>
+                )}
               </TabsContent>
             </Tabs>
           </>
