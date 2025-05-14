@@ -31,6 +31,150 @@ export default function Dashboard({ data }: DashboardProps) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [activeTab, setActiveTab] = useState("overview");
 
+  // Find the day with the most coding activity
+  const mostActiveDay = data.data.reduce(
+    (max, day) =>
+      day.grand_total.total_seconds > max.grand_total.total_seconds ? day : max,
+    data.data[0] || { grand_total: { total_seconds: 0 } }
+  );
+
+  // Aggregate languages across all days
+  const aggregatedLanguages = data.data.reduce(
+    (acc, day) => {
+      day.languages.forEach((lang) => {
+        const existing = acc.find((l) => l.name === lang.name);
+        if (existing) {
+          existing.total_seconds += lang.total_seconds;
+        } else {
+          acc.push({ ...lang });
+        }
+      });
+      return acc;
+    },
+    [] as Array<{
+      name: string;
+      total_seconds: number;
+      text: string;
+      percent: number;
+    }>
+  );
+
+  // Calculate percentages for aggregated languages
+  const totalLanguageSeconds = aggregatedLanguages.reduce(
+    (sum, lang) => sum + lang.total_seconds,
+    0
+  );
+  aggregatedLanguages.forEach((lang) => {
+    lang.percent =
+      totalLanguageSeconds > 0
+        ? (lang.percent = (lang.total_seconds / totalLanguageSeconds) * 100)
+        : 0;
+  });
+
+  // Sort languages by total seconds
+  aggregatedLanguages.sort((a, b) => b.total_seconds - a.total_seconds);
+
+  // Aggregate projects across all days
+  const aggregatedProjects = data.data.reduce(
+    (acc, day) => {
+      day.projects.forEach((project) => {
+        const existing = acc.find((p) => p.name === project.name);
+        if (existing) {
+          existing.total_seconds += project.total_seconds;
+        } else {
+          acc.push({ ...project });
+        }
+      });
+      return acc;
+    },
+    [] as Array<{
+      name: string;
+      total_seconds: number;
+      text: string;
+      percent: number;
+      color?: string | null;
+    }>
+  );
+
+  // Calculate percentages for aggregated projects
+  const totalProjectSeconds = aggregatedProjects.reduce(
+    (sum, project) => sum + project.total_seconds,
+    0
+  );
+  aggregatedProjects.forEach((project) => {
+    project.percent =
+      totalProjectSeconds > 0
+        ? (project.percent =
+            (project.total_seconds / totalProjectSeconds) * 100)
+        : 0;
+  });
+
+  // Sort projects by total seconds
+  aggregatedProjects.sort((a, b) => b.total_seconds - a.total_seconds);
+
+  // Aggregate dependencies across all days
+  const aggregatedDependencies = data.data.reduce(
+    (acc, day) => {
+      day.dependencies.forEach((dep) => {
+        const existing = acc.find((d) => d.name === dep.name);
+        if (existing) {
+          existing.total_seconds += dep.total_seconds;
+        } else {
+          acc.push({ ...dep });
+        }
+      });
+      return acc;
+    },
+    [] as Array<{
+      name: string;
+      total_seconds: number;
+      text: string;
+      percent: number;
+    }>
+  );
+
+  // Calculate percentages for aggregated dependencies
+  const totalDependencySeconds = aggregatedDependencies.reduce(
+    (sum, dep) => sum + dep.total_seconds,
+    0
+  );
+  aggregatedDependencies.forEach((dep) => {
+    dep.percent =
+      totalDependencySeconds > 0
+        ? (dep.percent = (dep.total_seconds / totalDependencySeconds) * 100)
+        : 0;
+  });
+
+  // Sort dependencies by total seconds
+  aggregatedDependencies.sort((a, b) => b.total_seconds - a.total_seconds);
+
+  // Get most used editor and OS
+  const mostUsedEditor = data.data
+    .flatMap((day) => day.editors)
+    .reduce(
+      (max, editor) =>
+        !max || editor.total_seconds > max.total_seconds ? editor : max,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      null as any
+    );
+
+  const mostUsedOS = data.data
+    .flatMap((day) => day.operating_systems)
+    .reduce(
+      (max, os) => (!max || os.total_seconds > max.total_seconds ? os : max),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      null as any
+    );
+
+  const mostUsedCategory = data.data
+    .flatMap((day) => day.categories)
+    .reduce(
+      (max, category) =>
+        !max || category.total_seconds > max.total_seconds ? category : max,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      null as any
+    );
+
   return (
     <div className="flex w-full flex-col bg-muted/40">
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
@@ -69,11 +213,11 @@ export default function Dashboard({ data }: DashboardProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {data.human_readable_total}
+                    {data.cumulative_total.text}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Daily average:{" "}
-                    {data.human_readable_daily_average_including_other_language}
+                    {data.daily_average.text_including_other_language}
                   </p>
                 </CardContent>
               </Card>
@@ -87,11 +231,11 @@ export default function Dashboard({ data }: DashboardProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {data.languages[0]?.name || "-"}
+                    {aggregatedLanguages[0]?.name || "-"}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {data.languages[0]?.text} (
-                    {data.languages[0]?.percent.toFixed(1)}%)
+                    {aggregatedLanguages[0]?.text} (
+                    {aggregatedLanguages[0]?.percent.toFixed(1)}%)
                   </p>
                 </CardContent>
               </Card>
@@ -105,11 +249,11 @@ export default function Dashboard({ data }: DashboardProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold truncate">
-                    {data.projects[0]?.name || "-"}
+                    {aggregatedProjects[0]?.name || "-"}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {data.projects[0]?.text} (
-                    {data.projects[0]?.percent.toFixed(1)}%)
+                    {aggregatedProjects[0]?.text} (
+                    {aggregatedProjects[0]?.percent.toFixed(1)}%)
                   </p>
                 </CardContent>
               </Card>
@@ -117,20 +261,25 @@ export default function Dashboard({ data }: DashboardProps) {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Best Day
+                    Most Active Day
                   </CardTitle>
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {new Date(data.best_day.date).toLocaleDateString("en-US", {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                    })}
+                    {mostActiveDay.range
+                      ? new Date(mostActiveDay.range.date).toLocaleDateString(
+                          "en-US",
+                          {
+                            weekday: "short",
+                            month: "short",
+                            day: "numeric",
+                          }
+                        )
+                      : "-"}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {data.best_day.text}
+                    {mostActiveDay.grand_total?.text || "-"}
                   </p>
                 </CardContent>
               </Card>
@@ -143,7 +292,7 @@ export default function Dashboard({ data }: DashboardProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {data.languages.slice(0, 5).map((language) => (
+                    {aggregatedLanguages.slice(0, 5).map((language) => (
                       <div className="grid gap-2" key={language.name}>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
@@ -171,7 +320,7 @@ export default function Dashboard({ data }: DashboardProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {data.projects.map((project) => (
+                    {aggregatedProjects.slice(0, 5).map((project) => (
                       <div className="grid gap-2" key={project.name}>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
@@ -203,7 +352,7 @@ export default function Dashboard({ data }: DashboardProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {data.dependencies.slice(0, 5).map((dependency) => (
+                    {aggregatedDependencies.slice(0, 5).map((dependency) => (
                       <div className="grid gap-2" key={dependency.name}>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
@@ -220,7 +369,7 @@ export default function Dashboard({ data }: DashboardProps) {
                         </div>
                         <Progress
                           value={dependency.percent}
-                          max={15}
+                          max={20}
                           className="h-2"
                         />
                       </div>
@@ -242,21 +391,21 @@ export default function Dashboard({ data }: DashboardProps) {
                       <Laptop className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">Operating System</span>
                       <span className="ml-auto text-sm text-muted-foreground">
-                        {data.operating_systems[0]?.name}
+                        {mostUsedOS?.name || "-"}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Cpu className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">Editor</span>
                       <span className="ml-auto text-sm text-muted-foreground">
-                        {data.editors[0]?.name}
+                        {mostUsedEditor?.name || "-"}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <BarChart className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">Categories</span>
                       <span className="ml-auto text-sm text-muted-foreground">
-                        {data.categories[0]?.name}
+                        {mostUsedCategory?.name || "-"}
                       </span>
                     </div>
                   </div>
@@ -275,7 +424,7 @@ export default function Dashboard({ data }: DashboardProps) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  {data.languages.map((language) => (
+                  {aggregatedLanguages.map((language) => (
                     <div className="grid gap-2" key={language.name}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -309,7 +458,7 @@ export default function Dashboard({ data }: DashboardProps) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  {data.projects.map((project) => (
+                  {aggregatedProjects.map((project) => (
                     <div className="grid gap-2" key={project.name}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -343,7 +492,7 @@ export default function Dashboard({ data }: DashboardProps) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  {data.dependencies.slice(0, 10).map((dependency) => (
+                  {aggregatedDependencies.slice(0, 10).map((dependency) => (
                     <div className="grid gap-2" key={dependency.name}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -361,7 +510,7 @@ export default function Dashboard({ data }: DashboardProps) {
                       </div>
                       <Progress
                         value={dependency.percent}
-                        max={15}
+                        max={20}
                         className="h-2"
                       />
                     </div>

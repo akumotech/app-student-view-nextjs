@@ -118,8 +118,6 @@ export default function DashboardPage() {
             errorDetail = errorData.detail || errorData.message || errorDetail;
           } catch (parseError) {
             console.log(parseError);
-            // If parsing the error response fails, stick with the original errorDetail based on status
-            // console.warn("Could not parse error response:", parseError);
           }
           throw new Error(errorDetail);
         }

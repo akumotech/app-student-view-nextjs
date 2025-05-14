@@ -5,6 +5,7 @@ export interface TimeStats {
   text: string;
   hours: number;
   minutes: number;
+  seconds: number;
   digital: string;
   decimal: string;
 }
@@ -32,6 +33,7 @@ export interface OperatingSystem extends TimeStats {
 // Project statistics
 export interface Project extends TimeStats {
   name: string;
+  color?: string | null;
 }
 
 // Category statistics
@@ -45,59 +47,64 @@ export interface Machine extends TimeStats {
   machine_name_id: string;
 }
 
-// Best day information
-export interface BestDay {
-  date: string;
+// Grand total time summary
+export interface GrandTotal {
+  hours: number;
+  minutes: number;
   total_seconds: number;
+  digital: string;
+  decimal: string;
   text: string;
 }
 
-// Main dashboard data structure
-export interface DashboardData {
-  id: string;
-  user_id: string;
-  range: string;
+// Date range object
+export interface DateRange {
   start: string;
   end: string;
-  timeout: number;
-  writes_only: boolean;
+  date: string;
+  text: string;
   timezone: string;
-  holidays: number;
-  status: string;
-  created_at: string;
-  modified_at: string;
-  days_minus_holidays: number;
-  human_readable_total: string;
-  best_day: BestDay;
-  projects: Project[];
-  daily_average: number;
-  total_seconds: number;
+}
+
+// Per-day dashboard data
+export interface DashboardEntry {
   languages: Language[];
-  daily_average_including_other_language: number;
-  human_readable_daily_average_including_other_language: string;
-  days_including_holidays: number;
-  dependencies: Dependency[];
-  is_already_updating: boolean;
   editors: Editor[];
-  is_stuck: boolean;
-  human_readable_total_including_other_language: string;
-  percent_calculated: number;
-  machines: Machine[];
-  is_up_to_date_pending_future: boolean;
-  categories: Category[];
-  is_up_to_date: boolean;
   operating_systems: OperatingSystem[];
-  human_readable_daily_average: string;
-  total_seconds_including_other_language: number;
-  is_cached: boolean;
-  username: string | null;
-  is_including_today: boolean;
-  human_readable_range: string;
-  is_coding_activity_visible: boolean;
-  is_language_usage_visible: boolean;
-  is_editor_usage_visible: boolean;
-  is_category_usage_visible: boolean;
-  is_os_usage_visible: boolean;
+  categories: Category[];
+  dependencies: Dependency[];
+  machines: Machine[];
+  projects: Project[];
+  grand_total: GrandTotal;
+  range: DateRange;
+}
+
+// Cumulative total structure
+export interface CumulativeTotal {
+  seconds: number;
+  text: string;
+  digital: string;
+  decimal: string;
+}
+
+// Daily average structure
+export interface DailyAverage {
+  holidays: number;
+  days_minus_holidays: number;
+  days_including_holidays: number;
+  seconds: number;
+  seconds_including_other_language: number;
+  text: string;
+  text_including_other_language: string;
+}
+
+// Main dashboard structure (response from backend)
+export interface DashboardData {
+  data: DashboardEntry[];
+  start: string;
+  end: string;
+  cumulative_total: CumulativeTotal;
+  daily_average: DailyAverage;
 }
 
 // API response structure
