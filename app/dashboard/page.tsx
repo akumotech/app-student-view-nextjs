@@ -39,7 +39,13 @@ export default function DashboardPage() {
         });
 
         if (!userResponse.ok) {
-          throw new Error("Failed to fetch user data");
+          if (userResponse.status === 401 || userResponse.status === 403) {
+            logout();
+            return;
+          }
+          throw new Error(
+            `Failed to fetch user data. Status: ${userResponse.status}`
+          );
         }
 
         const userData: {
@@ -57,7 +63,7 @@ export default function DashboardPage() {
     if (isAuthenticated) {
       checkWakaTimeAuthStatus();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, logout]);
 
   const handleLogout = async () => {
     try {
