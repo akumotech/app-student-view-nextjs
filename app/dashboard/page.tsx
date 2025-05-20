@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Suspense } from "react";
 import Dashboard from "./dashboard";
+import { MainNav } from "@/components/dashboard-navbar";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -192,19 +193,26 @@ export default function DashboardPage() {
 
   return (
     <Suspense>
-      <div className="min-h-screen bg-gray-100">
-        <header className="bg-white shadow">
-          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-              Dashboard
-            </h1>
+      <div className="min-h-screen bg-muted/40">
+        <header className="bg-background shadow">
+          <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
+            <div className="flex items-center space-x-8">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                Dashboard
+              </h1>
+              <MainNav />
+            </div>
             <div className="flex space-x-2">
               {!hasWakaTimeAuth && (
-                <Button onClick={handleWakaTimeAuth} variant="outline">
-                  WakaTime Auth
+                <Button
+                  onClick={handleWakaTimeAuth}
+                  variant="outline"
+                  size="sm"
+                >
+                  Connect WakaTime
                 </Button>
               )}
-              <Button onClick={handleLogout} variant="outline">
+              <Button onClick={handleLogout} variant="outline" size="sm">
                 Logout
               </Button>
             </div>
@@ -216,8 +224,8 @@ export default function DashboardPage() {
               className="p-4 mb-4 text-sm text-blue-700 bg-blue-100 rounded-lg dark:bg-gray-800 dark:text-blue-400"
               role="alert"
             >
-              Please connect your WakaTime account using the &apos;WakaTime
-              Auth&apos; button above to see your coding activity.
+              Please connect your WakaTime account using the &apos;Connect
+              WakaTime&apos; button above to see your coding activity.
             </p>
           )}
 
