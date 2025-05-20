@@ -114,9 +114,9 @@ export interface DashboardResponse {
 
 // Certificate types
 export interface CertificateBase {
-  title: string;
+  name: string;
   issuer: string;
-  issue_date: string;
+  date_issued: string;
   date_expired: string;
   credential_id?: string;
   credential_url?: string;

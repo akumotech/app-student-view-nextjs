@@ -5,14 +5,6 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -31,28 +23,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import {
-  Award,
-  Calendar,
-  ExternalLink,
-  Link2,
-  MoreHorizontal,
-  Plus,
-  Trash2,
-  Edit,
-} from "lucide-react";
+import { Award, Plus } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { CertificateRead } from "@/lib/dashboard-types";
 import { MainNav } from "@/components/dashboard-navbar";
 import { Textarea } from "@/components/ui/textarea";
+import { CertificateCard } from "@/components/ui/certificate-card";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -213,14 +191,17 @@ export default function CertificatesPage() {
   const handleEdit = (certificate: CertificateRead) => {
     setIsEditMode(true);
     setCurrentCertificateId(certificate.id);
+    console.log(certificate);
 
     form.reset({
-      name: certificate.title,
+      name: certificate.name,
       issuer: certificate.issuer,
-      date_issued: certificate.issue_date.split("T")[0],
+      date_issued: certificate.date_issued
+        ? certificate.date_issued.split("T")[0]
+        : "",
       date_expired: certificate.date_expired
         ? certificate.date_expired.split("T")[0]
-        : undefined,
+        : "",
       credential_id: certificate.credential_id,
       credential_url: certificate.credential_url,
       description: certificate.description,
@@ -465,81 +446,12 @@ export default function CertificatesPage() {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {certificates.map((certificate) => (
-              <Card key={certificate.id} className="overflow-hidden">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg">
-                      {certificate.title}
-                    </CardTitle>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Actions</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => handleEdit(certificate)}
-                        >
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleDelete(certificate.id)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                  <CardDescription>{certificate.issuer}</CardDescription>
-                </CardHeader>
-                <CardContent className="pb-2">
-                  <div className="flex items-center text-sm text-muted-foreground mb-2">
-                    <Calendar className="mr-1 h-4 w-4" />
-                    <span>
-                      Issued:{" "}
-                      {new Date(certificate.issue_date).toLocaleDateString()}
-                      {certificate.date_expired &&
-                        ` · Expires: ${new Date(certificate.date_expired).toLocaleDateString()}`}
-                    </span>
-                  </div>
-
-                  {certificate.credential_id && (
-                    <div className="flex items-center text-sm text-muted-foreground mb-2">
-                      <Link2 className="mr-1 h-4 w-4" />
-                      <span>ID: {certificate.credential_id}</span>
-                    </div>
-                  )}
-
-                  {certificate.description && (
-                    <p className="text-sm mt-2">{certificate.description}</p>
-                  )}
-                </CardContent>
-                {certificate.credential_url && (
-                  <CardFooter>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      asChild
-                    >
-                      <a
-                        href={certificate.credential_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center"
-                      >
-                        <ExternalLink className="mr-2 h-4 w-4" />
-                        View Credential
-                      </a>
-                    </Button>
-                  </CardFooter>
-                )}
-              </Card>
+              <CertificateCard
+                key={certificate.id}
+                certificate={certificate}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
             ))}
           </div>
         )}

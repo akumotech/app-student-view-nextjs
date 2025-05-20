@@ -32,7 +32,7 @@ import {
   Plus,
   Trash2,
   Edit,
-  ImageIcon,
+  // ImageIcon,
 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -479,7 +479,7 @@ export default function DemosPage() {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {demos.map((demo) => (
               <Card key={demo.id} className="overflow-hidden flex flex-col">
-                {demo.thumbnail_url ? (
+                {/* {demo.thumbnail_url ? (
                   <div className="aspect-video w-full overflow-hidden">
                     <img
                       src={demo.thumbnail_url || "/placeholder.svg"}
@@ -491,7 +491,7 @@ export default function DemosPage() {
                   <div className="aspect-video w-full bg-muted flex items-center justify-center">
                     <ImageIcon className="h-12 w-12 text-muted-foreground" />
                   </div>
-                )}
+                )} */}
 
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
