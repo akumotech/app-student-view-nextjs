@@ -117,7 +117,7 @@ export interface CertificateBase {
   title: string;
   issuer: string;
   issue_date: string;
-  expiry_date?: string;
+  date_expired: string;
   credential_id?: string;
   credential_url?: string;
   description?: string;

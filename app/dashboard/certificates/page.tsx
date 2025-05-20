@@ -55,14 +55,14 @@ import { MainNav } from "@/components/dashboard-navbar";
 import { Textarea } from "@/components/ui/textarea";
 
 const formSchema = z.object({
-  title: z.string().min(2, {
+  name: z.string().min(2, {
     message: "Title must be at least 2 characters.",
   }),
   issuer: z.string().min(2, {
     message: "Issuer must be at least 2 characters.",
   }),
-  issue_date: z.string(),
-  expiry_date: z.string().optional(),
+  date_issued: z.string(),
+  date_expired: z.string(),
   credential_id: z.string().optional(),
   credential_url: z.string().url().optional().or(z.literal("")),
   description: z.string().optional(),
@@ -82,10 +82,10 @@ export default function CertificatesPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: "",
+      name: "",
       issuer: "",
-      issue_date: new Date().toISOString().split("T")[0],
-      expiry_date: "",
+      date_issued: new Date().toISOString().split("T")[0],
+      date_expired: "",
       credential_id: "",
       credential_url: "",
       description: "",
@@ -215,11 +215,11 @@ export default function CertificatesPage() {
     setCurrentCertificateId(certificate.id);
 
     form.reset({
-      title: certificate.title,
+      name: certificate.title,
       issuer: certificate.issuer,
-      issue_date: certificate.issue_date.split("T")[0],
-      expiry_date: certificate.expiry_date
-        ? certificate.expiry_date.split("T")[0]
+      date_issued: certificate.issue_date.split("T")[0],
+      date_expired: certificate.date_expired
+        ? certificate.date_expired.split("T")[0]
         : undefined,
       credential_id: certificate.credential_id,
       credential_url: certificate.credential_url,
@@ -270,10 +270,10 @@ export default function CertificatesPage() {
     setIsEditMode(false);
     setCurrentCertificateId(null);
     form.reset({
-      title: "",
+      name: "",
       issuer: "",
-      issue_date: new Date().toISOString().split("T")[0],
-      expiry_date: "",
+      date_issued: new Date().toISOString().split("T")[0],
+      date_expired: "",
       credential_id: "",
       credential_url: "",
       description: "",
@@ -330,7 +330,7 @@ export default function CertificatesPage() {
                 >
                   <FormField
                     control={form.control}
-                    name="title"
+                    name="name"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Title</FormLabel>
@@ -365,7 +365,7 @@ export default function CertificatesPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="issue_date"
+                      name="date_issued"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Issue Date</FormLabel>
@@ -379,10 +379,10 @@ export default function CertificatesPage() {
 
                     <FormField
                       control={form.control}
-                      name="expiry_date"
+                      name="date_expired"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Expiry Date (Optional)</FormLabel>
+                          <FormLabel>Date Expired</FormLabel>
                           <FormControl>
                             <Input type="date" {...field} />
                           </FormControl>
@@ -503,8 +503,8 @@ export default function CertificatesPage() {
                     <span>
                       Issued:{" "}
                       {new Date(certificate.issue_date).toLocaleDateString()}
-                      {certificate.expiry_date &&
-                        ` · Expires: ${new Date(certificate.expiry_date).toLocaleDateString()}`}
+                      {certificate.date_expired &&
+                        ` · Expires: ${new Date(certificate.date_expired).toLocaleDateString()}`}
                     </span>
                   </div>
 

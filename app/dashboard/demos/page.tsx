@@ -187,14 +187,12 @@ export default function DemosPage() {
       const student_id = getStudentId();
       if (!student_id) throw new Error("No student ID found");
 
-      // Convert technologies from string to array for API
-      const formattedValues = {
-        ...values,
-        technologies: values.technologies
-          .split(",")
-          .map((tech) => tech.trim())
-          .filter((tech) => tech !== ""),
+      // Only send required fields and correct key names to backend
+      const payload: { title: string; link: string; description?: string } = {
+        title: values.title,
+        link: values.demo_url,
       };
+      if (values.description) payload.description = values.description;
 
       const endpoint =
         isEditMode && currentDemoId
@@ -209,7 +207,7 @@ export default function DemosPage() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formattedValues),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
