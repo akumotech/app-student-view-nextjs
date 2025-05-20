@@ -111,3 +111,47 @@ export interface DashboardData {
 export interface DashboardResponse {
   data: DashboardData;
 }
+
+// Certificate types
+export interface CertificateBase {
+  name: string;
+  issuer: string;
+  date_issued: string;
+  date_expired: string;
+  credential_id?: string;
+  credential_url?: string;
+  description?: string;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface CertificateCreate extends CertificateBase {}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface CertificateUpdate extends Partial<CertificateBase> {}
+
+export interface CertificateRead extends CertificateBase {
+  id: number;
+  student_id: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// Demo types
+export interface DemoBase {
+  title: string;
+  description?: string;
+  demo_url: string;
+  github_url?: string;
+  technologies: string[];
+  thumbnail_url?: string;
+}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface DemoCreate extends DemoBase {}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface DemoUpdate extends Partial<DemoBase> {}
+
+export interface DemoRead extends DemoBase {
+  id: number;
+  student_id: number;
+  created_at: string;
+  updated_at: string;
+}

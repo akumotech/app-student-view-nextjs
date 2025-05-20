@@ -40,12 +40,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
+    const storedUser = localStorage.getItem("user");
     if (token) {
       setIsAuthenticated(true);
-      // Optionally, set the user too if stored or refetch user info
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+        setLoading(false);
+        return;
+      }
+      // Fetch user info if not in localStorage
+      fetchUserFromApi(token);
+    } else {
+      setLoading(false);
     }
-    setLoading(false); // ✅ Always mark done after check
   }, []);
+
+  const fetchUserFromApi = async (token: string) => {
+    try {
+      const baseUrl =
+        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
+      const response = await fetch(`${baseUrl}/users/me`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+        localStorage.setItem("user", JSON.stringify(userData));
+      } else {
+        setUser(null);
+        localStorage.removeItem("user");
+      }
+    } catch (error) {
+      console.log("error occured: ", error);
+      setUser(null);
+      localStorage.removeItem("user");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const login = async (
     email: string,
@@ -69,8 +105,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const data = (await response.json()) as LoginResponse;
       localStorage.setItem("authToken", data.payload?.token || "");
+      if (data.payload?.user) {
+        setUser(data.payload.user);
+        localStorage.setItem("user", JSON.stringify(data.payload.user));
+      }
       setIsAuthenticated(true);
-      setUser(data.payload?.user || null);
       return data;
     } catch (error) {
       console.error(error);
@@ -120,6 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       localStorage.removeItem("authToken");
+      localStorage.removeItem("user");
       setIsAuthenticated(false);
       setUser(null);
     } catch (error) {
