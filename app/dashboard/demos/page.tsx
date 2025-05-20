@@ -16,7 +16,7 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
+  // FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -232,14 +232,15 @@ export default function DemosPage() {
   const handleEdit = (demo: DemoRead) => {
     setIsEditMode(true);
     setCurrentDemoId(demo.id);
+    console.log(demo);
 
     form.reset({
       title: demo.title,
       description: demo.description,
       demo_url: demo.demo_url,
       github_url: demo.github_url,
-      technologies: demo.technologies.join(", "),
-      thumbnail_url: demo.thumbnail_url,
+      // technologies: demo.technologies.join(", "),
+      // thumbnail_url: demo.thumbnail_url,
     });
 
     setIsDialogOpen(true);
@@ -384,9 +385,9 @@ export default function DemosPage() {
                         <FormControl>
                           <Input placeholder="https://..." {...field} />
                         </FormControl>
-                        <FormDescription>
+                        {/* <FormDescription>
                           Link to the live demo of your project
-                        </FormDescription>
+                        </FormDescription> */}
                         <FormMessage />
                       </FormItem>
                     )}
@@ -404,15 +405,15 @@ export default function DemosPage() {
                             {...field}
                           />
                         </FormControl>
-                        <FormDescription>
+                        {/* <FormDescription>
                           Link to the source code repository
-                        </FormDescription>
+                        </FormDescription> */}
                         <FormMessage />
                       </FormItem>
                     )}
                   />
 
-                  <FormField
+                  {/* <FormField
                     control={form.control}
                     name="technologies"
                     render={({ field }) => (
@@ -430,9 +431,9 @@ export default function DemosPage() {
                         <FormMessage />
                       </FormItem>
                     )}
-                  />
+                  /> */}
 
-                  <FormField
+                  {/* <FormField
                     control={form.control}
                     name="thumbnail_url"
                     render={({ field }) => (
@@ -448,7 +449,7 @@ export default function DemosPage() {
                         <FormMessage />
                       </FormItem>
                     )}
-                  />
+                  /> */}
 
                   <DialogFooter>
                     <Button type="submit">
