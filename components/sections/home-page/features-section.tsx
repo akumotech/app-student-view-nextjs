@@ -1,44 +1,44 @@
 "use client";
 
-import { CheckCircle, AlertTriangle, Cloud } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const features = [
   {
     icon: CheckCircle,
-    title: "Real-time Monitoring",
+    title: "Real-time Code Scanning",
     description:
-      "Get instant updates on service status changes with our real-time monitoring system.",
-  },
-  {
-    icon: AlertTriangle,
-    title: "Instant Alerts",
-    description:
-      "Receive notifications via email, SMS, or Slack when any of your critical services go down.",
-  },
-  {
-    icon: Cloud,
-    title: "Service Integration",
-    description:
-      "Easily integrate with popular services like GitHub, Slack, Digital Ocean, and many more.",
+      "Continuously scan your codebase for bugs, code smells, and anti-patterns as you code.",
   },
   {
     icon: CheckCircle,
-    title: "Uptime History",
+    title: "Security Vulnerability Detection",
     description:
-      "Track historical uptime data and identify patterns to improve your service reliability.",
+      "Identify security risks and vulnerabilities before they reach production.",
   },
   {
     icon: CheckCircle,
-    title: "Performance Metrics",
+    title: "Code Quality Metrics",
     description:
-      "Monitor response times and performance metrics to ensure optimal service delivery.",
+      "Track maintainability, complexity, and test coverage with actionable metrics.",
   },
   {
     icon: CheckCircle,
-    title: "Custom Dashboards",
+    title: "Pull Request Integration",
     description:
-      "Create personalized dashboards to monitor the services that matter most to your team.",
+      "Get instant feedback and suggestions directly in your pull requests.",
+  },
+  {
+    icon: CheckCircle,
+    title: "Team Collaboration",
+    description:
+      "Collaborate with your team, assign issues, and resolve problems together.",
+  },
+  {
+    icon: CheckCircle,
+    title: "Multi-language Support",
+    description:
+      "Analyze code in JavaScript, Python, Java, Go, and more—all in one platform.",
   },
 ];
 
@@ -52,11 +52,11 @@ export function FeaturesSection() {
               Features
             </div>
             <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">
-              Everything you need to stay informed
+              CodeSight: Your Complete Code Analysis Toolkit
             </h2>
             <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-              Our platform provides comprehensive monitoring tools to keep you
-              updated on all your critical services.
+              CodeSight empowers developers and teams to write better, more
+              secure code with automated analysis and actionable insights.
             </p>
           </div>
         </div>

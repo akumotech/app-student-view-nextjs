@@ -9,35 +9,32 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { toast } from "sonner";
 
 const plans = [
   {
     name: "Free",
     price: "$0",
-    description: "Perfect for personal projects and small teams",
+    description: "Perfect for individuals and hobby projects",
     features: [
-      "Monitor up to 5 services",
-      "Basic status updates",
-      "Email notifications",
-      "24-hour history",
+      "1 repository",
+      "Basic code analysis",
       "Community support",
+      "Email notifications",
     ],
     buttonText: "Get Started",
     buttonVariant: "outline" as const,
   },
   {
     name: "Pro",
-    price: "$19",
-    description: "For growing teams and businesses",
+    price: "$29",
+    description: "For teams and growing businesses",
     features: [
-      "Monitor up to 50 services",
-      "Advanced status updates",
-      "Email, SMS, and Slack notifications",
-      "30-day history",
-      "Priority support",
-      "Custom integrations",
+      "Unlimited repositories",
+      "Advanced code analysis",
+      "Security vulnerability detection",
       "Team collaboration",
+      "Pull request integration",
+      "Priority email support",
     ],
     buttonText: "Start Free Trial",
     buttonVariant: "default" as const,
@@ -47,13 +44,12 @@ const plans = [
     price: "Custom",
     description: "For large organizations with custom needs",
     features: [
-      "Unlimited services",
-      "Custom monitoring solutions",
-      "Dedicated support",
-      "Custom SLAs",
-      "Advanced security",
+      "Unlimited everything",
       "Custom integrations",
-      "API access",
+      "Single Sign-On (SSO)",
+      "On-premise deployment",
+      "Dedicated account manager",
+      "Priority support",
     ],
     buttonText: "Contact Sales",
     buttonVariant: "outline" as const,
@@ -70,11 +66,11 @@ export function PricingSection() {
               Pricing
             </div>
             <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">
-              Simple, transparent pricing
+              Simple, transparent pricing for every team
             </h2>
             <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-              Choose the plan that best fits your needs. All plans include a
-              14-day free trial.
+              Choose the plan that fits your needs. All plans include a 14-day
+              free trial.
             </p>
           </div>
         </div>
@@ -105,9 +101,6 @@ export function PricingSection() {
                 <Button
                   variant={plan.buttonVariant}
                   className="w-full cursor-pointer"
-                  onClick={() => {
-                    toast.info("Coming soon! We're working on it.");
-                  }}
                 >
                   {plan.buttonText}
                 </Button>
