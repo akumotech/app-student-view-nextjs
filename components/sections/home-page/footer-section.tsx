@@ -12,7 +12,7 @@ export function FooterSection() {
           <div className="size-8 rounded-full bg-primary flex items-center justify-center">
             <CheckCircle className="size-5 text-primary-foreground" />
           </div>
-          <span>StatusMonitor</span>
+          <span>CodeSight</span>
         </div>
         <nav className="flex gap-4 sm:gap-6">
           <Button

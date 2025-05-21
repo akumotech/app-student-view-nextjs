@@ -28,7 +28,7 @@ export function ContactSection() {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       toast.success(
-        `Thank you for your interest, ${email}! We'll be in touch soon.`,
+        `Thank you for your interest, ${email}! We'll be in touch soon.`
       );
       reset();
     } catch (err) {
@@ -42,11 +42,11 @@ export function ContactSection() {
       <div className="container mx-auto max-w-7xl grid items-center justify-center gap-4 px-4 text-center md:px-6">
         <div className="space-y-3">
           <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">
-            Ready to start monitoring your services?
+            Ready to improve your code quality?
           </h2>
           <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-            Join thousands of teams who trust our platform to keep them informed
-            about their critical services.
+            Join teams and developers who trust CodeSight to keep their codebase
+            clean, secure, and production-ready.
           </p>
         </div>
         <div className="mx-auto w-full max-w-sm space-y-2">
