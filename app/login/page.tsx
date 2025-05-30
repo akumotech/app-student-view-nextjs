@@ -56,7 +56,8 @@ export default function LoginPage() {
   const onSubmit = async (values: LoginFormValues) => {
     try {
       const response = await login(values.email, values.password);
-      if (response.ok) {
+      console.log("response", response);
+      if (response.success) {
         toast.success("You have been logged in successfully.");
         router.push("/dashboard");
       } else {

@@ -97,20 +97,14 @@ export default function CertificatesPage() {
       setIsLoading(true);
       const baseUrl =
         process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
-      const token = localStorage.getItem("authToken") || "";
-      const student_id = getStudentId();
-      if (!student_id) throw new Error("No student ID found");
 
-      const response = await fetch(
-        `${baseUrl}/students/${student_id}/certificates`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await fetch(`${baseUrl}/students/me/certificates`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
 
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
@@ -147,7 +141,6 @@ export default function CertificatesPage() {
     try {
       const baseUrl =
         process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
-      const token = localStorage.getItem("authToken") || "";
       const student_id = getStudentId();
       if (!student_id) throw new Error("No student ID found");
 
@@ -161,9 +154,9 @@ export default function CertificatesPage() {
       const response = await fetch(endpoint, {
         method,
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(values),
       });
 
@@ -218,7 +211,6 @@ export default function CertificatesPage() {
     try {
       const baseUrl =
         process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
-      const token = localStorage.getItem("authToken") || "";
       const student_id = getStudentId();
       if (!student_id) throw new Error("No student ID found");
 
@@ -227,9 +219,9 @@ export default function CertificatesPage() {
         {
           method: "DELETE",
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
+          credentials: "include",
         }
       );
 

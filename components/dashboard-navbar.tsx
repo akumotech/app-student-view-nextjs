@@ -3,42 +3,59 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Code2, Award, Play } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 
 import { cn } from "@/lib/utils";
 
 export function MainNav() {
   const pathname = usePathname();
+  const { user } = useAuth();
 
+  console.log("testing user", user);
   const navItems = [
     {
       name: "Code",
       href: "/dashboard",
       icon: Code2,
-      active: pathname === "/dashboard",
+      admin: false,
     },
     {
       name: "Certificates",
       href: "/dashboard/certificates",
       icon: Award,
-      active: pathname === "/dashboard/certificates",
+      admin: false,
     },
     {
       name: "Demos",
       href: "/dashboard/demos",
       icon: Play,
-      active: pathname === "/dashboard/demos",
+      admin: false,
+    },
+    {
+      name: "Batches",
+      href: "/admin",
+      icon: Play,
+      admin: true,
     },
   ];
 
+  const filteredNavItems = navItems.filter((item) => {
+    if (item.admin) {
+      return user?.role === "admin";
+    }
+    return true;
+  });
+
   return (
     <nav className="flex items-center space-x-6">
-      {navItems.map((item) => (
+      {filteredNavItems.map((item) => (
         <Link
           key={item.href}
           href={item.href}
           className={cn(
             "flex items-center space-x-2 text-sm font-medium transition-colors",
-            item.active
+            pathname === item.href ||
+              (item.href === "/admin" && pathname.startsWith("/admin"))
               ? "text-primary"
               : "text-muted-foreground hover:text-primary"
           )}

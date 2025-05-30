@@ -2,17 +2,23 @@
 
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
+import { toast } from "sonner";
 
 const CallbackPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { isAuthenticated, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
+    if (authLoading) {
+      return;
+    }
 
-    if (!token) {
-      console.error("No token found");
-      router.replace("/login?error=oauth_failed");
+    if (!isAuthenticated) {
+      console.error("User not authenticated during OAuth callback.");
+      toast.error("Authentication required. Please login to continue.");
+      router.replace("/login?error=auth_required_for_oauth");
       return;
     }
 
@@ -20,8 +26,9 @@ const CallbackPage = () => {
     const state = searchParams.get("state");
 
     if (!code) {
-      console.error("No code found in query params");
-      router.replace("/login?error=oauth_failed");
+      console.error("No code found in query params for OAuth callback.");
+      toast.error("WakaTime connection failed: Missing authorization code.");
+      router.replace("/dashboard?error=wakatime_oauth_failed_no_code");
       return;
     }
 
@@ -33,36 +40,50 @@ const CallbackPage = () => {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
             },
+            credentials: "include",
             body: JSON.stringify({
               code,
               state,
             }),
           }
         );
-        console.log(response);
 
         if (!response.ok) {
-          console.error("OAuth callback failed");
-          router.replace("/login?error=oauth_failed");
+          let errorMessage = "WakaTime connection failed. Please try again.";
+          try {
+            const errorData = await response.json();
+            errorMessage =
+              errorData.message || errorData.detail || errorMessage;
+          } catch (_e) {
+            console.log(_e);
+            // Ignore if error response is not JSON
+          }
+          console.error("OAuth callback failed to backend:", errorMessage);
+          toast.error(errorMessage);
+          router.replace(`/dashboard?error=wakatime_oauth_backend_failed`);
           return;
         }
 
-        console.log("OAuth callback successful");
-        router.replace("/dashboard");
+        toast.success("WakaTime connected successfully!");
+        router.replace("/dashboard?success=wakatime_connected");
       } catch (error) {
-        console.error("Error during OAuth callback:", error);
-        router.replace("/login?error=oauth_failed");
+        console.error("Error during OAuth callback processing:", error);
+        toast.error("An unexpected error occurred while connecting WakaTime.");
+        router.replace("/dashboard?error=wakatime_oauth_exception");
       }
     };
 
     handleOAuthCallback();
-  }, [searchParams, router]);
+  }, [searchParams, router, isAuthenticated, authLoading]);
 
   return (
     <div className="flex justify-center items-center h-screen">
-      <p>Processing OAuth callback...</p>
+      {authLoading ? (
+        <p>Verifying authentication...</p>
+      ) : (
+        <p>Processing WakaTime connection...</p>
+      )}
     </div>
   );
 };

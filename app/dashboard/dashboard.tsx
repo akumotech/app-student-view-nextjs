@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   BarChart,
   Calendar,
@@ -21,43 +20,49 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import type { DashboardData } from "@/lib/dashboard-types";
+import type {
+  DashboardData,
+  Editor,
+  OperatingSystem,
+  Category,
+  Language,
+  Project,
+  Dependency,
+} from "@/lib/dashboard-types";
 
 interface DashboardProps {
   data: DashboardData;
 }
 
 export default function Dashboard({ data }: DashboardProps) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [activeTab, setActiveTab] = useState("overview");
-
   // Find the day with the most coding activity
   const mostActiveDay = data.data.reduce(
     (max, day) =>
       day.grand_total.total_seconds > max.grand_total.total_seconds ? day : max,
-    data.data[0] || { grand_total: { total_seconds: 0 } }
+    data.data[0] || {
+      grand_total: {
+        total_seconds: 0,
+        digital: "",
+        decimal: "",
+        hours: 0,
+        minutes: 0,
+        text: "",
+      },
+    }
   );
 
   // Aggregate languages across all days
-  const aggregatedLanguages = data.data.reduce(
-    (acc, day) => {
-      day.languages.forEach((lang) => {
-        const existing = acc.find((l) => l.name === lang.name);
-        if (existing) {
-          existing.total_seconds += lang.total_seconds;
-        } else {
-          acc.push({ ...lang });
-        }
-      });
-      return acc;
-    },
-    [] as Array<{
-      name: string;
-      total_seconds: number;
-      text: string;
-      percent: number;
-    }>
-  );
+  const aggregatedLanguages = data.data.reduce((acc, day) => {
+    day.languages.forEach((lang) => {
+      const existing = acc.find((l) => l.name === lang.name);
+      if (existing) {
+        existing.total_seconds += lang.total_seconds;
+      } else {
+        acc.push({ ...lang });
+      }
+    });
+    return acc;
+  }, [] as Language[]);
 
   // Calculate percentages for aggregated languages
   const totalLanguageSeconds = aggregatedLanguages.reduce(
@@ -67,7 +72,7 @@ export default function Dashboard({ data }: DashboardProps) {
   aggregatedLanguages.forEach((lang) => {
     lang.percent =
       totalLanguageSeconds > 0
-        ? (lang.percent = (lang.total_seconds / totalLanguageSeconds) * 100)
+        ? (lang.total_seconds / totalLanguageSeconds) * 100
         : 0;
   });
 
@@ -75,26 +80,17 @@ export default function Dashboard({ data }: DashboardProps) {
   aggregatedLanguages.sort((a, b) => b.total_seconds - a.total_seconds);
 
   // Aggregate projects across all days
-  const aggregatedProjects = data.data.reduce(
-    (acc, day) => {
-      day.projects.forEach((project) => {
-        const existing = acc.find((p) => p.name === project.name);
-        if (existing) {
-          existing.total_seconds += project.total_seconds;
-        } else {
-          acc.push({ ...project });
-        }
-      });
-      return acc;
-    },
-    [] as Array<{
-      name: string;
-      total_seconds: number;
-      text: string;
-      percent: number;
-      color?: string | null;
-    }>
-  );
+  const aggregatedProjects = data.data.reduce((acc, day) => {
+    day.projects.forEach((project) => {
+      const existing = acc.find((p) => p.name === project.name);
+      if (existing) {
+        existing.total_seconds += project.total_seconds;
+      } else {
+        acc.push({ ...project });
+      }
+    });
+    return acc;
+  }, [] as Project[]);
 
   // Calculate percentages for aggregated projects
   const totalProjectSeconds = aggregatedProjects.reduce(
@@ -104,8 +100,7 @@ export default function Dashboard({ data }: DashboardProps) {
   aggregatedProjects.forEach((project) => {
     project.percent =
       totalProjectSeconds > 0
-        ? (project.percent =
-            (project.total_seconds / totalProjectSeconds) * 100)
+        ? (project.total_seconds / totalProjectSeconds) * 100
         : 0;
   });
 
@@ -113,25 +108,17 @@ export default function Dashboard({ data }: DashboardProps) {
   aggregatedProjects.sort((a, b) => b.total_seconds - a.total_seconds);
 
   // Aggregate dependencies across all days
-  const aggregatedDependencies = data.data.reduce(
-    (acc, day) => {
-      day.dependencies.forEach((dep) => {
-        const existing = acc.find((d) => d.name === dep.name);
-        if (existing) {
-          existing.total_seconds += dep.total_seconds;
-        } else {
-          acc.push({ ...dep });
-        }
-      });
-      return acc;
-    },
-    [] as Array<{
-      name: string;
-      total_seconds: number;
-      text: string;
-      percent: number;
-    }>
-  );
+  const aggregatedDependencies = data.data.reduce((acc, day) => {
+    day.dependencies.forEach((dep) => {
+      const existing = acc.find((d) => d.name === dep.name);
+      if (existing) {
+        existing.total_seconds += dep.total_seconds;
+      } else {
+        acc.push({ ...dep });
+      }
+    });
+    return acc;
+  }, [] as Dependency[]);
 
   // Calculate percentages for aggregated dependencies
   const totalDependencySeconds = aggregatedDependencies.reduce(
@@ -141,38 +128,67 @@ export default function Dashboard({ data }: DashboardProps) {
   aggregatedDependencies.forEach((dep) => {
     dep.percent =
       totalDependencySeconds > 0
-        ? (dep.percent = (dep.total_seconds / totalDependencySeconds) * 100)
+        ? (dep.total_seconds / totalDependencySeconds) * 100
         : 0;
   });
 
   // Sort dependencies by total seconds
   aggregatedDependencies.sort((a, b) => b.total_seconds - a.total_seconds);
 
-  // Get most used editor and OS
+  const initialEditor: Editor = {
+    name: "N/A",
+    total_seconds: -1,
+    percent: 0,
+    text: "",
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+    digital: "",
+    decimal: "",
+  };
   const mostUsedEditor = data.data
     .flatMap((day) => day.editors)
     .reduce(
       (max, editor) =>
-        !max || editor.total_seconds > max.total_seconds ? editor : max,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      null as any
+        editor.total_seconds > max.total_seconds ? editor : max,
+      initialEditor
     );
 
+  const initialOS: OperatingSystem = {
+    name: "N/A",
+    total_seconds: -1,
+    percent: 0,
+    text: "",
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+    digital: "",
+    decimal: "",
+  };
   const mostUsedOS = data.data
     .flatMap((day) => day.operating_systems)
     .reduce(
-      (max, os) => (!max || os.total_seconds > max.total_seconds ? os : max),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      null as any
+      (max, os) => (os.total_seconds > max.total_seconds ? os : max),
+      initialOS
     );
 
+  const initialCategory: Category = {
+    name: "N/A",
+    total_seconds: -1,
+    percent: 0,
+    text: "",
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+    digital: "",
+    decimal: "",
+  };
   const mostUsedCategory = data.data
     .flatMap((day) => day.categories)
     .reduce(
       (max, category) =>
-        !max || category.total_seconds > max.total_seconds ? category : max,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      null as any
+        category.total_seconds > max.total_seconds ? category : max,
+      initialCategory
     );
 
   return (
@@ -187,11 +203,7 @@ export default function Dashboard({ data }: DashboardProps) {
           </div>
         </div>
 
-        <Tabs
-          defaultValue="overview"
-          className="space-y-4"
-          onValueChange={setActiveTab}
-        >
+        <Tabs defaultValue="overview" className="space-y-4">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="languages">Languages</TabsTrigger>
@@ -388,21 +400,25 @@ export default function Dashboard({ data }: DashboardProps) {
                       <Laptop className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">Operating System</span>
                       <span className="ml-auto text-sm text-muted-foreground">
-                        {mostUsedOS?.name || "-"}
+                        {mostUsedOS.name !== "N/A" ? mostUsedOS.name : "-"}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Cpu className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">Editor</span>
                       <span className="ml-auto text-sm text-muted-foreground">
-                        {mostUsedEditor?.name || "-"}
+                        {mostUsedEditor.name !== "N/A"
+                          ? mostUsedEditor.name
+                          : "-"}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <BarChart className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">Categories</span>
                       <span className="ml-auto text-sm text-muted-foreground">
-                        {mostUsedCategory?.name || "-"}
+                        {mostUsedCategory.name !== "N/A"
+                          ? mostUsedCategory.name
+                          : "-"}
                       </span>
                     </div>
                   </div>

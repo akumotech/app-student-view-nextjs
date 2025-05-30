@@ -65,7 +65,7 @@ export default function SignupPage() {
   const onSubmit = async (values: SignupFormValues) => {
     try {
       const response = await signup(values.email, values.password, values.name);
-      if (response.ok) {
+      if (response.success) {
         toast.success("Account created successfully. Please login.");
         router.push("/login");
       } else {

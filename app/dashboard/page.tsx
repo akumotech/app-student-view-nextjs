@@ -11,12 +11,8 @@ import { MainNav } from "@/components/dashboard-navbar";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user, loading: authLoading } = useAuth();
   const [hasWakaTimeAuth, setHasWakaTimeAuth] = useState<boolean>(false);
-  const [userData, setUserData] = useState<{
-    email: string;
-    wakatime_access_token_encrypted: string | null;
-  } | null>(null);
 
   // State for WakaTime usage data
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -29,58 +25,21 @@ export default function DashboardPage() {
   const [isLoadingUsageData, setIsLoadingUsageData] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!authLoading && !isAuthenticated) {
       router.push("/login");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, authLoading, router]);
 
   useEffect(() => {
-    const checkWakaTimeAuthStatus = async () => {
-      try {
-        const baseUrl =
-          process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
-        const token = localStorage.getItem("authToken") || "";
-
-        const userResponse = await fetch(`${baseUrl}/users/me`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!userResponse.ok) {
-          if (userResponse.status === 401 || userResponse.status === 403) {
-            logout();
-            return;
-          }
-          throw new Error(
-            `Failed to fetch user data. Status: ${userResponse.status}`
-          );
-        }
-
-        const fetchedUserData: {
-          email: string;
-          wakatime_access_token_encrypted: string | null;
-        } = await userResponse.json();
-
-        setUserData(fetchedUserData);
-        setHasWakaTimeAuth(!!fetchedUserData.wakatime_access_token_encrypted);
-      } catch (error) {
-        console.error("Error checking WakaTime auth status:", error);
-        toast.error("Failed to verify WakaTime status."); // Optionally inform user
-      }
-    };
-
-    if (isAuthenticated) {
-      checkWakaTimeAuthStatus();
+    if (user) {
+      setHasWakaTimeAuth(!!user.wakatime_access_token_encrypted);
     }
-  }, [isAuthenticated, logout]);
+  }, [user]);
 
   // useEffect to fetch WakaTime usage data
   useEffect(() => {
     const fetchWakaTimeUsage = async () => {
-      if (!isAuthenticated || !hasWakaTimeAuth || !userData?.email) {
+      if (!isAuthenticated || !hasWakaTimeAuth || !user?.email) {
         setDashboardUsageData(null);
         setDashboardUsageError(null);
         return;
@@ -93,15 +52,14 @@ export default function DashboardPage() {
       try {
         const baseUrl =
           process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
-        const token = localStorage.getItem("authToken") || "";
-        const userEmail = userData.email;
+        const userEmail = user.email;
 
         const response = await fetch(`${baseUrl}/wakatime/usage`, {
-          method: "POST", // As per your attempt
+          method: "POST",
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
+          credentials: "include",
           body: JSON.stringify({ email: userEmail }),
         });
 
@@ -112,13 +70,21 @@ export default function DashboardPage() {
           return;
         }
 
+        if (response.status === 401 || response.status === 403) {
+          toast.error(
+            "Authentication error fetching WakaTime data. Please try logging out and in."
+          );
+          setDashboardUsageError("Authentication failed.");
+          return;
+        }
+
         if (!response.ok) {
           let errorDetail = `Failed to fetch WakaTime usage data (Status: ${response.status})`;
           try {
             const errorData = await response.json();
             errorDetail = errorData.detail || errorData.message || errorDetail;
-          } catch (parseError) {
-            console.log(parseError);
+          } catch (_parseError) {
+            console.warn("JSON parsing error ignored:", _parseError); // Optionally log if needed for debugging
           }
           throw new Error(errorDetail);
         }
@@ -137,8 +103,10 @@ export default function DashboardPage() {
       }
     };
 
-    fetchWakaTimeUsage();
-  }, [isAuthenticated, hasWakaTimeAuth, userData]);
+    if (isAuthenticated && hasWakaTimeAuth) {
+      fetchWakaTimeUsage();
+    }
+  }, [isAuthenticated, hasWakaTimeAuth, user, logout]);
 
   const handleLogout = async () => {
     try {
@@ -152,40 +120,59 @@ export default function DashboardPage() {
   };
 
   const handleWakaTimeAuth = async () => {
-    console.log("init oauth");
+    if (!user || !user.email) {
+      toast.error("User information not available. Please try again.");
+      return;
+    }
     try {
       const baseUrl =
         process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
-      const token = localStorage.getItem("authToken") || "";
-
-      if (!userData || !userData.email) {
-        throw new Error("Missing user email for WakaTime authorization");
-      }
 
       const wakatimeResponse = await fetch(
-        `${baseUrl}/wakatime/authorize?email=${encodeURIComponent(userData.email)}`,
+        `${baseUrl}/wakatime/authorize?email=${encodeURIComponent(user.email)}`,
         {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
+          credentials: "include",
         }
       );
 
       if (!wakatimeResponse.ok) {
-        const error = await wakatimeResponse.json();
-        console.log(error);
-        throw new Error("Failed to get WakaTime authorization URL");
+        let errorDetail = "Failed to get WakaTime authorization URL";
+        try {
+          const error = await wakatimeResponse.json();
+          errorDetail = error.detail || error.message || errorDetail;
+        } catch (_e) {
+          console.warn("JSON parsing error ignored for WakaTime auth URL:", _e); // Optionally log
+        }
+        throw new Error(errorDetail);
       }
 
-      const url = await wakatimeResponse.json();
-      window.location.href = url;
+      const responseData = await wakatimeResponse.json();
+      if (typeof responseData.redirect_url === "string") {
+        window.location.href = responseData.redirect_url;
+      } else if (typeof responseData === "string") {
+        window.location.href = responseData;
+      } else {
+        throw new Error("Invalid WakaTime authorization URL received.");
+      }
     } catch (error) {
       console.error("Error initiating WakaTime authorization:", error);
-      toast.error("Failed to connect to WakaTime");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to connect to WakaTime"
+      );
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p>Loading authentication...</p>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return null;
@@ -249,12 +236,9 @@ export default function DashboardPage() {
             !isLoadingUsageData &&
             !dashboardUsageError &&
             !dashboardUsageData && (
-              <p
-                className="p-4 text-sm text-gray-700 bg-gray-100 rounded-lg dark:bg-gray-800 dark:text-gray-300"
-                role="alert"
-              >
-                WakaTime is connected. We are either waiting for your first data
-                sync or there&apos;s no coding activity to display yet.
+              <p className="text-center text-gray-500">
+                No WakaTime data to display. Your data might still be syncing or
+                none available for the selected period.
               </p>
             )}
         </main>
