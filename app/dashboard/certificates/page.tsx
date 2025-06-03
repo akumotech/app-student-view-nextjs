@@ -70,28 +70,6 @@ export default function CertificatesPage() {
     },
   });
 
-  const getStudentId = () => {
-    if (user && user.id) return user.id;
-    const storedUser =
-      typeof window !== "undefined" ? localStorage.getItem("user") : null;
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser);
-        if (parsed.id) return parsed.id;
-      } catch {}
-    }
-    return null;
-  };
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/login");
-      return;
-    }
-
-    fetchCertificates();
-  }, [isAuthenticated, router]);
-
   const fetchCertificates = async () => {
     try {
       setIsLoading(true);
@@ -125,6 +103,28 @@ export default function CertificatesPage() {
       setIsLoading(false);
     }
   };
+
+  const getStudentId = () => {
+    if (user && user.id) return user.id;
+    const storedUser =
+      typeof window !== "undefined" ? localStorage.getItem("user") : null;
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        if (parsed.id) return parsed.id;
+      } catch {}
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+
+    fetchCertificates();
+  }, [isAuthenticated, router, fetchCertificates]);
 
   const handleLogout = async () => {
     try {

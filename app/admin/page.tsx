@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -45,7 +45,8 @@ interface NewlyCreatedBatchInfo {
   registrationKey: string;
 }
 
-export default function AdminDashboardPage() {
+// This new component will contain the original logic
+function AdminDashboardContents() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
@@ -280,5 +281,20 @@ export default function AdminDashboardPage() {
         )}
       </Card>
     </div>
+  );
+}
+
+// The default export page component will now wrap AdminDashboardContents in Suspense
+export default function AdminDashboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <p>Loading admin page...</p>
+        </div>
+      }
+    >
+      <AdminDashboardContents />
+    </Suspense>
   );
 }

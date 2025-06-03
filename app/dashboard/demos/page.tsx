@@ -111,28 +111,6 @@ export default function DemosPage() {
     },
   });
 
-  const getStudentId = () => {
-    if (user && user.id) return user.id;
-    const storedUser =
-      typeof window !== "undefined" ? localStorage.getItem("user") : null;
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser);
-        if (parsed.id) return parsed.id;
-      } catch {}
-    }
-    return null;
-  };
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/login");
-      return;
-    }
-
-    fetchDemos();
-  }, [isAuthenticated, router]);
-
   const fetchDemos = async () => {
     try {
       setIsLoading(true);
@@ -164,6 +142,28 @@ export default function DemosPage() {
       setIsLoading(false);
     }
   };
+
+  const getStudentId = () => {
+    if (user && user.id) return user.id;
+    const storedUser =
+      typeof window !== "undefined" ? localStorage.getItem("user") : null;
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        if (parsed.id) return parsed.id;
+      } catch {}
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+
+    fetchDemos();
+  }, [isAuthenticated, router, fetchDemos]);
 
   const handleLogout = async () => {
     try {

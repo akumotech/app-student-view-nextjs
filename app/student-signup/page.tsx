@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth, BackendAPIResponse } from "@/lib/auth-context";
@@ -53,7 +53,8 @@ interface HTTPValidationError {
 // Use the existing BackendAPIResponse type, data will be null or an empty object on success
 type StudentSignupApiResponse = BackendAPIResponse<null | object>;
 
-export default function StudentSignupPage() {
+// This new component will contain the original logic
+function StudentSignupFormContents() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, loading: authLoading, fetchUserOnMount } = useAuth();
@@ -246,5 +247,20 @@ export default function StudentSignupPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+// The default export page component will now wrap StudentSignupFormContents in Suspense
+export default function StudentSignupPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <p>Loading page...</p>
+        </div>
+      }
+    >
+      <StudentSignupFormContents />
+    </Suspense>
   );
 }
