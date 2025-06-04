@@ -27,18 +27,6 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { getBaseUrl } from "@/lib/utils";
 
-// Define BatchRead type locally based on openapi.json / backend docs
-interface BatchRead {
-  id: number;
-  name: string;
-  slack_channel: string;
-  start_date: string;
-  end_date: string;
-  curriculum?: string | null;
-  registration_key: string;
-  registration_key_active: boolean;
-}
-
 const batchFormSchema = z.object({
   name: z.string().min(3, "Batch name must be at least 3 characters"),
   slack_channel: z.string().min(1, "Slack channel is required"),
@@ -101,7 +89,7 @@ export default function AdminCreateBatchPage() {
 
       const result = await response.json();
 
-      if (!response.ok || !result.success) {
+      if (!response.ok) {
         const errorMessage =
           result.error ||
           result.message ||
@@ -114,8 +102,9 @@ export default function AdminCreateBatchPage() {
         return;
       }
 
+      // If we get here, the response was ok (200-299)
       toast.success(result.message || "Batch created successfully!");
-      const newBatch = result.data as BatchRead;
+      const newBatch = result.data || result; // Handle different response structures
       form.reset();
       router.push(
         `/admin?newBatchId=${newBatch.id}&batchName=${encodeURIComponent(newBatch.name)}&regKey=${encodeURIComponent(newBatch.registration_key)}`
