@@ -36,13 +36,18 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, loading, isAuthenticated } = useAuth();
+  const { login, loading, isAuthenticated, user } = useAuth();
 
   useEffect(() => {
-    if (!loading && isAuthenticated) {
-      router.push("/dashboard");
+    if (!loading && isAuthenticated && user) {
+      // Redirect based on user role
+      if (user.role === "admin" || user.role === "instructor") {
+        router.push("/admin");
+      } else {
+        router.push("/dashboard");
+      }
     }
-  }, [isAuthenticated, loading, router]);
+  }, [isAuthenticated, loading, user, router]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -59,7 +64,8 @@ export default function LoginPage() {
       console.log("response", response);
       if (response.success) {
         toast.success("You have been logged in successfully.");
-        router.push("/dashboard");
+        // Note: After successful login, the useEffect will handle redirection based on user role
+        // We don't redirect here directly to avoid race conditions
       } else {
         toast.error(response.message);
       }

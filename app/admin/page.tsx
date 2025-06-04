@@ -97,7 +97,7 @@ interface NewlyCreatedBatchInfo {
 function AdminDashboardContents() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { user, isAuthenticated, loading: authLoading, logout } = useAuth();
 
   // State for dashboard stats
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -312,6 +312,17 @@ function AdminDashboardContents() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success("Logged out successfully");
+      router.push("/login");
+    } catch (error) {
+      console.error("Failed to logout:", error);
+      toast.error("Failed to logout. Please try again.");
+    }
+  };
+
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case "admin":
@@ -350,9 +361,14 @@ function AdminDashboardContents() {
     <div className="container mx-auto p-4 py-8 space-y-8">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <Link href="/admin/batches" passHref>
-          <Button>Create New Batch</Button>
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/admin/batches" passHref>
+            <Button>Create New Batch</Button>
+          </Link>
+          <Button onClick={handleLogout} variant="outline">
+            Logout
+          </Button>
+        </div>
       </div>
 
       {/* Dashboard Stats */}
