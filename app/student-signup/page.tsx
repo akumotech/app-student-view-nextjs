@@ -25,7 +25,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { getBaseUrl } from "@/lib/utils";
+import { makeUrl } from "@/lib/utils";
 
 const studentSignupFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -82,8 +82,7 @@ function StudentSignupFormContents() {
   const onSubmit = async (values: StudentSignupFormValues) => {
     setIsLoading(true);
     try {
-      const backendUrl = getBaseUrl();
-      const response = await fetch(`${backendUrl}/signup/student`, {
+      const response = await fetch(makeUrl("signupStudent"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),

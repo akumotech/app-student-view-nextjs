@@ -31,6 +31,7 @@ import { CertificateRead } from "@/lib/dashboard-types";
 import { MainNav } from "@/components/dashboard-navbar";
 import { Textarea } from "@/components/ui/textarea";
 import { CertificateCard } from "@/components/ui/certificate-card";
+import { makeUrl } from "@/lib/utils";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -73,10 +74,7 @@ export default function CertificatesPage() {
   const fetchCertificates = async () => {
     try {
       setIsLoading(true);
-      const baseUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
-
-      const response = await fetch(`${baseUrl}/students/me/certificates`, {
+      const response = await fetch(makeUrl("studentsCertificates"), {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

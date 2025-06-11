@@ -47,7 +47,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     try {
       const baseUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
+        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000/api";
+      console.log(baseUrl);
       const response = await fetch(`${baseUrl}/users/me`, {
         method: "GET",
         headers: {

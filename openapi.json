@@ -6,10 +6,10 @@
     "version": "1.0.0"
   },
   "paths": {
-    "/users/me/": {
+    "/api/users/me/": {
       "get": {
         "summary": "Read Users Me",
-        "operationId": "read_users_me_users_me__get",
+        "operationId": "read_users_me_api_users_me__get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -29,10 +29,10 @@
         ]
       }
     },
-    "/login": {
+    "/api/login": {
       "post": {
         "summary": "Login",
-        "operationId": "login_login_post",
+        "operationId": "login_api_login_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -65,10 +65,10 @@
         }
       }
     },
-    "/signup": {
+    "/api/signup": {
       "post": {
         "summary": "Signup",
-        "operationId": "signup_signup_post",
+        "operationId": "signup_api_signup_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -103,10 +103,10 @@
         }
       }
     },
-    "/signup/student": {
+    "/api/signup/student": {
       "post": {
         "summary": "Student Signup with Batch Key",
-        "operationId": "student_signup_with_key_signup_student_post",
+        "operationId": "student_signup_with_key_api_signup_student_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -141,10 +141,10 @@
         }
       }
     },
-    "/students/register": {
+    "/api/students/register": {
       "post": {
         "summary": "Register Student",
-        "operationId": "register_student_students_register_post",
+        "operationId": "register_student_api_students_register_post",
         "security": [
           {
             "CookieAuth": []
@@ -203,10 +203,10 @@
         }
       }
     },
-    "/logout": {
+    "/api/logout": {
       "post": {
         "summary": "Logout",
-        "operationId": "logout_logout_post",
+        "operationId": "logout_api_logout_post",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -226,10 +226,10 @@
         ]
       }
     },
-    "/wakatime/today": {
+    "/api/wakatime/today": {
       "post": {
         "summary": "Get WakaTime data for today for authenticated user",
-        "operationId": "wakatime_today_for_user_wakatime_today_post",
+        "operationId": "wakatime_today_for_user_api_wakatime_today_post",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -249,10 +249,10 @@
         ]
       }
     },
-    "/wakatime/usage": {
+    "/api/wakatime/usage": {
       "post": {
         "summary": "Get WakaTime usage stats for authenticated user",
-        "operationId": "wakatime_usage_for_user_wakatime_usage_post",
+        "operationId": "wakatime_usage_for_user_api_wakatime_usage_post",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -272,10 +272,10 @@
         ]
       }
     },
-    "/wakatime/authorize": {
+    "/api/wakatime/authorize": {
       "get": {
         "summary": "Initiate WakaTime OAuth for authenticated user",
-        "operationId": "wakatime_authorize_for_user_wakatime_authorize_get",
+        "operationId": "wakatime_authorize_for_user_api_wakatime_authorize_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -293,10 +293,10 @@
         ]
       }
     },
-    "/wakatime/callback": {
+    "/api/wakatime/callback": {
       "post": {
         "summary": "Handle WakaTime OAuth callback",
-        "operationId": "wakatime_callback_wakatime_callback_post",
+        "operationId": "wakatime_callback_api_wakatime_callback_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -336,11 +336,11 @@
         ]
       }
     },
-    "/batches/": {
+    "/api/batches/": {
       "get": {
         "tags": ["Batches"],
         "summary": "List Batches",
-        "operationId": "list_batches_endpoint_batches__get",
+        "operationId": "list_batches_endpoint_api_batches__get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -351,7 +351,7 @@
                     "$ref": "#/components/schemas/BatchRead"
                   },
                   "type": "array",
-                  "title": "Response List Batches Endpoint Batches  Get"
+                  "title": "Response List Batches Endpoint Api Batches  Get"
                 }
               }
             }
@@ -366,7 +366,7 @@
       "post": {
         "tags": ["Batches"],
         "summary": "Create Batch",
-        "operationId": "create_batch_endpoint_batches__post",
+        "operationId": "create_batch_endpoint_api_batches__post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -406,11 +406,11 @@
         ]
       }
     },
-    "/batches/{batch_id}": {
+    "/api/batches/{batch_id}": {
       "get": {
         "tags": ["Batches"],
         "summary": "Get Batch by ID",
-        "operationId": "get_batch_endpoint_batches__batch_id__get",
+        "operationId": "get_batch_endpoint_api_batches__batch_id__get",
         "security": [
           {
             "CookieAuth": []
@@ -453,7 +453,7 @@
       "put": {
         "tags": ["Batches"],
         "summary": "Update Batch",
-        "operationId": "update_batch_endpoint_batches__batch_id__put",
+        "operationId": "update_batch_endpoint_api_batches__batch_id__put",
         "security": [
           {
             "CookieAuth": []
@@ -506,7 +506,7 @@
       "delete": {
         "tags": ["Batches"],
         "summary": "Delete Batch",
-        "operationId": "delete_batch_endpoint_batches__batch_id__delete",
+        "operationId": "delete_batch_endpoint_api_batches__batch_id__delete",
         "security": [
           {
             "CookieAuth": []
@@ -540,11 +540,11 @@
         }
       }
     },
-    "/projects/": {
+    "/api/projects/": {
       "get": {
         "tags": ["Projects"],
         "summary": "List Projects",
-        "operationId": "list_projects_endpoint_projects__get",
+        "operationId": "list_projects_endpoint_api_projects__get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -555,7 +555,7 @@
                     "$ref": "#/components/schemas/ProjectRead"
                   },
                   "type": "array",
-                  "title": "Response List Projects Endpoint Projects  Get"
+                  "title": "Response List Projects Endpoint Api Projects  Get"
                 }
               }
             }
@@ -570,7 +570,7 @@
       "post": {
         "tags": ["Projects"],
         "summary": "Create Project",
-        "operationId": "create_project_endpoint_projects__post",
+        "operationId": "create_project_endpoint_api_projects__post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -610,11 +610,11 @@
         ]
       }
     },
-    "/projects/{project_id}": {
+    "/api/projects/{project_id}": {
       "get": {
         "tags": ["Projects"],
         "summary": "Get Project by ID",
-        "operationId": "get_project_endpoint_projects__project_id__get",
+        "operationId": "get_project_endpoint_api_projects__project_id__get",
         "security": [
           {
             "CookieAuth": []
@@ -657,7 +657,7 @@
       "put": {
         "tags": ["Projects"],
         "summary": "Update Project",
-        "operationId": "update_project_endpoint_projects__project_id__put",
+        "operationId": "update_project_endpoint_api_projects__project_id__put",
         "security": [
           {
             "CookieAuth": []
@@ -710,7 +710,7 @@
       "delete": {
         "tags": ["Projects"],
         "summary": "Delete Project",
-        "operationId": "delete_project_endpoint_projects__project_id__delete",
+        "operationId": "delete_project_endpoint_api_projects__project_id__delete",
         "security": [
           {
             "CookieAuth": []
@@ -744,11 +744,11 @@
         }
       }
     },
-    "/students/": {
+    "/api/students/": {
       "get": {
         "tags": ["Students"],
         "summary": "List Students",
-        "operationId": "list_students_endpoint_students__get",
+        "operationId": "list_students_endpoint_api_students__get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -759,7 +759,7 @@
                     "$ref": "#/components/schemas/StudentRead"
                   },
                   "type": "array",
-                  "title": "Response List Students Endpoint Students  Get"
+                  "title": "Response List Students Endpoint Api Students  Get"
                 }
               }
             }
@@ -772,11 +772,11 @@
         ]
       }
     },
-    "/students/{student_id}": {
+    "/api/students/{student_id}": {
       "get": {
         "tags": ["Students"],
         "summary": "Get Student by ID",
-        "operationId": "get_student_endpoint_students__student_id__get",
+        "operationId": "get_student_endpoint_api_students__student_id__get",
         "security": [
           {
             "CookieAuth": []
@@ -819,7 +819,7 @@
       "put": {
         "tags": ["Students"],
         "summary": "Update Student Profile",
-        "operationId": "update_student_endpoint_students__student_id__put",
+        "operationId": "update_student_endpoint_api_students__student_id__put",
         "security": [
           {
             "CookieAuth": []
@@ -870,11 +870,11 @@
         }
       }
     },
-    "/students/me/certificates": {
+    "/api/students/me/certificates": {
       "get": {
         "tags": ["My Student Data"],
         "summary": "List My Certificates",
-        "operationId": "list_my_certificates_students_me_certificates_get",
+        "operationId": "list_my_certificates_api_students_me_certificates_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -885,7 +885,7 @@
                     "$ref": "#/components/schemas/CertificateRead"
                   },
                   "type": "array",
-                  "title": "Response List My Certificates Students Me Certificates Get"
+                  "title": "Response List My Certificates Api Students Me Certificates Get"
                 }
               }
             }
@@ -898,11 +898,11 @@
         ]
       }
     },
-    "/students/me/demos": {
+    "/api/students/me/demos": {
       "get": {
         "tags": ["My Student Data"],
         "summary": "List My Demos",
-        "operationId": "list_my_demos_students_me_demos_get",
+        "operationId": "list_my_demos_api_students_me_demos_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -913,7 +913,7 @@
                     "$ref": "#/components/schemas/DemoRead"
                   },
                   "type": "array",
-                  "title": "Response List My Demos Students Me Demos Get"
+                  "title": "Response List My Demos Api Students Me Demos Get"
                 }
               }
             }
@@ -926,11 +926,11 @@
         ]
       }
     },
-    "/students/{student_id}/certificates": {
+    "/api/students/{student_id}/certificates": {
       "get": {
         "tags": ["Student Specific"],
         "summary": "List Student Certificates",
-        "operationId": "list_student_certificates_students__student_id__certificates_get",
+        "operationId": "list_student_certificates_api_students__student_id__certificates_get",
         "security": [
           {
             "CookieAuth": []
@@ -957,7 +957,7 @@
                   "items": {
                     "$ref": "#/components/schemas/CertificateRead"
                   },
-                  "title": "Response List Student Certificates Students  Student Id  Certificates Get"
+                  "title": "Response List Student Certificates Api Students  Student Id  Certificates Get"
                 }
               }
             }
@@ -977,7 +977,7 @@
       "post": {
         "tags": ["Student Specific"],
         "summary": "Create Student Certificate",
-        "operationId": "create_student_certificate_students__student_id__certificates_post",
+        "operationId": "create_student_certificate_api_students__student_id__certificates_post",
         "security": [
           {
             "CookieAuth": []
@@ -1028,11 +1028,11 @@
         }
       }
     },
-    "/students/{student_id}/certificates/{certificate_id}": {
+    "/api/students/{student_id}/certificates/{certificate_id}": {
       "put": {
         "tags": ["Student Specific"],
         "summary": "Update Student Certificate",
-        "operationId": "update_student_certificate_students__student_id__certificates__certificate_id__put",
+        "operationId": "update_student_certificate_api_students__student_id__certificates__certificate_id__put",
         "security": [
           {
             "CookieAuth": []
@@ -1094,7 +1094,7 @@
       "delete": {
         "tags": ["Student Specific"],
         "summary": "Delete Student Certificate",
-        "operationId": "delete_student_certificate_students__student_id__certificates__certificate_id__delete",
+        "operationId": "delete_student_certificate_api_students__student_id__certificates__certificate_id__delete",
         "security": [
           {
             "CookieAuth": []
@@ -1137,11 +1137,11 @@
         }
       }
     },
-    "/students/{student_id}/demos": {
+    "/api/students/{student_id}/demos": {
       "get": {
         "tags": ["Student Specific"],
         "summary": "List Student Demos",
-        "operationId": "list_student_demos_students__student_id__demos_get",
+        "operationId": "list_student_demos_api_students__student_id__demos_get",
         "security": [
           {
             "CookieAuth": []
@@ -1168,7 +1168,7 @@
                   "items": {
                     "$ref": "#/components/schemas/DemoRead"
                   },
-                  "title": "Response List Student Demos Students  Student Id  Demos Get"
+                  "title": "Response List Student Demos Api Students  Student Id  Demos Get"
                 }
               }
             }
@@ -1188,7 +1188,7 @@
       "post": {
         "tags": ["Student Specific"],
         "summary": "Create Student Demo",
-        "operationId": "create_student_demo_students__student_id__demos_post",
+        "operationId": "create_student_demo_api_students__student_id__demos_post",
         "security": [
           {
             "CookieAuth": []
@@ -1239,11 +1239,11 @@
         }
       }
     },
-    "/students/{student_id}/demos/{demo_id}": {
+    "/api/students/{student_id}/demos/{demo_id}": {
       "put": {
         "tags": ["Student Specific"],
         "summary": "Update Student Demo",
-        "operationId": "update_student_demo_students__student_id__demos__demo_id__put",
+        "operationId": "update_student_demo_api_students__student_id__demos__demo_id__put",
         "security": [
           {
             "CookieAuth": []
@@ -1305,7 +1305,7 @@
       "delete": {
         "tags": ["Student Specific"],
         "summary": "Delete Student Demo",
-        "operationId": "delete_student_demo_students__student_id__demos__demo_id__delete",
+        "operationId": "delete_student_demo_api_students__student_id__demos__demo_id__delete",
         "security": [
           {
             "CookieAuth": []

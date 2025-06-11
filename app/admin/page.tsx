@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { getBaseUrl } from "@/lib/utils";
+import { makeUrl } from "@/lib/utils";
 import Link from "next/link";
 import {
   Copy,
@@ -157,8 +157,7 @@ function AdminDashboardContents() {
   const fetchStats = async () => {
     try {
       setIsLoadingStats(true);
-      const backendUrl = getBaseUrl();
-      const response = await fetch(`${backendUrl}/api/v1/admin/stats`, {
+      const response = await fetch(makeUrl("adminStats"), {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -184,7 +183,6 @@ function AdminDashboardContents() {
   const fetchUsers = async () => {
     try {
       setIsLoadingUsers(true);
-      const backendUrl = getBaseUrl();
       const params = new URLSearchParams({
         page: currentPage.toString(),
         page_size: pageSize.toString(),
@@ -193,14 +191,11 @@ function AdminDashboardContents() {
       if (searchTerm) params.append("search", searchTerm);
       if (roleFilter !== "all") params.append("role", roleFilter);
 
-      const response = await fetch(
-        `${backendUrl}/api/v1/admin/users?${params}`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${makeUrl("adminUsers")}?${params}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
 
       if (!response.ok) {
         throw new Error("Failed to fetch users");
@@ -223,8 +218,7 @@ function AdminDashboardContents() {
   const fetchLegacyBatches = async () => {
     try {
       setIsLoadingLegacyBatches(true);
-      const backendUrl = getBaseUrl();
-      const response = await fetch(`${backendUrl}/batches/`, {
+      const response = await fetch(makeUrl("batches"), {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -244,9 +238,8 @@ function AdminDashboardContents() {
   // Update user role
   const updateUserRole = async (userId: number, newRole: string) => {
     try {
-      const backendUrl = getBaseUrl();
       const response = await fetch(
-        `${backendUrl}/api/v1/admin/users/${userId}/role`,
+        makeUrl("adminUserRole", { user_id: userId }),
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },

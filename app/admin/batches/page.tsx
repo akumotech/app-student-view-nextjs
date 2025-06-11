@@ -25,7 +25,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { getBaseUrl } from "@/lib/utils";
+import { makeUrl } from "@/lib/utils";
 
 const batchFormSchema = z.object({
   name: z.string().min(3, "Batch name must be at least 3 characters"),
@@ -79,8 +79,7 @@ export default function AdminCreateBatchPage() {
   const onSubmit = async (values: BatchFormValues) => {
     setIsLoading(true);
     try {
-      const backendUrl = getBaseUrl();
-      const response = await fetch(`${backendUrl}/batches/`, {
+      const response = await fetch(makeUrl("batches"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
