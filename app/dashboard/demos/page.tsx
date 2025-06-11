@@ -111,43 +111,18 @@ export default function DemosPage() {
     },
   });
 
-  const getStudentId = () => {
-    if (user && user.id) return user.id;
-    const storedUser =
-      typeof window !== "undefined" ? localStorage.getItem("user") : null;
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser);
-        if (parsed.id) return parsed.id;
-      } catch {}
-    }
-    return null;
-  };
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/login");
-      return;
-    }
-
-    fetchDemos();
-  }, [isAuthenticated, router]);
-
   const fetchDemos = async () => {
     try {
       setIsLoading(true);
       const baseUrl =
         process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
-      const token = localStorage.getItem("authToken") || "";
-      const student_id = getStudentId();
-      if (!student_id) throw new Error("No student ID found");
 
-      const response = await fetch(`${baseUrl}/students/${student_id}/demos`, {
+      const response = await fetch(`${baseUrl}/students/me/demos`, {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -168,6 +143,28 @@ export default function DemosPage() {
     }
   };
 
+  const getStudentId = () => {
+    if (user && user.id) return user.id;
+    const storedUser =
+      typeof window !== "undefined" ? localStorage.getItem("user") : null;
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        if (parsed.id) return parsed.id;
+      } catch {}
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+
+    fetchDemos();
+  }, [isAuthenticated, router, fetchDemos]);
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -183,9 +180,9 @@ export default function DemosPage() {
     try {
       const baseUrl =
         process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
-      const token = localStorage.getItem("authToken") || "";
       const student_id = getStudentId();
-      if (!student_id) throw new Error("No student ID found");
+      if (!student_id)
+        throw new Error("No student ID found for this operation.");
 
       // Only send required fields and correct key names to backend
       const payload: { title: string; link: string; description?: string } = {
@@ -204,9 +201,9 @@ export default function DemosPage() {
       const response = await fetch(endpoint, {
         method,
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 
@@ -254,18 +251,18 @@ export default function DemosPage() {
     try {
       const baseUrl =
         process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
-      const token = localStorage.getItem("authToken") || "";
       const student_id = getStudentId();
-      if (!student_id) throw new Error("No student ID found");
+      if (!student_id)
+        throw new Error("No student ID found for this operation.");
 
       const response = await fetch(
         `${baseUrl}/students/${student_id}/demos/${id}`,
         {
           method: "DELETE",
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
+          credentials: "include",
         }
       );
 

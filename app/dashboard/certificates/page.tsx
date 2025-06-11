@@ -31,6 +31,7 @@ import { CertificateRead } from "@/lib/dashboard-types";
 import { MainNav } from "@/components/dashboard-navbar";
 import { Textarea } from "@/components/ui/textarea";
 import { CertificateCard } from "@/components/ui/certificate-card";
+import { makeUrl } from "@/lib/utils";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -70,47 +71,16 @@ export default function CertificatesPage() {
     },
   });
 
-  const getStudentId = () => {
-    if (user && user.id) return user.id;
-    const storedUser =
-      typeof window !== "undefined" ? localStorage.getItem("user") : null;
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser);
-        if (parsed.id) return parsed.id;
-      } catch {}
-    }
-    return null;
-  };
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/login");
-      return;
-    }
-
-    fetchCertificates();
-  }, [isAuthenticated, router]);
-
   const fetchCertificates = async () => {
     try {
       setIsLoading(true);
-      const baseUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
-      const token = localStorage.getItem("authToken") || "";
-      const student_id = getStudentId();
-      if (!student_id) throw new Error("No student ID found");
-
-      const response = await fetch(
-        `${baseUrl}/students/${student_id}/certificates`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await fetch(makeUrl("studentsCertificates"), {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
 
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
@@ -132,6 +102,28 @@ export default function CertificatesPage() {
     }
   };
 
+  const getStudentId = () => {
+    if (user && user.id) return user.id;
+    const storedUser =
+      typeof window !== "undefined" ? localStorage.getItem("user") : null;
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        if (parsed.id) return parsed.id;
+      } catch {}
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+
+    fetchCertificates();
+  }, [isAuthenticated, router, fetchCertificates]);
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -147,7 +139,6 @@ export default function CertificatesPage() {
     try {
       const baseUrl =
         process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
-      const token = localStorage.getItem("authToken") || "";
       const student_id = getStudentId();
       if (!student_id) throw new Error("No student ID found");
 
@@ -161,9 +152,9 @@ export default function CertificatesPage() {
       const response = await fetch(endpoint, {
         method,
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(values),
       });
 
@@ -218,7 +209,6 @@ export default function CertificatesPage() {
     try {
       const baseUrl =
         process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
-      const token = localStorage.getItem("authToken") || "";
       const student_id = getStudentId();
       if (!student_id) throw new Error("No student ID found");
 
@@ -227,9 +217,9 @@ export default function CertificatesPage() {
         {
           method: "DELETE",
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
+          credentials: "include",
         }
       );
 

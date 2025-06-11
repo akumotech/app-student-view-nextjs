@@ -1,23 +1,12 @@
-# Use official Node.js 20 image as the base
 FROM node:20-alpine
-
-# Set working directory
 WORKDIR /app
-
-# Copy package.json and package-lock.json (or yarn.lock) first for better caching
 COPY package*.json ./
-
-# Install dependencies
-RUN npm install --frozen-lockfile
-
-# Copy the rest of the application code
+RUN npm ci --frozen-lockfile
 COPY . .
-
-# Build the Next.js app
 RUN npm run build
-
-# Expose the port Next.js will run on
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+RUN chown -R nextjs:nodejs /app
+USER nextjs
 EXPOSE 3000
-
-# Start the Next.js app
-CMD ["npm", "start"]
+CMD ["npm", "run", "start"]
