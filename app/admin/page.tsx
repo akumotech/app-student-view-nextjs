@@ -125,6 +125,7 @@ function AdminDashboardContents() {
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
+      console.log("Admin page: Redirecting to login - user not authenticated");
       router.replace("/login?error=unauthenticated_admin");
       return;
     }
@@ -134,6 +135,10 @@ function AdminDashboardContents() {
       user?.role !== "admin" &&
       user?.role !== "instructor"
     ) {
+      console.log(
+        "Admin page: Access denied - insufficient permissions",
+        user?.role
+      );
       toast.error("You are not authorized to view this page.");
       router.replace("/dashboard?error=unauthorized_admin_page");
     }
@@ -187,11 +192,10 @@ function AdminDashboardContents() {
         page: currentPage.toString(),
         page_size: pageSize.toString(),
       });
-
       if (searchTerm) params.append("search", searchTerm);
       if (roleFilter !== "all") params.append("role", roleFilter);
-
-      const response = await fetch(`${makeUrl("adminUsers")}?${params}`, {
+      const url = makeUrl("adminUsers") + "?" + params.toString();
+      const response = await fetch(url, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

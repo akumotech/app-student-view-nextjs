@@ -6,6 +6,7 @@ import {
   useState,
   useEffect,
   ReactNode,
+  useRef,
 } from "react";
 import { makeUrl } from "./utils";
 
@@ -38,39 +39,127 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialCheckComplete, setInitialCheckComplete] = useState(false);
+  const fetchInProgress = useRef(false);
 
   useEffect(() => {
-    fetchUserOnMount();
-  }, []);
+    if (!initialCheckComplete && !fetchInProgress.current) {
+      fetchUserOnMount();
+    }
+  }, [initialCheckComplete]);
 
-  const fetchUserOnMount = async () => {
+  const fetchUserOnMount = async (retryCount = 0) => {
+    // Prevent duplicate calls
+    if (fetchInProgress.current) {
+      console.log("fetchUserOnMount already in progress, skipping...");
+      return;
+    }
+
+    fetchInProgress.current = true;
     setLoading(true);
+
     try {
-      const baseUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000/api";
-      console.log(baseUrl);
-      const response = await fetch(`${baseUrl}/users/me`, {
+      const url = makeUrl("usersMe");
+      console.log(`Fetching user from: ${url} (attempt ${retryCount + 1})`);
+
+      const response = await fetch(url, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include", // Uncomment if backend is on a different domain and needs cookies
+        credentials: "include",
       });
+
+      console.log("User fetch response status:", response.status);
 
       if (response.ok) {
         const userData = await response.json();
+        console.log("User data fetched successfully:", userData);
         setUser(userData);
         setIsAuthenticated(true);
-      } else {
+      } else if (response.status === 401 || response.status === 403) {
+        console.log("User not authenticated (401/403)");
         setUser(null);
         setIsAuthenticated(false);
+      } else if (response.status === 307) {
+        console.log("Received 307 redirect, retrying...");
+        // Handle redirect by following it
+        const location = response.headers.get("location");
+        if (location) {
+          const redirectResponse = await fetch(location, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+          });
+
+          if (redirectResponse.ok) {
+            const userData = await redirectResponse.json();
+            console.log(
+              "User data fetched successfully after redirect:",
+              userData
+            );
+            setUser(userData);
+            setIsAuthenticated(true);
+          } else {
+            console.log(
+              "Redirect failed with status:",
+              redirectResponse.status
+            );
+            if (
+              redirectResponse.status === 401 ||
+              redirectResponse.status === 403
+            ) {
+              setUser(null);
+              setIsAuthenticated(false);
+            }
+          }
+        } else {
+          console.log("No location header in 307 response");
+          // Retry once more for 307 without location
+          if (retryCount < 1) {
+            console.log("Retrying 307 response...");
+            fetchInProgress.current = false;
+            setTimeout(() => fetchUserOnMount(retryCount + 1), 1000);
+            return;
+          } else {
+            setUser(null);
+            setIsAuthenticated(false);
+          }
+        }
+      } else {
+        console.log(
+          "User fetch failed with unexpected status:",
+          response.status
+        );
+        // For other status codes, retry once before giving up
+        if (retryCount < 1) {
+          console.log(`Retrying due to status ${response.status}...`);
+          fetchInProgress.current = false;
+          setTimeout(() => fetchUserOnMount(retryCount + 1), 1000);
+          return;
+        } else {
+          console.log("Max retries reached, maintaining current auth state");
+        }
       }
     } catch (error) {
       console.error("Error fetching user on mount:", error);
-      setUser(null);
-      setIsAuthenticated(false);
+      // Retry once on network error
+      if (retryCount < 1) {
+        console.log("Retrying due to network error...");
+        fetchInProgress.current = false;
+        setTimeout(() => fetchUserOnMount(retryCount + 1), 1000);
+        return;
+      } else {
+        console.log(
+          "Network error after retry - maintaining current auth state"
+        );
+      }
     } finally {
       setLoading(false);
+      setInitialCheckComplete(true);
+      fetchInProgress.current = false;
     }
   };
 
@@ -80,16 +169,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ): Promise<LoginResponse> => {
     setLoading(true);
     try {
-      const url = makeUrl("login").toString();
+      const url = makeUrl("login");
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, action: "login" }), // Assuming 'action' is needed by backend
-        credentials: "include", // Uncomment if backend is on a different domain
+        body: JSON.stringify({ email, password, action: "login" }),
+        credentials: "include",
       });
 
       if (!response.ok) {
-        // Try to parse error, provide fallback
         const errorData = await response
           .json()
           .catch(() => ({ message: "Login request failed" }));
@@ -98,24 +186,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           message:
             errorData.message || `Login failed with status: ${response.status}`,
           error: errorData.detail || errorData.error || "Unknown login error",
-          // data is implicitly undefined here, aligning with LoginResponse
         };
       }
 
       const data = (await response.json()) as LoginResponse;
 
-      // After successful login, backend should have set HTTP-only cookie.
-      // Now, fetch user data to confirm and populate state.
-      // Or, if your backend login response includes user data, you can use that directly.
       if (data.success && data.data?.user) {
         setUser(data.data.user);
         setIsAuthenticated(true);
-        setLoading(false); // User data received, loading complete
+        setLoading(false);
       } else if (data.success) {
-        // If login was successful but no user data in response, fetch it.
-        await fetchUserOnMount(); // This will set user, isAuthenticated, and loading states
+        await fetchUserOnMount();
       } else {
-        // This case implies response.ok was true, but data.success from payload is false.
         setIsAuthenticated(false);
         setUser(null);
         setLoading(false);
@@ -124,7 +206,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           message:
             data.message || "Login succeeded but payload indicates failure.",
           error: data.error,
-          // data is implicitly undefined here, aligning with LoginResponse
         };
       }
       return data;
@@ -140,10 +221,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           error instanceof Error
             ? error.message
             : "Client-side login exception",
-        // data is implicitly undefined here, aligning with LoginResponse
       };
     }
-    // setLoading(false) is handled in all branches or by fetchUserOnMount
   };
 
   const signup = async (
@@ -151,13 +230,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string,
     name: string
   ): Promise<SignUpResponse> => {
-    // setLoading(true); // Optional: set loading state for signup
     try {
-      const url = makeUrl("signup").toString();
+      const url = makeUrl("signup");
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, name, action: "signup" }), // Assuming 'action' is needed
+        body: JSON.stringify({ email, password, name, action: "signup" }),
         credentials: "include",
       });
 
@@ -171,11 +249,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             errorData.message ||
             `Signup failed with status: ${response.status}`,
           error: errorData.detail || errorData.error || "Unknown signup error",
-          data: null, // For SignUpResponse, data can be null on error, as T is null
+          data: null,
         };
       }
-      // Assuming signup response is primarily for status, not immediate login.
-      // If backend sends { success: true, data: null }, it will be cast to SignUpResponse.
       return (await response.json()) as SignUpResponse;
     } catch (error) {
       console.error("Signup error:", error);
@@ -186,20 +262,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           error instanceof Error
             ? error.message
             : "Client-side signup exception",
-        data: null, // For SignUpResponse, data can be null on error
+        data: null,
       };
-    } finally {
-      // setLoading(false); // Optional: clear loading state for signup
     }
   };
 
   const logout = async () => {
     setLoading(true);
     try {
-      const url = makeUrl("logout").toString();
+      const url = makeUrl("logout");
       await fetch(url, {
-        method: "POST", // Or GET, as per your backend
-        credentials: "include", // Important to send cookies for backend to clear
+        method: "POST",
+        credentials: "include",
       });
     } catch (error) {
       console.error(
@@ -207,11 +281,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         error
       );
     } finally {
-      // Always clear client-side session state
       setIsAuthenticated(false);
       setUser(null);
       setLoading(false);
-      // HTTP-only cookie is managed by the browser based on backend response.
     }
   };
 
@@ -240,29 +312,19 @@ export function useAuth() {
   return context;
 }
 
-// Types remain largely the same, but LoginResponse payload might not need 'token'
-// if it was only for localStorage. User type already had 'password' removed.
-
-// Define a generic Backend API Response structure based on openapi.json
 type BackendAPIResponse<T = unknown> = {
-  // Default T to unknown, data can be T or undefined
-  success: boolean; // Matches backend openapi.json
+  success: boolean;
   message?: string | null;
   data?: T;
-  error?: string | string[] | null; // Allow for varied error structures
+  error?: string | string[] | null;
 };
 
-// Specific type for the data field in a successful Login response
 type LoginSuccessData = {
   user: User;
-  // token field is removed as it's an HTTP-only cookie now
 };
 
-// For SignUp, the data type is null (or undefined on error)
-// meaning a successful signup might return { success: true, data: null } or just { success: true }
 type SignUpResponse = BackendAPIResponse<null>;
 
-// For Login, data is LoginSuccessData (or undefined on error)
 type LoginResponse = BackendAPIResponse<LoginSuccessData>;
 
 export type {

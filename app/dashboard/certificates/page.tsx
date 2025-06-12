@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,7 @@ import { CertificateRead } from "@/lib/dashboard-types";
 import { MainNav } from "@/components/dashboard-navbar";
 import { Textarea } from "@/components/ui/textarea";
 import { CertificateCard } from "@/components/ui/certificate-card";
-import { makeUrl } from "@/lib/utils";
+import { makeUrl, makeUrlWithParams } from "@/lib/utils";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -57,6 +57,7 @@ export default function CertificatesPage() {
   const [currentCertificateId, setCurrentCertificateId] = useState<
     number | null
   >(null);
+  const [isNotStudent, setIsNotStudent] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -71,9 +72,10 @@ export default function CertificatesPage() {
     },
   });
 
-  const fetchCertificates = async () => {
+  const fetchCertificates = useCallback(async () => {
     try {
       setIsLoading(true);
+      setIsNotStudent(false);
       const response = await fetch(makeUrl("studentsCertificates"), {
         method: "GET",
         headers: {
@@ -83,8 +85,12 @@ export default function CertificatesPage() {
       });
 
       if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
+        if (response.status === 401) {
           logout();
+          return;
+        } else if (response.status === 403) {
+          setIsNotStudent(true);
+          setCertificates([]);
           return;
         }
         throw new Error(
@@ -100,7 +106,7 @@ export default function CertificatesPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [logout]);
 
   const getStudentId = () => {
     if (user && user.id) return user.id;
@@ -137,18 +143,26 @@ export default function CertificatesPage() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const baseUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
       const student_id = getStudentId();
       if (!student_id) throw new Error("No student ID found");
-
-      const endpoint =
-        isEditMode && currentCertificateId
-          ? `${baseUrl}/students/${student_id}/certificates/${currentCertificateId}`
-          : `${baseUrl}/students/${student_id}/certificates`;
-
+      let endpoint = "";
+      if (isEditMode && currentCertificateId) {
+        endpoint = makeUrlWithParams(
+          "/api/students/{student_id}/certificates/{certificate_id}",
+          {
+            student_id,
+            certificate_id: currentCertificateId,
+          }
+        );
+      } else {
+        endpoint = makeUrlWithParams(
+          "/api/students/{student_id}/certificates",
+          {
+            student_id,
+          }
+        );
+      }
       const method = isEditMode ? "PUT" : "POST";
-
       const response = await fetch(endpoint, {
         method,
         headers: {
@@ -207,13 +221,17 @@ export default function CertificatesPage() {
     }
 
     try {
-      const baseUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
       const student_id = getStudentId();
       if (!student_id) throw new Error("No student ID found");
 
       const response = await fetch(
-        `${baseUrl}/students/${student_id}/certificates/${id}`,
+        makeUrlWithParams(
+          "/api/students/{student_id}/certificates/{certificate_id}",
+          {
+            student_id,
+            certificate_id: id,
+          }
+        ),
         {
           method: "DELETE",
           headers: {
@@ -421,6 +439,20 @@ export default function CertificatesPage() {
 
         {isLoading ? (
           <div className="text-center py-10">Loading certificates...</div>
+        ) : isNotStudent ? (
+          <div className="text-center py-10 bg-muted rounded-lg">
+            <Award className="mx-auto h-12 w-12 text-muted-foreground mb-3" />
+            <h3 className="text-lg font-medium">
+              You are not registered as a student.
+            </h3>
+            <p className="text-muted-foreground mt-2 mb-4">
+              Please contact your instructor to register as a student.
+            </p>
+            <Button onClick={handleLogout}>
+              <Plus className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
+          </div>
         ) : certificates.length === 0 ? (
           <div className="text-center py-10 bg-muted rounded-lg">
             <Award className="mx-auto h-12 w-12 text-muted-foreground mb-3" />

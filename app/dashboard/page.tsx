@@ -8,11 +8,13 @@ import { toast } from "sonner";
 import { Suspense } from "react";
 import Dashboard from "./dashboard";
 import { MainNav } from "@/components/dashboard-navbar";
+import { makeUrl } from "@/lib/utils";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { isAuthenticated, logout, user, loading: authLoading } = useAuth();
   const [hasWakaTimeAuth, setHasWakaTimeAuth] = useState<boolean>(false);
+  const [isStudent, setIsStudent] = useState<boolean | null>(null);
 
   // State for WakaTime usage data
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -25,7 +27,9 @@ export default function DashboardPage() {
   const [isLoadingUsageData, setIsLoadingUsageData] = useState<boolean>(false);
 
   useEffect(() => {
+    // Only redirect if auth loading is complete and user is not authenticated
     if (!authLoading && !isAuthenticated) {
+      console.log("Redirecting to login - user not authenticated");
       router.push("/login");
     }
   }, [isAuthenticated, authLoading, router]);
@@ -36,10 +40,46 @@ export default function DashboardPage() {
     }
   }, [user]);
 
+  // Check if user is registered as a student
+  useEffect(() => {
+    const checkStudentStatus = async () => {
+      if (!isAuthenticated || !user) return;
+
+      // First check if user has student role
+      if (user.role === "student") {
+        setIsStudent(true);
+        return;
+      }
+
+      // If user doesn't have student role, check if they can access student endpoints
+      try {
+        const response = await fetch(makeUrl("studentsCertificates"), {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+
+        if (response.status === 403) {
+          setIsStudent(false);
+        } else if (response.ok) {
+          setIsStudent(true);
+        }
+      } catch (error) {
+        console.error("Error checking student status:", error);
+      }
+    };
+
+    if (isAuthenticated && user) {
+      checkStudentStatus();
+    }
+  }, [isAuthenticated, user]);
+
   // useEffect to fetch WakaTime usage data
   useEffect(() => {
     const fetchWakaTimeUsage = async () => {
-      if (!isAuthenticated || !hasWakaTimeAuth || !user?.email) {
+      if (!isAuthenticated || !hasWakaTimeAuth || !user?.email || !isStudent) {
         setDashboardUsageData(null);
         setDashboardUsageError(null);
         return;
@@ -50,17 +90,13 @@ export default function DashboardPage() {
       setDashboardUsageData(null);
 
       try {
-        const baseUrl =
-          process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
-        const userEmail = user.email;
-
-        const response = await fetch(`${baseUrl}/wakatime/usage`, {
+        const response = await fetch(makeUrl("wakatimeUsage"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           credentials: "include",
-          body: JSON.stringify({ email: userEmail }),
+          body: JSON.stringify({ email: user.email }),
         });
 
         if (response.status === 404) {
@@ -84,13 +120,25 @@ export default function DashboardPage() {
             const errorData = await response.json();
             errorDetail = errorData.detail || errorData.message || errorDetail;
           } catch (_parseError) {
-            console.warn("JSON parsing error ignored:", _parseError); // Optionally log if needed for debugging
+            console.warn("JSON parsing error ignored:", _parseError);
           }
           throw new Error(errorDetail);
         }
 
         const result = await response.json();
-        setDashboardUsageData(result);
+        console.log("WakaTime API response:", result);
+        console.log("Result type:", typeof result);
+        console.log("Result keys:", Object.keys(result || {}));
+
+        // Handle nested data structure - backend returns { data: actualDashboardData }
+        const dashboardData = result.data || result;
+        console.log("Dashboard data after extraction:", dashboardData);
+        console.log(
+          "Dashboard data.data is array:",
+          Array.isArray(dashboardData.data)
+        );
+
+        setDashboardUsageData(dashboardData);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         console.error("Error fetching WakaTime usage data:", error);
@@ -103,10 +151,10 @@ export default function DashboardPage() {
       }
     };
 
-    if (isAuthenticated && hasWakaTimeAuth) {
+    if (isAuthenticated && hasWakaTimeAuth && isStudent) {
       fetchWakaTimeUsage();
     }
-  }, [isAuthenticated, hasWakaTimeAuth, user, logout]);
+  }, [isAuthenticated, hasWakaTimeAuth, user, logout, isStudent]);
 
   const handleLogout = async () => {
     try {
@@ -125,19 +173,16 @@ export default function DashboardPage() {
       return;
     }
     try {
-      const baseUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
-
-      const wakatimeResponse = await fetch(
-        `${baseUrl}/wakatime/authorize?email=${encodeURIComponent(user.email)}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
+      const url =
+        makeUrl("wakatimeAuthorize") +
+        `?email=${encodeURIComponent(user.email)}`;
+      const wakatimeResponse = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
 
       if (!wakatimeResponse.ok) {
         let errorDetail = "Failed to get WakaTime authorization URL";
@@ -145,20 +190,23 @@ export default function DashboardPage() {
           const error = await wakatimeResponse.json();
           errorDetail = error.detail || error.message || errorDetail;
         } catch (_e) {
-          console.warn("JSON parsing error ignored for WakaTime auth URL:", _e); // Optionally log
+          console.warn("JSON parsing error ignored for WakaTime auth URL:", _e);
         }
         throw new Error(errorDetail);
       }
 
       const responseData = await wakatimeResponse.json();
-      if (typeof responseData.redirect_url === "string") {
+      if (responseData?.data?.authorization_url) {
+        window.location.href = responseData.data.authorization_url;
+      } else if (typeof responseData.redirect_url === "string") {
         window.location.href = responseData.redirect_url;
       } else if (typeof responseData === "string") {
         window.location.href = responseData;
       } else {
         throw new Error("Invalid WakaTime authorization URL received.");
       }
-    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
       console.error("Error initiating WakaTime authorization:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to connect to WakaTime"
@@ -206,7 +254,20 @@ export default function DashboardPage() {
           </div>
         </header>
         <main className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-          {!hasWakaTimeAuth && isAuthenticated && (
+          {isStudent === false && (
+            <div
+              className="p-4 mb-4 text-sm text-orange-700 bg-orange-100 rounded-lg dark:bg-gray-800 dark:text-orange-400"
+              role="alert"
+            >
+              <span className="font-medium">
+                Student Registration Required:
+              </span>{" "}
+              You need to be registered as a student to access certificates and
+              demos. Please contact your instructor for a registration key.
+            </div>
+          )}
+
+          {!hasWakaTimeAuth && isAuthenticated && isStudent && (
             <p
               className="p-4 mb-4 text-sm text-blue-700 bg-blue-100 rounded-lg dark:bg-gray-800 dark:text-blue-400"
               role="alert"
@@ -228,11 +289,13 @@ export default function DashboardPage() {
           )}
 
           {hasWakaTimeAuth &&
+            isStudent &&
             !isLoadingUsageData &&
             !dashboardUsageError &&
             dashboardUsageData && <Dashboard data={dashboardUsageData} />}
 
           {hasWakaTimeAuth &&
+            isStudent &&
             !isLoadingUsageData &&
             !dashboardUsageError &&
             !dashboardUsageData && (
@@ -241,6 +304,21 @@ export default function DashboardPage() {
                 none available for the selected period.
               </p>
             )}
+
+          {isStudent === false && (
+            <div className="text-center py-10 bg-muted rounded-lg">
+              <h3 className="text-lg font-medium mb-2">
+                Student Registration Required
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                To access student features like certificates and demos, you need
+                to be registered as a student.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Please contact your instructor to get a registration key.
+              </p>
+            </div>
+          )}
         </main>
       </div>
     </Suspense>

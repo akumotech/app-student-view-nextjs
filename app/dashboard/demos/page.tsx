@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -55,6 +55,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
+import { makeUrl, makeUrlWithParams } from "@/lib/utils";
 
 const formSchema = z.object({
   title: z.string().min(2, {
@@ -98,6 +99,7 @@ export default function DemosPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentDemoId, setCurrentDemoId] = useState<number | null>(null);
+  const [isNotStudent, setIsNotStudent] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -111,13 +113,11 @@ export default function DemosPage() {
     },
   });
 
-  const fetchDemos = async () => {
+  const fetchDemos = useCallback(async () => {
     try {
       setIsLoading(true);
-      const baseUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
-
-      const response = await fetch(`${baseUrl}/students/me/demos`, {
+      setIsNotStudent(false);
+      const response = await fetch(makeUrl("studentsDemos"), {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -126,8 +126,12 @@ export default function DemosPage() {
       });
 
       if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
+        if (response.status === 401) {
           logout();
+          return;
+        } else if (response.status === 403) {
+          setIsNotStudent(true);
+          setDemos([]);
           return;
         }
         throw new Error(`Failed to fetch demos. Status: ${response.status}`);
@@ -141,7 +145,7 @@ export default function DemosPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [logout]);
 
   const getStudentId = () => {
     if (user && user.id) return user.id;
@@ -178,26 +182,29 @@ export default function DemosPage() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const baseUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
       const student_id = getStudentId();
       if (!student_id)
         throw new Error("No student ID found for this operation.");
-
-      // Only send required fields and correct key names to backend
       const payload: { title: string; link: string; description?: string } = {
         title: values.title,
         link: values.demo_url,
       };
       if (values.description) payload.description = values.description;
-
-      const endpoint =
-        isEditMode && currentDemoId
-          ? `${baseUrl}/students/${student_id}/demos/${currentDemoId}`
-          : `${baseUrl}/students/${student_id}/demos`;
-
+      let endpoint = "";
+      if (isEditMode && currentDemoId) {
+        endpoint = makeUrlWithParams(
+          "/api/students/{student_id}/demos/{demo_id}",
+          {
+            student_id,
+            demo_id: currentDemoId,
+          }
+        );
+      } else {
+        endpoint = makeUrlWithParams("/api/students/{student_id}/demos", {
+          student_id,
+        });
+      }
       const method = isEditMode ? "PUT" : "POST";
-
       const response = await fetch(endpoint, {
         method,
         headers: {
@@ -249,14 +256,14 @@ export default function DemosPage() {
     }
 
     try {
-      const baseUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
       const student_id = getStudentId();
       if (!student_id)
         throw new Error("No student ID found for this operation.");
-
       const response = await fetch(
-        `${baseUrl}/students/${student_id}/demos/${id}`,
+        makeUrlWithParams("/api/students/{student_id}/demos/{demo_id}", {
+          student_id,
+          demo_id: id,
+        }),
         {
           method: "DELETE",
           headers: {
@@ -461,6 +468,15 @@ export default function DemosPage() {
 
         {isLoading ? (
           <div className="text-center py-10">Loading demos...</div>
+        ) : isNotStudent ? (
+          <div className="text-center py-10 bg-muted rounded-lg">
+            <h3 className="text-lg font-medium">
+              You are not registered as a student.
+            </h3>
+            <p className="text-muted-foreground mt-2 mb-4">
+              Please contact your instructor to register as a student.
+            </p>
+          </div>
         ) : demos.length === 0 ? (
           <div className="text-center py-10 bg-muted rounded-lg">
             <Play className="mx-auto h-12 w-12 text-muted-foreground mb-3" />

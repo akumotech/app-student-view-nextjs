@@ -35,6 +35,24 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ data }: DashboardProps) {
+  // Safety check to prevent errors
+  if (!data || !data.data || !Array.isArray(data.data)) {
+    console.error("Invalid data structure received:", data);
+    return (
+      <div className="flex w-full flex-col bg-muted/40">
+        <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
+          <div className="text-center py-10">
+            <h3 className="text-lg font-medium mb-2">Data Loading Error</h3>
+            <p className="text-muted-foreground">
+              The dashboard data structure is invalid. Please try refreshing the
+              page.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Find the day with the most coding activity
   const mostActiveDay = data.data.reduce(
     (max, day) =>
