@@ -14,6 +14,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const { isAuthenticated, logout, user, loading: authLoading } = useAuth();
   const [hasWakaTimeAuth, setHasWakaTimeAuth] = useState<boolean>(false);
+  const [isStudent, setIsStudent] = useState<boolean | null>(null);
 
   // State for WakaTime usage data
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -39,10 +40,46 @@ export default function DashboardPage() {
     }
   }, [user]);
 
+  // Check if user is registered as a student
+  useEffect(() => {
+    const checkStudentStatus = async () => {
+      if (!isAuthenticated || !user) return;
+
+      // First check if user has student role
+      if (user.role === "student") {
+        setIsStudent(true);
+        return;
+      }
+
+      // If user doesn't have student role, check if they can access student endpoints
+      try {
+        const response = await fetch(makeUrl("studentsCertificates"), {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+
+        if (response.status === 403) {
+          setIsStudent(false);
+        } else if (response.ok) {
+          setIsStudent(true);
+        }
+      } catch (error) {
+        console.error("Error checking student status:", error);
+      }
+    };
+
+    if (isAuthenticated && user) {
+      checkStudentStatus();
+    }
+  }, [isAuthenticated, user]);
+
   // useEffect to fetch WakaTime usage data
   useEffect(() => {
     const fetchWakaTimeUsage = async () => {
-      if (!isAuthenticated || !hasWakaTimeAuth || !user?.email) {
+      if (!isAuthenticated || !hasWakaTimeAuth || !user?.email || !isStudent) {
         setDashboardUsageData(null);
         setDashboardUsageError(null);
         return;
@@ -102,10 +139,10 @@ export default function DashboardPage() {
       }
     };
 
-    if (isAuthenticated && hasWakaTimeAuth) {
+    if (isAuthenticated && hasWakaTimeAuth && isStudent) {
       fetchWakaTimeUsage();
     }
-  }, [isAuthenticated, hasWakaTimeAuth, user, logout]);
+  }, [isAuthenticated, hasWakaTimeAuth, user, logout, isStudent]);
 
   const handleLogout = async () => {
     try {
@@ -205,7 +242,20 @@ export default function DashboardPage() {
           </div>
         </header>
         <main className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-          {!hasWakaTimeAuth && isAuthenticated && (
+          {isStudent === false && (
+            <div
+              className="p-4 mb-4 text-sm text-orange-700 bg-orange-100 rounded-lg dark:bg-gray-800 dark:text-orange-400"
+              role="alert"
+            >
+              <span className="font-medium">
+                Student Registration Required:
+              </span>{" "}
+              You need to be registered as a student to access certificates and
+              demos. Please contact your instructor for a registration key.
+            </div>
+          )}
+
+          {!hasWakaTimeAuth && isAuthenticated && isStudent && (
             <p
               className="p-4 mb-4 text-sm text-blue-700 bg-blue-100 rounded-lg dark:bg-gray-800 dark:text-blue-400"
               role="alert"
@@ -227,11 +277,13 @@ export default function DashboardPage() {
           )}
 
           {hasWakaTimeAuth &&
+            isStudent &&
             !isLoadingUsageData &&
             !dashboardUsageError &&
             dashboardUsageData && <Dashboard data={dashboardUsageData} />}
 
           {hasWakaTimeAuth &&
+            isStudent &&
             !isLoadingUsageData &&
             !dashboardUsageError &&
             !dashboardUsageData && (
@@ -240,6 +292,21 @@ export default function DashboardPage() {
                 none available for the selected period.
               </p>
             )}
+
+          {isStudent === false && (
+            <div className="text-center py-10 bg-muted rounded-lg">
+              <h3 className="text-lg font-medium mb-2">
+                Student Registration Required
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                To access student features like certificates and demos, you need
+                to be registered as a student.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Please contact your instructor to get a registration key.
+              </p>
+            </div>
+          )}
         </main>
       </div>
     </Suspense>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -99,6 +99,7 @@ export default function DemosPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentDemoId, setCurrentDemoId] = useState<number | null>(null);
+  const [isNotStudent, setIsNotStudent] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -112,9 +113,10 @@ export default function DemosPage() {
     },
   });
 
-  const fetchDemos = async () => {
+  const fetchDemos = useCallback(async () => {
     try {
       setIsLoading(true);
+      setIsNotStudent(false);
       const response = await fetch(makeUrl("studentsDemos"), {
         method: "GET",
         headers: {
@@ -124,8 +126,12 @@ export default function DemosPage() {
       });
 
       if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
+        if (response.status === 401) {
           logout();
+          return;
+        } else if (response.status === 403) {
+          setIsNotStudent(true);
+          setDemos([]);
           return;
         }
         throw new Error(`Failed to fetch demos. Status: ${response.status}`);
@@ -139,7 +145,7 @@ export default function DemosPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [logout]);
 
   const getStudentId = () => {
     if (user && user.id) return user.id;
@@ -462,6 +468,15 @@ export default function DemosPage() {
 
         {isLoading ? (
           <div className="text-center py-10">Loading demos...</div>
+        ) : isNotStudent ? (
+          <div className="text-center py-10 bg-muted rounded-lg">
+            <h3 className="text-lg font-medium">
+              You are not registered as a student.
+            </h3>
+            <p className="text-muted-foreground mt-2 mb-4">
+              Please contact your instructor to register as a student.
+            </p>
+          </div>
         ) : demos.length === 0 ? (
           <div className="text-center py-10 bg-muted rounded-lg">
             <Play className="mx-auto h-12 w-12 text-muted-foreground mb-3" />
