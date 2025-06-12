@@ -126,7 +126,19 @@ export default function DashboardPage() {
         }
 
         const result = await response.json();
-        setDashboardUsageData(result);
+        console.log("WakaTime API response:", result);
+        console.log("Result type:", typeof result);
+        console.log("Result keys:", Object.keys(result || {}));
+
+        // Handle nested data structure - backend returns { data: actualDashboardData }
+        const dashboardData = result.data || result;
+        console.log("Dashboard data after extraction:", dashboardData);
+        console.log(
+          "Dashboard data.data is array:",
+          Array.isArray(dashboardData.data)
+        );
+
+        setDashboardUsageData(dashboardData);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         console.error("Error fetching WakaTime usage data:", error);
