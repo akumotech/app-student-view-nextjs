@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
@@ -11,18 +11,40 @@ const CallbackPage = () => {
   const searchParams = useSearchParams();
   const { fetchUserOnMount } = useAuth();
   const [isProcessing, setIsProcessing] = useState(true);
+  const hasProcessed = useRef(false);
+  const currentCode = useRef<string | null>(null);
 
   useEffect(() => {
     const handleCallback = async () => {
       const code = searchParams.get("code");
       const state = searchParams.get("state");
 
-      if (!code) {
-        console.error("No code found in query params for OAuth callback.");
-        toast.error("WakaTime connection failed: Missing authorization code.");
-        router.replace("/dashboard?error=wakatime_oauth_failed_no_code");
+      // Prevent duplicate processing
+      if (hasProcessed.current || !code) {
+        if (!code) {
+          console.error("No code found in query params for OAuth callback.");
+          toast.error(
+            "WakaTime connection failed: Missing authorization code."
+          );
+          router.replace("/dashboard?error=wakatime_oauth_failed_no_code");
+        }
         return;
       }
+
+      // Check if we're processing the same code again
+      if (currentCode.current === code) {
+        console.log("Duplicate callback request detected, ignoring...");
+        return;
+      }
+
+      // Mark as processing and store the current code
+      hasProcessed.current = true;
+      currentCode.current = code;
+
+      console.log(
+        "Processing WakaTime callback with code:",
+        code.substring(0, 10) + "..."
+      );
 
       try {
         // First, handle the WakaTime callback
@@ -52,6 +74,8 @@ const CallbackPage = () => {
           router.replace(`/dashboard?error=wakatime_oauth_backend_failed`);
           return;
         }
+
+        console.log("WakaTime callback successful, refreshing user state...");
 
         // After successful WakaTime callback, refresh the user's authentication state
         try {
