@@ -147,7 +147,9 @@ export default function DashboardPage() {
       }
 
       const responseData = await wakatimeResponse.json();
-      if (typeof responseData.redirect_url === "string") {
+      if (responseData?.data?.authorization_url) {
+        window.location.href = responseData.data.authorization_url;
+      } else if (typeof responseData.redirect_url === "string") {
         window.location.href = responseData.redirect_url;
       } else if (typeof responseData === "string") {
         window.location.href = responseData;
