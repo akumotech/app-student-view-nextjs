@@ -31,7 +31,7 @@ import { CertificateRead } from "@/lib/dashboard-types";
 import { MainNav } from "@/components/dashboard-navbar";
 import { Textarea } from "@/components/ui/textarea";
 import { CertificateCard } from "@/components/ui/certificate-card";
-import { makeUrl } from "@/lib/utils";
+import { makeUrl, makeUrlWithParams } from "@/lib/utils";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -137,18 +137,26 @@ export default function CertificatesPage() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const baseUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
       const student_id = getStudentId();
       if (!student_id) throw new Error("No student ID found");
-
-      const endpoint =
-        isEditMode && currentCertificateId
-          ? `${baseUrl}/students/${student_id}/certificates/${currentCertificateId}`
-          : `${baseUrl}/students/${student_id}/certificates`;
-
+      let endpoint = "";
+      if (isEditMode && currentCertificateId) {
+        endpoint = makeUrlWithParams(
+          "/api/students/{student_id}/certificates/{certificate_id}",
+          {
+            student_id,
+            certificate_id: currentCertificateId,
+          }
+        );
+      } else {
+        endpoint = makeUrlWithParams(
+          "/api/students/{student_id}/certificates",
+          {
+            student_id,
+          }
+        );
+      }
       const method = isEditMode ? "PUT" : "POST";
-
       const response = await fetch(endpoint, {
         method,
         headers: {
@@ -207,13 +215,17 @@ export default function CertificatesPage() {
     }
 
     try {
-      const baseUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
       const student_id = getStudentId();
       if (!student_id) throw new Error("No student ID found");
 
       const response = await fetch(
-        `${baseUrl}/students/${student_id}/certificates/${id}`,
+        makeUrlWithParams(
+          "/api/students/{student_id}/certificates/{certificate_id}",
+          {
+            student_id,
+            certificate_id: id,
+          }
+        ),
         {
           method: "DELETE",
           headers: {

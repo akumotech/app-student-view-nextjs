@@ -55,6 +55,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
+import { makeUrl, makeUrlWithParams } from "@/lib/utils";
 
 const formSchema = z.object({
   title: z.string().min(2, {
@@ -114,10 +115,7 @@ export default function DemosPage() {
   const fetchDemos = async () => {
     try {
       setIsLoading(true);
-      const baseUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
-
-      const response = await fetch(`${baseUrl}/students/me/demos`, {
+      const response = await fetch(makeUrl("studentsDemos"), {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -178,26 +176,29 @@ export default function DemosPage() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const baseUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
       const student_id = getStudentId();
       if (!student_id)
         throw new Error("No student ID found for this operation.");
-
-      // Only send required fields and correct key names to backend
       const payload: { title: string; link: string; description?: string } = {
         title: values.title,
         link: values.demo_url,
       };
       if (values.description) payload.description = values.description;
-
-      const endpoint =
-        isEditMode && currentDemoId
-          ? `${baseUrl}/students/${student_id}/demos/${currentDemoId}`
-          : `${baseUrl}/students/${student_id}/demos`;
-
+      let endpoint = "";
+      if (isEditMode && currentDemoId) {
+        endpoint = makeUrlWithParams(
+          "/api/students/{student_id}/demos/{demo_id}",
+          {
+            student_id,
+            demo_id: currentDemoId,
+          }
+        );
+      } else {
+        endpoint = makeUrlWithParams("/api/students/{student_id}/demos", {
+          student_id,
+        });
+      }
       const method = isEditMode ? "PUT" : "POST";
-
       const response = await fetch(endpoint, {
         method,
         headers: {
@@ -249,14 +250,14 @@ export default function DemosPage() {
     }
 
     try {
-      const baseUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
       const student_id = getStudentId();
       if (!student_id)
         throw new Error("No student ID found for this operation.");
-
       const response = await fetch(
-        `${baseUrl}/students/${student_id}/demos/${id}`,
+        makeUrlWithParams("/api/students/{student_id}/demos/{demo_id}", {
+          student_id,
+          demo_id: id,
+        }),
         {
           method: "DELETE",
           headers: {

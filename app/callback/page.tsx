@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
+import { makeUrl } from "@/lib/utils";
 
 const CallbackPage = () => {
   const router = useRouter();
@@ -34,20 +35,17 @@ const CallbackPage = () => {
 
     const handleOAuthCallback = async () => {
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/wakatime/callback`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify({
-              code,
-              state,
-            }),
-          }
-        );
+        const response = await fetch(makeUrl("wakatimeCallback"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            code,
+            state,
+          }),
+        });
 
         if (!response.ok) {
           let errorMessage = "WakaTime connection failed. Please try again.";

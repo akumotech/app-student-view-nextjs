@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Suspense } from "react";
 import Dashboard from "./dashboard";
 import { MainNav } from "@/components/dashboard-navbar";
+import { makeUrl } from "@/lib/utils";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -25,7 +26,9 @@ export default function DashboardPage() {
   const [isLoadingUsageData, setIsLoadingUsageData] = useState<boolean>(false);
 
   useEffect(() => {
+    // Only redirect if auth loading is complete and user is not authenticated
     if (!authLoading && !isAuthenticated) {
+      console.log("Redirecting to login - user not authenticated");
       router.push("/login");
     }
   }, [isAuthenticated, authLoading, router]);
@@ -50,17 +53,13 @@ export default function DashboardPage() {
       setDashboardUsageData(null);
 
       try {
-        const baseUrl =
-          process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
-        const userEmail = user.email;
-
-        const response = await fetch(`${baseUrl}/wakatime/usage`, {
+        const response = await fetch(makeUrl("wakatimeUsage"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           credentials: "include",
-          body: JSON.stringify({ email: userEmail }),
+          body: JSON.stringify({ email: user.email }),
         });
 
         if (response.status === 404) {
@@ -84,7 +83,7 @@ export default function DashboardPage() {
             const errorData = await response.json();
             errorDetail = errorData.detail || errorData.message || errorDetail;
           } catch (_parseError) {
-            console.warn("JSON parsing error ignored:", _parseError); // Optionally log if needed for debugging
+            console.warn("JSON parsing error ignored:", _parseError);
           }
           throw new Error(errorDetail);
         }
@@ -125,19 +124,16 @@ export default function DashboardPage() {
       return;
     }
     try {
-      const baseUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
-
-      const wakatimeResponse = await fetch(
-        `${baseUrl}/wakatime/authorize?email=${encodeURIComponent(user.email)}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
+      const url =
+        makeUrl("wakatimeAuthorize") +
+        `?email=${encodeURIComponent(user.email)}`;
+      const wakatimeResponse = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
 
       if (!wakatimeResponse.ok) {
         let errorDetail = "Failed to get WakaTime authorization URL";
@@ -145,7 +141,7 @@ export default function DashboardPage() {
           const error = await wakatimeResponse.json();
           errorDetail = error.detail || error.message || errorDetail;
         } catch (_e) {
-          console.warn("JSON parsing error ignored for WakaTime auth URL:", _e); // Optionally log
+          console.warn("JSON parsing error ignored for WakaTime auth URL:", _e);
         }
         throw new Error(errorDetail);
       }
@@ -158,7 +154,8 @@ export default function DashboardPage() {
       } else {
         throw new Error("Invalid WakaTime authorization URL received.");
       }
-    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
       console.error("Error initiating WakaTime authorization:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to connect to WakaTime"
