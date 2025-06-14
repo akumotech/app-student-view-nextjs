@@ -1,0 +1,62 @@
+@media print {
+  body.modal-open
+    #__next
+    > *:not(.DialogContent):not(.dialog-content):not(.max-w-3xl) {
+    display: none !important;
+  }
+  .no-print,
+  .no-print * {
+    display: none !important;
+  }
+  .DialogContent,
+  .dialog-content,
+  .max-w-3xl {
+    box-shadow: none !important;
+    border: none !important;
+    background: #fff !important;
+    color: #000 !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    padding: 0 !important;
+  }
+  .print\:block {
+    display: block !important;
+  }
+  .print\:w-full {
+    width: 100% !important;
+  }
+  .print\:text-black {
+    color: #000 !important;
+  }
+  /* Hide modal overlay/backdrop */
+  [class*="DialogOverlay"],
+  .dialog-overlay {
+    display: none !important;
+  }
+  /* Remove padding/margins for print */
+  .container,
+  .p-4,
+  .py-8,
+  .space-y-8,
+  .space-y-6,
+  .space-y-4 {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  /* Table styles for print */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    font-size: 12px !important;
+  }
+  th,
+  td {
+    border: 1px solid #000 !important;
+    padding: 4px 8px !important;
+    color: #000 !important;
+  }
+  th {
+    background: #eee !important;
+    font-weight: bold !important;
+  }
+}

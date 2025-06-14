@@ -17,6 +17,7 @@ type User = {
   role?: string;
   disabled?: boolean;
   wakatime_access_token_encrypted?: string | null;
+  student_id?: number;
 };
 
 interface AuthContextType {

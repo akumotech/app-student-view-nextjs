@@ -148,13 +148,13 @@ export default function DemosPage() {
   }, [logout]);
 
   const getStudentId = () => {
-    if (user && user.id) return user.id;
+    if (user && user.student_id) return user.student_id;
     const storedUser =
       typeof window !== "undefined" ? localStorage.getItem("user") : null;
     if (storedUser) {
       try {
         const parsed = JSON.parse(storedUser);
-        if (parsed.id) return parsed.id;
+        if (parsed.student_id) return parsed.student_id;
       } catch {}
     }
     return null;
