@@ -35,10 +35,20 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+export function AuthProvider({
+  children,
+  initialUser = null,
+  initialIsAuthenticated = false,
+}: {
+  children: ReactNode;
+  initialUser?: User | null;
+  initialIsAuthenticated?: boolean;
+}) {
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    initialIsAuthenticated
+  );
+  const [user, setUser] = useState<User | null>(initialUser);
+  const [loading, setLoading] = useState(initialUser ? false : true);
   const [initialCheckComplete, setInitialCheckComplete] = useState(false);
   const fetchInProgress = useRef(false);
 

@@ -11,7 +11,6 @@ export function MainNav() {
   const pathname = usePathname();
   const { user } = useAuth();
 
-  console.log("testing user", user);
   const navItems = [
     {
       name: "Code",
