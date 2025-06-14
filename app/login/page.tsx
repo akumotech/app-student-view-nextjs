@@ -36,7 +36,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, loading, isAuthenticated, user } = useAuth();
+  const { login, loading, isAuthenticated, user, fetchUserOnMount } = useAuth();
 
   useEffect(() => {
     if (!loading && isAuthenticated && user) {
@@ -63,9 +63,9 @@ export default function LoginPage() {
       const response = await login(values.email, values.password);
       console.log("response", response);
       if (response.success) {
+        await fetchUserOnMount(); // Ensure user state is fresh
         toast.success("You have been logged in successfully.");
         // Note: After successful login, the useEffect will handle redirection based on user role
-        // We don't redirect here directly to avoid race conditions
       } else {
         toast.error(response.message);
       }
