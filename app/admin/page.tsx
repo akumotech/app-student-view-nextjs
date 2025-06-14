@@ -44,6 +44,8 @@ import {
   ChevronRight,
   Edit,
 } from "lucide-react";
+import type { CertificateRead, DemoRead } from "@/lib/dashboard-types";
+import "./admin-print.css";
 
 // Enhanced types based on API documentation
 interface DashboardStats {
@@ -65,8 +67,31 @@ interface UserOverview {
   disabled: boolean;
   wakatime_connected: boolean;
   student_detail?: {
-    batch?: { id: number; name: string };
-    project?: { id: number; name: string };
+    id: number;
+    user: {
+      id: number;
+      email: string;
+      name: string;
+      role: string;
+      disabled: boolean;
+    };
+    batch?: {
+      id: number;
+      name: string;
+      description?: string;
+      start_date?: string;
+      end_date?: string;
+      slack_channel?: string;
+      curriculum?: string | null;
+    };
+    project?: {
+      id: number;
+      name: string;
+      start_date?: string;
+      end_date?: string;
+    };
+    certificates: CertificateRead[];
+    demos: DemoRead[];
     wakatime_stats?: {
       hours: number;
       digital: string;
@@ -122,6 +147,11 @@ function AdminDashboardContents() {
   const [isLoadingLegacyBatches, setIsLoadingLegacyBatches] = useState(true);
   const [newlyCreatedBatchInfo, setNewlyCreatedBatchInfo] =
     useState<NewlyCreatedBatchInfo | null>(null);
+
+  // Add state for student profile modal
+  const [studentProfile, setStudentProfile] = useState<
+    UserOverview["student_detail"] | null
+  >(null);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -335,6 +365,19 @@ function AdminDashboardContents() {
 
   const totalPages = Math.ceil(usersTotal / pageSize);
 
+  // Add effect to set modal-open class on body when modal is open
+  useEffect(() => {
+    if (studentProfile) {
+      document.body.classList.add("modal-open");
+    } else {
+      document.body.classList.remove("modal-open");
+    }
+    // Clean up on unmount
+    return () => {
+      document.body.classList.remove("modal-open");
+    };
+  }, [studentProfile]);
+
   if (authLoading || isLoadingStats) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -471,7 +514,15 @@ function AdminDashboardContents() {
                 </TableHeader>
                 <TableBody>
                   {users.map((user) => (
-                    <TableRow key={user.id}>
+                    <TableRow
+                      key={user.id}
+                      className="cursor-pointer hover:bg-muted"
+                      onClick={() => {
+                        if (user.role === "student" && user.student_detail) {
+                          setStudentProfile(user.student_detail);
+                        }
+                      }}
+                    >
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
@@ -511,7 +562,10 @@ function AdminDashboardContents() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleRoleEdit(user)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRoleEdit(user);
+                          }}
                         >
                           <Edit className="h-4 w-4 mr-1" />
                           Edit Role
@@ -714,6 +768,182 @@ function AdminDashboardContents() {
               Cancel
             </Button>
             <Button onClick={handleRoleUpdate}>Update Role</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Student Profile Dialog */}
+      <Dialog
+        open={!!studentProfile}
+        onOpenChange={(open) => {
+          if (!open) setStudentProfile(null);
+        }}
+      >
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Student Profile</DialogTitle>
+          </DialogHeader>
+          {studentProfile && (
+            <div className="space-y-6">
+              {/* Top Section: Name, Email, Role, Status, Batch */}
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b pb-4">
+                <div>
+                  <h2 className="text-2xl font-bold">
+                    {studentProfile.user.name}
+                  </h2>
+                  <div className="text-muted-foreground">
+                    {studentProfile.user.email}
+                  </div>
+                  {studentProfile.batch && (
+                    <div className="text-muted-foreground">
+                      Batch: {studentProfile.batch.name}
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Badge className="capitalize">
+                    {studentProfile.user.role}
+                  </Badge>
+                  <Badge
+                    variant={
+                      studentProfile.user.disabled ? "destructive" : "secondary"
+                    }
+                  >
+                    {studentProfile.user.disabled ? "Disabled" : "Active"}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Project Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Project</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {studentProfile.project ? (
+                      <>
+                        <div className="font-semibold">
+                          {studentProfile.project.name}
+                        </div>
+                        <div className="text-xs mt-2">
+                          {studentProfile.project.start_date && (
+                            <>
+                              Start: {studentProfile.project.start_date}
+                              <br />
+                            </>
+                          )}
+                          {studentProfile.project.end_date && (
+                            <>End: {studentProfile.project.end_date}</>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-muted-foreground">
+                        No project assigned
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Certificates Section as Table */}
+              <div>
+                <h3 className="font-semibold mb-2">Certificates</h3>
+                {studentProfile.certificates.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Issuer</TableHead>
+                        <TableHead>Date Issued</TableHead>
+                        <TableHead>Date Expired</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {studentProfile.certificates.map(
+                        (cert: CertificateRead) => (
+                          <TableRow key={cert.id}>
+                            <TableCell>{cert.name}</TableCell>
+                            <TableCell>{cert.issuer}</TableCell>
+                            <TableCell>{cert.date_issued}</TableCell>
+                            <TableCell>{cert.date_expired || "—"}</TableCell>
+                          </TableRow>
+                        )
+                      )}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-muted-foreground">No certificates</div>
+                )}
+              </div>
+
+              {/* Demos Section as Table */}
+              <div>
+                <h3 className="font-semibold mb-2">Demos</h3>
+                {studentProfile.demos.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Title</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Demo URL</TableHead>
+                        <TableHead>GitHub</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {studentProfile.demos.map((demo: DemoRead) => (
+                        <TableRow key={demo.id}>
+                          <TableCell>{demo.title}</TableCell>
+                          <TableCell className="max-w-xs truncate">
+                            {demo.description || "—"}
+                          </TableCell>
+                          <TableCell>
+                            {demo.demo_url ? (
+                              <a
+                                href={demo.demo_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 underline"
+                              >
+                                Link
+                              </a>
+                            ) : (
+                              "—"
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {demo.github_url ? (
+                              <a
+                                href={demo.github_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 underline"
+                              >
+                                GitHub
+                              </a>
+                            ) : (
+                              "—"
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-muted-foreground">No demos</div>
+                )}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              onClick={() => setStudentProfile(null)}
+              type="button"
+              className="no-print"
+            >
+              Close
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -6,10 +6,10 @@
     "version": "1.0.0"
   },
   "paths": {
-    "/api/users/me/": {
+    "/api/users/me": {
       "get": {
         "summary": "Read Users Me",
-        "operationId": "read_users_me_api_users_me__get",
+        "operationId": "read_users_me_api_users_me_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1704,6 +1704,51 @@
             "CookieAuth": []
           }
         ]
+      }
+    },
+    "/api/v1/admin/students/{student_id}/full": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get all data for a student (admin only)",
+        "operationId": "get_full_student_data_api_v1_admin_students__student_id__full_get",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "student_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Student Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     }
   },

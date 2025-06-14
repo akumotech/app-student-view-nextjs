@@ -58,6 +58,7 @@ export const endpoints = {
   adminStudentById: "/api/v1/admin/students/{student_id}", // PUT /api/v1/admin/students/{student_id}
   adminBatches: "/api/v1/admin/batches", // GET /api/v1/admin/batches
   adminProjects: "/api/v1/admin/projects", // GET /api/v1/admin/projects
+  adminStudentFull: "/api/v1/admin/students/{student_id}/full", // GET /api/v1/admin/students/{student_id}/full
 } as const;
 
 export function makeUrl(
