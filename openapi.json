@@ -2641,6 +2641,17 @@
               }
             ],
             "title": "Wakatime Refresh Token Encrypted"
+          },
+          "student_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Student Id"
           }
         },
         "type": "object",

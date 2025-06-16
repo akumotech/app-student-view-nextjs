@@ -24,99 +24,26 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { makeUrl } from "@/lib/utils";
 import Link from "next/link";
-import {
-  Copy,
-  Users,
-  GraduationCap,
-  Calendar,
-  Clock,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  Edit,
-} from "lucide-react";
-import type { CertificateRead, DemoRead } from "@/lib/dashboard-types";
+import { Copy, Search, ChevronLeft, ChevronRight, Edit } from "lucide-react";
+import DashboardStats from "./components/DashboardStats";
+import type {
+  DashboardStats as DashboardStatsType,
+  UserOverview,
+  BatchRead,
+  NewlyCreatedBatchInfo,
+  CertificateRead,
+  DemoRead,
+} from "./components/types";
 import "./admin-print.css";
-
-// Enhanced types based on API documentation
-interface DashboardStats {
-  total_users: number;
-  total_students: number;
-  total_instructors: number;
-  total_admins: number;
-  active_batches: number;
-  total_certificates: number;
-  total_demos: number;
-  users_with_wakatime: number;
-}
-
-interface UserOverview {
-  id: number;
-  email: string;
-  name: string;
-  role: "student" | "instructor" | "admin" | "user";
-  disabled: boolean;
-  wakatime_connected: boolean;
-  student_detail?: {
-    id: number;
-    user: {
-      id: number;
-      email: string;
-      name: string;
-      role: string;
-      disabled: boolean;
-    };
-    batch?: {
-      id: number;
-      name: string;
-      description?: string;
-      start_date?: string;
-      end_date?: string;
-      slack_channel?: string;
-      curriculum?: string | null;
-    };
-    project?: {
-      id: number;
-      name: string;
-      start_date?: string;
-      end_date?: string;
-    };
-    certificates: CertificateRead[];
-    demos: DemoRead[];
-    wakatime_stats?: {
-      hours: number;
-      digital: string;
-      text: string;
-    };
-  };
-}
-
-// Legacy batch interface for existing functionality
-interface BatchRead {
-  id: number;
-  name: string;
-  slack_channel: string;
-  start_date: string;
-  end_date: string;
-  curriculum?: string | null;
-  registration_key: string;
-  registration_key_active: boolean;
-}
-
-interface NewlyCreatedBatchInfo {
-  id: string;
-  name: string;
-  registrationKey: string;
-}
+import UserEditDialog from "./components/UserEditDialog";
 
 // This new component will contain the original logic
 function AdminDashboardContents() {
@@ -125,7 +52,7 @@ function AdminDashboardContents() {
   const { user, isAuthenticated, loading: authLoading, logout } = useAuth();
 
   // State for dashboard stats
-  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [stats, setStats] = useState<DashboardStatsType | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
   // State for user management
@@ -139,8 +66,7 @@ function AdminDashboardContents() {
 
   // State for modals
   const [editingUser, setEditingUser] = useState<UserOverview | null>(null);
-  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
-  const [newRole, setNewRole] = useState<string>("");
+  const [isUserEditDialogOpen, setIsUserEditDialogOpen] = useState(false);
 
   // Legacy state for existing batch functionality
   const [legacyBatches, setLegacyBatches] = useState<BatchRead[]>([]);
@@ -269,31 +195,6 @@ function AdminDashboardContents() {
     }
   };
 
-  // Update user role
-  const updateUserRole = async (userId: number, newRole: string) => {
-    try {
-      const response = await fetch(
-        makeUrl("adminUserRole", { user_id: userId }),
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ role: newRole }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to update user role");
-      }
-
-      toast.success("User role updated successfully");
-      fetchUsers(); // Refresh the user list
-    } catch (error) {
-      console.error("Error updating user role:", error);
-      toast.error("Failed to update user role");
-    }
-  };
-
   useEffect(() => {
     if (
       isAuthenticated &&
@@ -325,17 +226,42 @@ function AdminDashboardContents() {
     toast.success("Registration key copied to clipboard!");
   };
 
-  const handleRoleEdit = (user: UserOverview) => {
+  const handleUserEdit = (user: UserOverview) => {
     setEditingUser(user);
-    setNewRole(user.role);
-    setIsRoleDialogOpen(true);
+    setIsUserEditDialogOpen(true);
   };
 
-  const handleRoleUpdate = async () => {
-    if (editingUser && newRole) {
-      await updateUserRole(editingUser.id, newRole);
-      setIsRoleDialogOpen(false);
+  const handleUserUpdate = async (updated: {
+    name: string;
+    email: string;
+    role: string;
+    batchId: number | null;
+    disabled: boolean;
+  }) => {
+    if (!editingUser || !editingUser.student_detail) return;
+    try {
+      // Only update batch for students
+      const studentRes = await fetch(
+        makeUrl("adminStudentById", {
+          student_id: editingUser.student_detail.id,
+        }),
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            batch_id: updated.batchId,
+          }),
+        }
+      );
+      if (!studentRes.ok) throw new Error("Failed to update student batch");
+      toast.success("Student batch updated successfully");
+      setIsUserEditDialogOpen(false);
       setEditingUser(null);
+      fetchUsers();
+    } catch (error) {
+      console.error("Error updating student batch:", error);
+      toast.error("Failed to update student batch");
     }
   };
 
@@ -412,55 +338,7 @@ function AdminDashboardContents() {
       </div>
 
       {/* Dashboard Stats */}
-      {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.total_users}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Students</CardTitle>
-              <GraduationCap className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.total_students}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Active Batches
-              </CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.active_batches}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                WakaTime Connected
-              </CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {stats.users_with_wakatime}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      {stats && <DashboardStats stats={stats} />}
 
       {/* User Management */}
       <Card>
@@ -564,11 +442,19 @@ function AdminDashboardContents() {
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleRoleEdit(user);
+                            if (
+                              user.role === "student" &&
+                              user.student_detail
+                            ) {
+                              handleUserEdit(user);
+                            }
                           }}
+                          disabled={
+                            user.role !== "student" || !user.student_detail
+                          }
                         >
                           <Edit className="h-4 w-4 mr-1" />
-                          Edit Role
+                          Edit
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -739,38 +625,14 @@ function AdminDashboardContents() {
         )}
       </Card>
 
-      {/* Role Edit Dialog */}
-      <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit User Role</DialogTitle>
-            <DialogDescription>
-              Change the role for {editingUser?.name} ({editingUser?.email})
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <select
-              value={newRole}
-              onChange={(e) => setNewRole(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="user">User</option>
-              <option value="student">Student</option>
-              <option value="instructor">Instructor</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsRoleDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleRoleUpdate}>Update Role</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* User Edit Dialog */}
+      <UserEditDialog
+        user={editingUser}
+        batches={legacyBatches}
+        open={isUserEditDialogOpen}
+        onOpenChange={setIsUserEditDialogOpen}
+        onSave={handleUserUpdate}
+      />
 
       {/* Student Profile Dialog */}
       <Dialog

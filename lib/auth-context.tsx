@@ -40,24 +40,32 @@ export function AuthProvider({
   children,
   initialUser = null,
   initialIsAuthenticated = false,
+  skipInitialFetch = false,
 }: {
   children: ReactNode;
   initialUser?: User | null;
   initialIsAuthenticated?: boolean;
+  skipInitialFetch?: boolean;
 }) {
   const [isAuthenticated, setIsAuthenticated] = useState(
     initialIsAuthenticated
   );
   const [user, setUser] = useState<User | null>(initialUser);
-  const [loading, setLoading] = useState(initialUser ? false : true);
+  const [loading, setLoading] = useState(
+    skipInitialFetch ? false : initialUser ? false : true
+  );
   const [initialCheckComplete, setInitialCheckComplete] = useState(false);
   const fetchInProgress = useRef(false);
 
   useEffect(() => {
-    if (!initialCheckComplete && !fetchInProgress.current) {
+    if (
+      !skipInitialFetch &&
+      !initialCheckComplete &&
+      !fetchInProgress.current
+    ) {
       fetchUserOnMount();
     }
-  }, [initialCheckComplete]);
+  }, [skipInitialFetch, initialCheckComplete]);
 
   const fetchUserOnMount = async (retryCount = 0) => {
     // Prevent duplicate calls
