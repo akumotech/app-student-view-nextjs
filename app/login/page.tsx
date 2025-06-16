@@ -43,8 +43,10 @@ export default function LoginPage() {
       // Redirect based on user role
       if (user.role === "admin" || user.role === "instructor") {
         router.push("/admin");
-      } else {
+      } else if (user.role === "student" || user.role === "user") {
         router.push("/dashboard");
+      } else {
+        router.push("/login");
       }
     }
   }, [isAuthenticated, loading, user, router]);
