@@ -8,8 +8,7 @@
     "start": "next start",
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write .",
-    "type-check": "tsc --noEmit",
-    "prepare": "husky install"
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
