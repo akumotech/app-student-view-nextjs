@@ -42,6 +42,7 @@ import type {
 } from "./types";
 import "./admin-print.css";
 import { useAuth } from "@/lib/auth-context";
+import { makeUrl } from "@/lib/utils";
 
 interface AdminDashboardContentsProps {
   stats: DashboardStatsType;
@@ -135,12 +136,24 @@ export default function AdminDashboardContents({
   }) => {
     if (!editingUser || !editingUser.student_detail) return;
     try {
-      // Only update batch for students
-      // You may want to call an API here and then update local state
-      toast.success("Student batch updated successfully (mocked)");
+      const studentId = editingUser.student_detail.id;
+      const url = makeUrl("adminStudentById", { student_id: studentId });
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ batch_id: updated.batchId }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        const errorMessage = result.message || result.error || "Failed to update student batch.";
+        toast.error(errorMessage);
+        return;
+      }
+      toast.success(result.message || "Student batch updated successfully.");
       setIsUserEditDialogOpen(false);
       setEditingUser(null);
-      // Optionally refetch or update userList
+      // Optionally refetch or update userList here
     } catch (error) {
       console.error("Error updating student batch:", error);
       toast.error("Failed to update student batch");
