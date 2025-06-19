@@ -1,3 +1,40 @@
+# Project Name
+
+## Overview
+
+Brief description of the app and its purpose.
+
+## Getting Started
+
+- Prerequisites
+- Installation
+- Running locally
+- Environment variables
+
+## Project Structure
+
+- Feature-based folders
+- UI components
+- Centralized API logic
+
+## Development
+
+- Linting, formatting, type-checking
+- Adding new features/components
+- Testing
+
+## Deployment
+
+- Docker, Vercel, or other options
+
+## Contributing
+
+- Branching, PRs, code style
+
+## License
+
+This project is licensed under the MIT License.
+
 # API Monitoring SaaS
 
 This repository contains the source code for an API monitoring SaaS application built with the Next.js framework. The service enables clients to create and manage API status pages for continuous monitoring of their APIs.
