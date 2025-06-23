@@ -1,30 +1,30 @@
 import { getUserServer } from "@/lib/getUserServer";
 import { fetchDashboardData } from "./api/fetchDashboardData";
 import { fetchStudentStatus } from "@/app/dashboard/api/fetchStudentStatus";
-import DashboardStats from "@/app/dashboard/components/DashboardStats";
-import DashboardError from "@/app/dashboard/components/DashboardError";
-import { MainNav } from "@/components/dashboard-navbar";
+import DashboardClientShell from "./components/DashboardClientShell";
 
 export default async function DashboardPage() {
   const { user, isAuthenticated } = await getUserServer();
   if (!isAuthenticated || !user) {
-    return <DashboardError message="Not authenticated" />;
+    // Optionally render a server error or redirect
+    return null;
   }
 
   const isStudent = await fetchStudentStatus();
-  if (!isStudent) {
-    return <DashboardError message="You are not a student." />;
-  }
+  let dashboardData = null;
+  let hasWakaTimeAuth = false;
 
-  const dashboardData = await fetchDashboardData(user.email);
-  if (!dashboardData) {
-    return <DashboardError message="No WakaTime data found." />;
+  if (user.wakatime_access_token_encrypted) {
+    hasWakaTimeAuth = true;
+    dashboardData = await fetchDashboardData(user.email);
   }
 
   return (
-    <div>
-      <MainNav />
-      <DashboardStats data={dashboardData} />
-    </div>
+    <DashboardClientShell
+      user={user}
+      isStudent={isStudent}
+      hasWakaTimeAuth={hasWakaTimeAuth}
+      dashboardData={dashboardData}
+    />
   );
 }

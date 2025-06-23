@@ -2,6 +2,7 @@ import { getUserServer } from "@/lib/getUserServer";
 import { fetchCertificates } from "@/app/dashboard/certificates/api/fetchCertificates";
 import CertificatesList from "@/app/dashboard/certificates/components/CertificatesList";
 import CertificatesError from "@/app/dashboard/certificates/components/CertificatesError";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
 
 export default async function CertificatesPage() {
   const { user, isAuthenticated } = await getUserServer();
@@ -14,5 +15,12 @@ export default async function CertificatesPage() {
     return <CertificatesError message="No certificates found." />;
   }
 
-  return <CertificatesList certificates={certificates} />;
+  return (
+    <div className="min-h-screen bg-muted/40">
+      <DashboardHeader title="Dashboard" />
+      <main className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
+        <CertificatesList certificates={certificates} user={user} />
+      </main>
+    </div>
+  );
 }

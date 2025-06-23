@@ -1,18 +1,24 @@
 import { getUserServer } from "@/lib/getUserServer";
 import { fetchDemos } from "@/app/dashboard/demos/api/fetchDemos";
-import DemosList from "@/app/dashboard/demos/components/DemosList";
-import DemosError from "@/app/dashboard/demos/components/DemosError";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import DemosClientShell from "./DemosClientShell";
 
 export default async function DemosPage() {
   const { user, isAuthenticated } = await getUserServer();
   if (!isAuthenticated || !user) {
-    return <DemosError message="Not authenticated" />;
+    // Optionally render an error or redirect
+    return null;
   }
 
   const demos = await fetchDemos();
-  if (!demos) {
-    return <DemosError message="No demos found." />;
-  }
+  // Optionally handle error state if demos is null
 
-  return <DemosList demos={demos} />;
+  return (
+    <div className="min-h-screen bg-muted/40">
+      <DashboardHeader title="Dashboard" />
+      <main className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
+        <DemosClientShell initialDemos={demos || []} user={user} />
+      </main>
+    </div>
+  );
 }

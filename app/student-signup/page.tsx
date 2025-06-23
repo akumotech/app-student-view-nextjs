@@ -48,7 +48,7 @@ type StudentSignupApiResponse = BackendAPIResponse<null | object>;
 function StudentSignupFormContents() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isAuthenticated, loading: authLoading, fetchUserOnMount } = useAuth();
+  const { isAuthenticated, loading: authLoading, fetchUserOnMount, user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const registrationKeyFromQuery = searchParams.get("key");
@@ -79,6 +79,7 @@ function StudentSignupFormContents() {
         values.password,
         values.batch_registration_key,
       );
+      console.log(response);
       if (!response.success) {
         let apiErrorMessage = response.message || "Student signup failed. Please try again.";
         if (response.error) {
@@ -94,7 +95,16 @@ function StudentSignupFormContents() {
       } else {
         toast.success(response.message || "Signup successful! Redirecting to dashboard...");
         await fetchUserOnMount();
-        router.push("/dashboard?signup=success");
+        // Wait a tick for user state to update
+        setTimeout(() => {
+          if (user?.role === "admin" || user?.role === "instructor") {
+            router.push("/admin");
+          } else if (user?.role === "student" || user?.role === "user") {
+            router.push("/dashboard");
+          } else {
+            router.push("/login");
+          }
+        }, 100);
       }
     } catch (error) {
       console.error("Student signup error:", error);
