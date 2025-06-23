@@ -53,10 +53,9 @@ export function MainNav() {
           href={item.href}
           className={cn(
             "flex items-center space-x-2 text-sm font-medium transition-colors",
-            pathname === item.href ||
-              (item.href === "/admin" && pathname.startsWith("/admin"))
+            pathname === item.href || (item.href === "/admin" && pathname.startsWith("/admin"))
               ? "text-primary"
-              : "text-muted-foreground hover:text-primary"
+              : "text-muted-foreground hover:text-primary",
           )}
         >
           <item.icon className="h-4 w-4" />

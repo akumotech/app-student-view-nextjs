@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-  useRef,
-} from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useRef } from "react";
 import { makeUrl } from "./utils";
 
 type User = {
@@ -25,11 +18,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<LoginResponse>;
-  signup: (
-    email: string,
-    password: string,
-    name: string
-  ) => Promise<SignUpResponse>;
+  signup: (email: string, password: string, name: string) => Promise<SignUpResponse>;
   logout: () => Promise<void>;
   fetchUserOnMount: () => Promise<void>;
 }
@@ -47,22 +36,14 @@ export function AuthProvider({
   initialIsAuthenticated?: boolean;
   skipInitialFetch?: boolean;
 }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    initialIsAuthenticated
-  );
+  const [isAuthenticated, setIsAuthenticated] = useState(initialIsAuthenticated);
   const [user, setUser] = useState<User | null>(initialUser);
-  const [loading, setLoading] = useState(
-    skipInitialFetch ? false : initialUser ? false : true
-  );
+  const [loading, setLoading] = useState(skipInitialFetch ? false : initialUser ? false : true);
   const [initialCheckComplete, setInitialCheckComplete] = useState(false);
   const fetchInProgress = useRef(false);
 
   useEffect(() => {
-    if (
-      !skipInitialFetch &&
-      !initialCheckComplete &&
-      !fetchInProgress.current
-    ) {
+    if (!skipInitialFetch && !initialCheckComplete && !fetchInProgress.current) {
       fetchUserOnMount();
     }
   }, [skipInitialFetch, initialCheckComplete]);
@@ -93,7 +74,7 @@ export function AuthProvider({
 
       if (response.ok) {
         const userData = await response.json();
-        console.log("User data fetched successfully:", userData);
+        console.log("User data fetched successfully:");
         setUser(userData);
         setIsAuthenticated(true);
       } else if (response.status === 401 || response.status === 403) {
@@ -115,21 +96,12 @@ export function AuthProvider({
 
           if (redirectResponse.ok) {
             const userData = await redirectResponse.json();
-            console.log(
-              "User data fetched successfully after redirect:",
-              userData
-            );
+            console.log("User data fetched successfully after redirect:");
             setUser(userData);
             setIsAuthenticated(true);
           } else {
-            console.log(
-              "Redirect failed with status:",
-              redirectResponse.status
-            );
-            if (
-              redirectResponse.status === 401 ||
-              redirectResponse.status === 403
-            ) {
+            console.log("Redirect failed with status:", redirectResponse.status);
+            if (redirectResponse.status === 401 || redirectResponse.status === 403) {
               setUser(null);
               setIsAuthenticated(false);
             }
@@ -148,10 +120,7 @@ export function AuthProvider({
           }
         }
       } else {
-        console.log(
-          "User fetch failed with unexpected status:",
-          response.status
-        );
+        console.log("User fetch failed with unexpected status:", response.status);
         // For other status codes, retry once before giving up
         if (retryCount < 1) {
           console.log(`Retrying due to status ${response.status}...`);
@@ -171,9 +140,7 @@ export function AuthProvider({
         setTimeout(() => fetchUserOnMount(retryCount + 1), 1000);
         return;
       } else {
-        console.log(
-          "Network error after retry - maintaining current auth state"
-        );
+        console.log("Network error after retry - maintaining current auth state");
       }
     } finally {
       setLoading(false);
@@ -182,10 +149,7 @@ export function AuthProvider({
     }
   };
 
-  const login = async (
-    email: string,
-    password: string
-  ): Promise<LoginResponse> => {
+  const login = async (email: string, password: string): Promise<LoginResponse> => {
     setLoading(true);
     try {
       const url = makeUrl("login");
@@ -197,13 +161,10 @@ export function AuthProvider({
       });
 
       if (!response.ok) {
-        const errorData = await response
-          .json()
-          .catch(() => ({ message: "Login request failed" }));
+        const errorData = await response.json().catch(() => ({ message: "Login request failed" }));
         return {
           success: false,
-          message:
-            errorData.message || `Login failed with status: ${response.status}`,
+          message: errorData.message || `Login failed with status: ${response.status}`,
           error: errorData.detail || errorData.error || "Unknown login error",
         };
       }
@@ -222,8 +183,7 @@ export function AuthProvider({
         setLoading(false);
         return {
           success: false,
-          message:
-            data.message || "Login succeeded but payload indicates failure.",
+          message: data.message || "Login succeeded but payload indicates failure.",
           error: data.error,
         };
       }
@@ -236,19 +196,12 @@ export function AuthProvider({
       return {
         success: false,
         message: "Something went wrong during login.",
-        error:
-          error instanceof Error
-            ? error.message
-            : "Client-side login exception",
+        error: error instanceof Error ? error.message : "Client-side login exception",
       };
     }
   };
 
-  const signup = async (
-    email: string,
-    password: string,
-    name: string
-  ): Promise<SignUpResponse> => {
+  const signup = async (email: string, password: string, name: string): Promise<SignUpResponse> => {
     try {
       const url = makeUrl("signup");
       const response = await fetch(url, {
@@ -259,14 +212,10 @@ export function AuthProvider({
       });
 
       if (!response.ok) {
-        const errorData = await response
-          .json()
-          .catch(() => ({ message: "Signup request failed" }));
+        const errorData = await response.json().catch(() => ({ message: "Signup request failed" }));
         return {
           success: false,
-          message:
-            errorData.message ||
-            `Signup failed with status: ${response.status}`,
+          message: errorData.message || `Signup failed with status: ${response.status}`,
           error: errorData.detail || errorData.error || "Unknown signup error",
           data: null,
         };
@@ -277,10 +226,7 @@ export function AuthProvider({
       return {
         success: false,
         message: "Something went wrong during signup.",
-        error:
-          error instanceof Error
-            ? error.message
-            : "Client-side signup exception",
+        error: error instanceof Error ? error.message : "Client-side signup exception",
         data: null,
       };
     }
@@ -295,10 +241,7 @@ export function AuthProvider({
         credentials: "include",
       });
     } catch (error) {
-      console.error(
-        "Error calling backend logout, proceeding with client-side cleanup:",
-        error
-      );
+      console.error("Error calling backend logout, proceeding with client-side cleanup:", error);
     } finally {
       setIsAuthenticated(false);
       setUser(null);
@@ -346,10 +289,4 @@ type SignUpResponse = BackendAPIResponse<null>;
 
 type LoginResponse = BackendAPIResponse<LoginSuccessData>;
 
-export type {
-  User,
-  SignUpResponse,
-  LoginResponse,
-  LoginSuccessData,
-  BackendAPIResponse,
-};
+export type { User, SignUpResponse, LoginResponse, LoginSuccessData, BackendAPIResponse };

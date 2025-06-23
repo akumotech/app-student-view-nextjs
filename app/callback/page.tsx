@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 import { makeUrl } from "@/lib/utils";
+import { handleWakaTimeCallback } from "./api/handleWakaTimeCallback";
 
 const CallbackPage = () => {
   const router = useRouter();
@@ -23,9 +24,7 @@ const CallbackPage = () => {
       if (hasProcessed.current || !code) {
         if (!code) {
           console.error("No code found in query params for OAuth callback.");
-          toast.error(
-            "WakaTime connection failed: Missing authorization code."
-          );
+          toast.error("WakaTime connection failed: Missing authorization code.");
           router.replace("/dashboard?error=wakatime_oauth_failed_no_code");
         }
         return;
@@ -41,34 +40,14 @@ const CallbackPage = () => {
       hasProcessed.current = true;
       currentCode.current = code;
 
-      console.log(
-        "Processing WakaTime callback with code:",
-        code.substring(0, 10) + "..."
-      );
+      console.log("Processing WakaTime callback with code:", code.substring(0, 10) + "...");
 
       try {
         // First, handle the WakaTime callback
-        const response = await fetch(makeUrl("wakatimeCallback"), {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            code,
-            state,
-          }),
-        });
-
-        if (!response.ok) {
-          let errorMessage = "WakaTime connection failed. Please try again.";
-          try {
-            const errorData = await response.json();
-            errorMessage =
-              errorData.message || errorData.detail || errorMessage;
-          } catch (_e) {
-            console.log(_e);
-          }
+        const response = await handleWakaTimeCallback(code, state || "");
+        if (!response || response.error) {
+          let errorMessage =
+            response?.message || response?.error || "WakaTime connection failed. Please try again.";
           console.error("OAuth callback failed to backend:", errorMessage);
           toast.error(errorMessage);
           router.replace(`/dashboard?error=wakatime_oauth_backend_failed`);
@@ -102,11 +81,7 @@ const CallbackPage = () => {
 
   return (
     <div className="flex justify-center items-center h-screen">
-      {isProcessing ? (
-        <p>Processing WakaTime connection...</p>
-      ) : (
-        <p>Redirecting to dashboard...</p>
-      )}
+      {isProcessing ? <p>Processing WakaTime connection...</p> : <p>Redirecting to dashboard...</p>}
     </div>
   );
 };

@@ -64,6 +64,7 @@ export interface UserOverview {
       hours: number;
       digital: string;
       text: string;
+      last_updated?: string;
     };
   };
 }

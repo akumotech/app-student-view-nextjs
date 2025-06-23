@@ -4,13 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth-context";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -26,6 +20,7 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import Header from "@/components/header";
+import { loginUser } from "./api/loginUser";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -34,9 +29,15 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
+type LoginResponse = {
+  success: boolean;
+  message?: string;
+  // ...other fields as needed
+};
+
 export default function LoginPage() {
   const router = useRouter();
-  const { login, loading, isAuthenticated, user, fetchUserOnMount } = useAuth();
+  const { loading, isAuthenticated, user, fetchUserOnMount } = useAuth();
 
   useEffect(() => {
     if (!loading && isAuthenticated && user) {
@@ -62,14 +63,13 @@ export default function LoginPage() {
 
   const onSubmit = async (values: LoginFormValues) => {
     try {
-      const response = await login(values.email, values.password);
-      console.log("response", response);
+      const response: LoginResponse = await loginUser(values.email, values.password);
       if (response.success) {
         await fetchUserOnMount(); // Ensure user state is fresh
         toast.success("You have been logged in successfully.");
         // Note: After successful login, the useEffect will handle redirection based on user role
       } else {
-        toast.error(response.message);
+        toast.error(response.message || "Login failed.");
       }
     } catch (error) {
       console.error(error);
@@ -96,16 +96,11 @@ export default function LoginPage() {
         <Card className="w-[400px]">
           <CardHeader>
             <CardTitle>Login</CardTitle>
-            <CardDescription>
-              Enter your credentials to access your account
-            </CardDescription>
+            <CardDescription>Enter your credentials to access your account</CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
-              >
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
                   name="email"
@@ -135,9 +130,7 @@ export default function LoginPage() {
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={
-                    !form.formState.isValid || form.formState.isSubmitting
-                  }
+                  disabled={!form.formState.isValid || form.formState.isSubmitting}
                 >
                   {form.formState.isSubmitting ? "Logging in..." : "Login"}
                 </Button>

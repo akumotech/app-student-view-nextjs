@@ -1,22 +1,8 @@
 "use client";
 
-import {
-  Calendar,
-  ExternalLink,
-  Link2,
-  MoreHorizontal,
-  Award,
-  Edit,
-  Trash2,
-} from "lucide-react";
+import { Calendar, ExternalLink, Link2, MoreHorizontal, Award, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,13 +19,8 @@ interface CertificateCardProps {
   onDelete: (id: number) => void;
 }
 
-export function CertificateCard({
-  certificate,
-  onEdit,
-  onDelete,
-}: CertificateCardProps) {
-  const isExpired =
-    certificate.date_expired && new Date(certificate.date_expired) < new Date();
+export function CertificateCard({ certificate, onEdit, onDelete }: CertificateCardProps) {
+  const isExpired = certificate.date_expired && new Date(certificate.date_expired) < new Date();
 
   return (
     <Card className="overflow-hidden transition-all hover:shadow-md">
@@ -57,18 +38,12 @@ export function CertificateCard({
                 <CardTitle className="text-base font-semibold line-clamp-2">
                   {certificate.name}
                 </CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {certificate.issuer}
-                </p>
+                <p className="text-sm text-muted-foreground mt-1">{certificate.issuer}</p>
               </div>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full"
-                >
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
                   <MoreHorizontal className="h-4 w-4" />
                   <span className="sr-only">Actions</span>
                 </Button>
@@ -103,12 +78,8 @@ export function CertificateCard({
 
               {certificate.date_expired && (
                 <span
-                  className={cn(
-                    "flex items-center gap-1",
-                    isExpired ? "text-destructive" : ""
-                  )}
+                  className={cn("flex items-center gap-1", isExpired ? "text-destructive" : "")}
                 >
-                  <span className="text-muted-foreground">•</span>
                   <span className="text-muted-foreground">Expires:</span>{" "}
                   <span className="font-medium">
                     {new Date(certificate.date_expired).toLocaleDateString()}
@@ -129,10 +100,7 @@ export function CertificateCard({
           {certificate.credential_id && (
             <div className="flex items-center gap-2">
               <Link2 className="h-4 w-4 text-green-500 flex-shrink-0" />
-              <Badge
-                variant="secondary"
-                className="font-mono text-xs px-2 py-0"
-              >
+              <Badge variant="secondary" className="font-mono text-xs px-2 py-0">
                 {certificate.credential_id}
               </Badge>
             </div>
@@ -149,12 +117,7 @@ export function CertificateCard({
 
         {certificate.credential_url && (
           <CardFooter className="pt-0">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full gap-1 hover:bg-primary/5"
-              asChild
-            >
+            <Button variant="outline" size="sm" className="w-full gap-1 hover:bg-primary/5" asChild>
               <a
                 href={certificate.credential_url}
                 target="_blank"
