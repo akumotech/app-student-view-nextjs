@@ -113,7 +113,7 @@ export default function DashboardClientShell({
           </div>
         )}
 
-        {!hasWakaTimeAuth && isStudent && (
+        {!hasWakaTimeAuth && (
           <p
             className="p-4 mb-4 text-sm text-blue-700 bg-blue-100 rounded-lg dark:bg-gray-800 dark:text-blue-400"
             role="alert"
@@ -134,34 +134,15 @@ export default function DashboardClientShell({
           </div>
         )}
 
-        {hasWakaTimeAuth &&
-          isStudent &&
-          !isLoadingUsageData &&
-          !dashboardUsageError &&
-          dashboardUsageData && <Dashboard data={dashboardUsageData} />}
+        {hasWakaTimeAuth && !isLoadingUsageData && !dashboardUsageError && dashboardUsageData && (
+          <Dashboard data={dashboardUsageData} />
+        )}
 
-        {hasWakaTimeAuth &&
-          isStudent &&
-          !isLoadingUsageData &&
-          !dashboardUsageError &&
-          !dashboardUsageData && (
-            <p className="text-center text-gray-500">
-              No WakaTime data to display. Your data might still be syncing or none available for
-              the selected period.
-            </p>
-          )}
-
-        {isStudent === false && (
-          <div className="text-center py-10 bg-muted rounded-lg">
-            <h3 className="text-lg font-medium mb-2">Student Registration Required</h3>
-            <p className="text-muted-foreground mb-4">
-              To access student features like certificates and demos, you need to be registered as a
-              student.
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Please contact your instructor to get a registration key.
-            </p>
-          </div>
+        {hasWakaTimeAuth && !isLoadingUsageData && !dashboardUsageError && !dashboardUsageData && (
+          <p className="text-center text-gray-500">
+            No WakaTime data to display. Your data might still be syncing or none available for the
+            selected period.
+          </p>
         )}
       </main>
     </div>

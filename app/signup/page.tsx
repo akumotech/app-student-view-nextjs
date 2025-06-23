@@ -44,7 +44,7 @@ type SignupResponse = {
 
 export default function SignupPage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, login } = useAuth();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -67,8 +67,15 @@ export default function SignupPage() {
     try {
       const response: SignupResponse = await signupUser(values.name, values.email, values.password);
       if (response.success) {
-        toast.success("Account created successfully. Please login.");
-        router.push("/login");
+        toast.success("Account created successfully! Logging you in...");
+        // Auto-login after signup
+        const loginResp = await login(values.email, values.password);
+        if (loginResp.success) {
+          router.push("/dashboard");
+        } else {
+          toast.error("Signup succeeded, but login failed. Please log in manually.");
+          router.push("/login");
+        }
       } else {
         toast.error(response.message || "Signup failed.");
       }

@@ -10,6 +10,24 @@ export default async function CertificatesPage() {
     return <CertificatesError message="Not authenticated" />;
   }
 
+  if (user.role !== "student") {
+    return (
+      <div className="min-h-screen bg-muted/40">
+        <DashboardHeader title="Dashboard" />
+        <main className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
+          <div
+            className="p-4 mb-4 text-sm text-orange-700 bg-orange-100 rounded-lg dark:bg-gray-800 dark:text-orange-400"
+            role="alert"
+          >
+            <span className="font-medium">Student Registration Required:</span> You need to be
+            registered as a student to access certificates and demos. Please contact your instructor
+            for a registration key.
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   const certificates = await fetchCertificates();
   if (!certificates) {
     return <CertificatesError message="No certificates found." />;

@@ -48,7 +48,7 @@ type StudentSignupApiResponse = BackendAPIResponse<null | object>;
 function StudentSignupFormContents() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isAuthenticated, loading: authLoading, fetchUserOnMount, user } = useAuth();
+  const { isAuthenticated, loading: authLoading, login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const registrationKeyFromQuery = searchParams.get("key");
@@ -93,18 +93,15 @@ function StudentSignupFormContents() {
         }
         toast.error(apiErrorMessage);
       } else {
-        toast.success(response.message || "Signup successful! Redirecting to dashboard...");
-        await fetchUserOnMount();
-        // Wait a tick for user state to update
-        setTimeout(() => {
-          if (user?.role === "admin" || user?.role === "instructor") {
-            router.push("/admin");
-          } else if (user?.role === "student" || user?.role === "user") {
-            router.push("/dashboard");
-          } else {
-            router.push("/login");
-          }
-        }, 100);
+        toast.success(response.message || "Signup successful! Logging you in...");
+        // Auto-login after signup
+        const loginResp = await login(values.email, values.password);
+        if (loginResp.success) {
+          router.push("/dashboard");
+        } else {
+          toast.error("Signup succeeded, but login failed. Please log in manually.");
+          router.push("/login");
+        }
       }
     } catch (error) {
       console.error("Student signup error:", error);
