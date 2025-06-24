@@ -36,14 +36,14 @@ export const endpoints = {
 
   // Student-specific endpoints (OpenAPI: /api/students/{student_id}/...)
   studentCertificates: "/api/students/{student_id}/certificates", // GET|POST /api/students/{student_id}/certificates
-  studentCertificateById:
-    "/api/students/{student_id}/certificates/{certificate_id}", // PUT|DELETE /api/students/{student_id}/certificates/{certificate_id}
+  studentCertificateById: "/api/students/{student_id}/certificates/{certificate_id}", // PUT|DELETE /api/students/{student_id}/certificates/{certificate_id}
   studentDemos: "/api/students/{student_id}/demos", // GET|POST /api/students/{student_id}/demos
   studentDemoById: "/api/students/{student_id}/demos/{demo_id}", // PUT|DELETE /api/students/{student_id}/demos/{demo_id}
 
   // Batch endpoints (OpenAPI: /api/batches/...)
   batches: "/api/batches/", // GET|POST /api/batches/
   batchById: "/api/batches/{batch_id}", // GET|PUT|DELETE /api/batches/{batch_id}
+  batchStudents: "/api/batches/{batch_id}/students", // GET /api/batches/{batch_id}/students
 
   // Project endpoints (OpenAPI: /api/projects/...)
   projects: "/api/projects/", // GET|POST /api/projects/
@@ -61,10 +61,7 @@ export const endpoints = {
   adminStudentFull: "/api/v1/admin/students/{student_id}/full", // GET /api/v1/admin/students/{student_id}/full
 } as const;
 
-export function makeUrl(
-  path: keyof typeof endpoints,
-  params?: Record<string, string | number>
-) {
+export function makeUrl(path: keyof typeof endpoints, params?: Record<string, string | number>) {
   const baseUrl = getBaseUrl();
   let endpoint: string = endpoints[path];
 
@@ -79,10 +76,7 @@ export function makeUrl(
 }
 
 // Helper function for parameterized endpoints
-export function makeUrlWithParams(
-  path: string,
-  params?: Record<string, string | number>
-) {
+export function makeUrlWithParams(path: string, params?: Record<string, string | number>) {
   const baseUrl = getBaseUrl();
   let endpoint = path;
 

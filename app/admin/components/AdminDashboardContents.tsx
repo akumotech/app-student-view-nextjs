@@ -43,6 +43,7 @@ import type {
 import "./admin-print.css";
 import { useAuth } from "@/lib/auth-context";
 import { makeUrl } from "@/lib/utils";
+import { fetchBatchStudents } from "../api/fetchBatchStudents";
 
 interface AdminDashboardContentsProps {
   stats: DashboardStatsType;
@@ -72,6 +73,8 @@ export default function AdminDashboardContents({
   const [pageSize] = useState(20);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [batchFilter, setBatchFilter] = useState<string>("all");
+  const [isLoadingBatch, setIsLoadingBatch] = useState(false);
 
   // State for modals
   const [editingUser, setEditingUser] = useState<UserOverview | null>(null);
@@ -113,9 +116,49 @@ export default function AdminDashboardContents({
     if (roleFilter !== "all") {
       filtered = filtered.filter((u) => u.role === roleFilter);
     }
+    // Batch filter (client-side fallback)
+    if (batchFilter !== "all") {
+      filtered = filtered.filter(
+        (u) =>
+          u.student_detail &&
+          u.student_detail.batch &&
+          String(u.student_detail.batch.id) === batchFilter,
+      );
+    }
     setUsersTotal(filtered.length);
     setUserList(filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize));
-  }, [searchTerm, roleFilter, users.users, currentPage, pageSize]);
+  }, [searchTerm, roleFilter, batchFilter, users.users, currentPage, pageSize]);
+
+  // Fetch users for selected batch (server-side for all, client-side for batch)
+  useEffect(() => {
+    if (batchFilter === "all") {
+      setUserList(users.users);
+      setUsersTotal(users.total_count);
+      return;
+    }
+    setIsLoadingBatch(true);
+    fetchBatchStudents(batchFilter)
+      .then((batchUsers) => {
+        if (batchUsers) {
+          // Apply role and search filter to batch users
+          let filtered = batchUsers;
+          if (searchTerm) {
+            filtered = filtered.filter(
+              (u) =>
+                u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                u.email.toLowerCase().includes(searchTerm.toLowerCase()),
+            );
+          }
+          if (roleFilter !== "all") {
+            filtered = filtered.filter((u) => u.role === roleFilter);
+          }
+          setUserList(filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize));
+          setUsersTotal(filtered.length);
+        }
+      })
+      .finally(() => setIsLoadingBatch(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [batchFilter]);
 
   const handleCopyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -199,13 +242,46 @@ export default function AdminDashboardContents({
           <Link href="/admin/batches" passHref>
             <Button>Create New Batch</Button>
           </Link>
-          <Button onClick={handleLogout} variant="outline">
+          <Button variant="outline" onClick={handleLogout}>
             Logout
           </Button>
         </div>
       </div>
-      {/* Dashboard Stats */}
-      {stats && <DashboardStats stats={stats} />}
+      <DashboardStats stats={stats} />
+      {/* Filters */}
+      <div className="flex flex-wrap gap-4 items-center mb-4">
+        <Input
+          placeholder="Search users by name or email"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-64"
+        />
+        <select
+          className="border rounded px-2 py-1"
+          value={roleFilter}
+          onChange={(e) => setRoleFilter(e.target.value)}
+        >
+          <option value="all">All Roles</option>
+          <option value="admin">Admin</option>
+          <option value="instructor">Instructor</option>
+          <option value="student">Student</option>
+        </select>
+        <select
+          className="border rounded px-2 py-1"
+          value={batchFilter}
+          onChange={(e) => setBatchFilter(e.target.value)}
+        >
+          <option value="all">All Batches</option>
+          {batches.map((batch) => (
+            <option key={batch.id} value={String(batch.id)}>
+              {batch.name}
+            </option>
+          ))}
+        </select>
+        {isLoadingBatch && (
+          <span className="ml-2 text-sm text-gray-500">Loading batch users...</span>
+        )}
+      </div>
       {/* User Management */}
       <Card>
         <CardHeader>
@@ -213,29 +289,6 @@ export default function AdminDashboardContents({
           <CardDescription>Manage users, roles, and permissions.</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search users..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8"
-              />
-            </div>
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">All Roles</option>
-              <option value="student">Students</option>
-              <option value="instructor">Instructors</option>
-              <option value="admin">Admins</option>
-              <option value="user">Users</option>
-            </select>
-          </div>
           {/* Users Table */}
           {isLoadingUsers ? (
             <div className="text-center py-10">Loading users...</div>

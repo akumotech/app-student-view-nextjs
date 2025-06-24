@@ -540,6 +540,55 @@
         }
       }
     },
+    "/api/batches/{batch_id}/students": {
+      "get": {
+        "tags": ["Batches", "Students"],
+        "summary": "List Students in a Batch",
+        "operationId": "list_students_in_batch_api_batches__batch_id__students_get",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "batch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Batch Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StudentRead"
+                  },
+                  "title": "Response List Students In Batch Api Batches  Batch Id  Students Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/projects/": {
       "get": {
         "tags": ["Projects"],

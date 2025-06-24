@@ -5,6 +5,7 @@ import AdminDashboardContents from "@/app/admin/components/AdminDashboardContent
 import AdminError from "@/app/admin/components/AdminError";
 import { fetchBatches } from "./api/fetchBatches";
 import type { UserOverview, BatchRead } from "./components/types";
+import AnalyticsTabs from "./components/AnalyticsTabs";
 
 interface UsersApiResponse {
   users: UserOverview[];
@@ -42,5 +43,12 @@ export default async function AdminPage() {
     return <AdminError message="Failed to load admin data." />;
   }
 
-  return <AdminDashboardContents stats={stats} users={users} batches={batches} />;
+  return (
+    <>
+      <AdminDashboardContents stats={stats} users={users} batches={batches} />
+      <section className="mt-8">
+        <AnalyticsTabs />
+      </section>
+    </>
+  );
 }
