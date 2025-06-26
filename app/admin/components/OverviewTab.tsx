@@ -51,11 +51,18 @@ export default function OverviewTab({ batchId }: { batchId?: string }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log("OverviewTab - Fetching data for batchId:", batchId);
     setLoading(true);
     setError(null);
     getOverviewStats(batchId ? Number(batchId) : undefined)
-      .then(setStats)
-      .catch(() => setError("Failed to load overview stats."))
+      .then((data) => {
+        console.log("OverviewTab - Received data:", data);
+        setStats(data);
+      })
+      .catch((err) => {
+        console.error("OverviewTab - Error:", err);
+        setError("Failed to load overview stats.");
+      })
       .finally(() => setLoading(false));
   }, [batchId]);
 

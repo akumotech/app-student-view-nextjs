@@ -47,7 +47,7 @@ export default async function AdminPage() {
     <>
       <AdminDashboardContents stats={stats} users={users} batches={batches} />
       <section className="mt-8">
-        <AnalyticsTabs />
+        <AnalyticsTabs batches={batches} />
       </section>
     </>
   );
