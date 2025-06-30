@@ -1397,6 +1397,213 @@
         }
       }
     },
+    "/api/demo-sessions": {
+      "get": {
+        "tags": ["Demo Sessions"],
+        "summary": "List Available Demo Sessions",
+        "description": "List available demo sessions for the current student",
+        "operationId": "list_available_demo_sessions_api_demo_sessions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DemoSessionSummary"
+                  },
+                  "type": "array",
+                  "title": "Response List Available Demo Sessions Api Demo Sessions Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ]
+      }
+    },
+    "/api/demo-sessions/{session_id}/signup": {
+      "post": {
+        "tags": ["Demo Sessions"],
+        "summary": "Sign Up for Demo Session",
+        "description": "Sign up for a demo session",
+        "operationId": "signup_for_demo_session_api_demo_sessions__session_id__signup_post",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoSignupCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSignupRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/students/me/demo-signups": {
+      "get": {
+        "tags": ["My Student Data"],
+        "summary": "My Demo Signups",
+        "description": "List all demo signups for the current student",
+        "operationId": "list_my_demo_signups_api_students_me_demo_signups_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DemoSignupRead"
+                  },
+                  "type": "array",
+                  "title": "Response List My Demo Signups Api Students Me Demo Signups Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ]
+      }
+    },
+    "/api/demo-signups/{signup_id}": {
+      "put": {
+        "tags": ["Demo Sessions"],
+        "summary": "Update My Demo Signup",
+        "description": "Update a demo signup (student can only update their own)",
+        "operationId": "update_my_demo_signup_api_demo_signups__signup_id__put",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "signup_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Signup Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoSignupUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSignupRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Demo Sessions"],
+        "summary": "Cancel My Demo Signup",
+        "description": "Cancel a demo signup",
+        "operationId": "cancel_my_demo_signup_api_demo_signups__signup_id__delete",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "signup_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Signup Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/dashboard": {
       "get": {
         "tags": ["Admin"],
@@ -1783,6 +1990,765 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/APIResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/analytics/overview": {
+      "get": {
+        "tags": ["Admin", "Analytics"],
+        "summary": "Get Overview Analytics",
+        "description": "Get overview analytics",
+        "operationId": "get_overview_analytics_api_v1_admin_analytics_overview_get",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "batch_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Batch Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Overview Analytics Api V1 Admin Analytics Overview Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/analytics/demos": {
+      "get": {
+        "tags": ["Admin", "Analytics"],
+        "summary": "Get Demo Trends",
+        "description": "Get demo trends over time",
+        "operationId": "get_demo_trends_api_v1_admin_analytics_demos_get",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "batch_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Batch Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response Get Demo Trends Api V1 Admin Analytics Demos Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/analytics/wakatime": {
+      "get": {
+        "tags": ["Admin", "Analytics"],
+        "summary": "Get Wakatime Trends",
+        "description": "Get WakaTime activity trends",
+        "operationId": "get_wakatime_trends_api_v1_admin_analytics_wakatime_get",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "batch_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Batch Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response Get Wakatime Trends Api V1 Admin Analytics Wakatime Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/demo-sessions": {
+      "get": {
+        "tags": ["Admin", "Demo Sessions"],
+        "summary": "List Demo Sessions",
+        "description": "List all demo sessions with optional filtering",
+        "operationId": "list_demo_sessions_api_v1_admin_demo_sessions_get",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "include_inactive",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Inactive"
+            }
+          },
+          {
+            "name": "include_cancelled",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Cancelled"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DemoSessionRead"
+                  },
+                  "title": "Response List Demo Sessions Api V1 Admin Demo Sessions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Admin", "Demo Sessions"],
+        "summary": "Create Demo Session",
+        "description": "Create a new demo session",
+        "operationId": "create_demo_session_api_v1_admin_demo_sessions_post",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoSessionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSessionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/demo-sessions/{session_id}": {
+      "get": {
+        "tags": ["Admin", "Demo Sessions"],
+        "summary": "Get Demo Session",
+        "description": "Get detailed info about a demo session including signups",
+        "operationId": "get_demo_session_detail_api_v1_admin_demo_sessions__session_id__get",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSessionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Admin", "Demo Sessions"],
+        "summary": "Update Demo Session",
+        "description": "Update a demo session",
+        "operationId": "update_demo_session_api_v1_admin_demo_sessions__session_id__put",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoSessionUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSessionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Admin", "Demo Sessions"],
+        "summary": "Delete Demo Session",
+        "description": "Delete a demo session and all associated signups",
+        "operationId": "delete_demo_session_api_v1_admin_demo_sessions__session_id__delete",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/demo-sessions/{session_id}/signups": {
+      "get": {
+        "tags": ["Admin", "Demo Sessions"],
+        "summary": "List Session Signups",
+        "description": "List all signups for a specific demo session",
+        "operationId": "list_session_signups_api_v1_admin_demo_sessions__session_id__signups_get",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DemoSignupRead"
+                  },
+                  "title": "Response List Session Signups Api V1 Admin Demo Sessions  Session Id  Signups Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/demo-signups/{signup_id}/admin": {
+      "put": {
+        "tags": ["Admin", "Demo Sessions"],
+        "summary": "Update Signup (Admin)",
+        "description": "Update signup after presentation (admin only)",
+        "operationId": "update_signup_admin_api_v1_admin_demo_signups__signup_id__admin_put",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "signup_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Signup Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoSignupAdminUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSignupRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/demo-sessions/bulk-create": {
+      "post": {
+        "tags": ["Admin", "Demo Sessions"],
+        "summary": "Bulk Create Demo Sessions",
+        "description": "Create multiple demo sessions at once",
+        "operationId": "bulk_create_demo_sessions_api_v1_admin_demo_sessions_bulk_create_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/DemoSessionCreate"
+                },
+                "type": "array",
+                "title": "Sessions Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DemoSessionRead"
+                  },
+                  "type": "array",
+                  "title": "Response Bulk Create Demo Sessions Api V1 Admin Demo Sessions Bulk Create Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/overview": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Overview",
+        "operationId": "overview_api_v1_admin_overview_get",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "batch_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Batch ID for per-batch analytics",
+              "title": "Batch Id"
+            },
+            "description": "Batch ID for per-batch analytics"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverviewStats"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/trends": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Trends",
+        "operationId": "trends_api_v1_admin_trends_get",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "batch_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Batch ID for per-batch analytics",
+              "title": "Batch Id"
+            },
+            "description": "Batch ID for per-batch analytics"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrendsStats"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/engagement": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Engagement",
+        "operationId": "engagement_api_v1_admin_engagement_get",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "batch_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Batch ID for per-batch analytics",
+              "title": "Batch Id"
+            },
+            "description": "Batch ID for per-batch analytics"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EngagementStats"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/coding-activity": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Coding Activity",
+        "operationId": "coding_activity_api_v1_admin_coding_activity_get",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "batch_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Batch ID for per-batch analytics",
+              "title": "Batch Id"
+            },
+            "description": "Batch ID for per-batch analytics"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CodingActivityStats"
                 }
               }
             }
@@ -2208,6 +3174,54 @@
         "type": "object",
         "title": "CertificateUpdate"
       },
+      "CodingActivityStats": {
+        "properties": {
+          "total_coding_seconds": {
+            "type": "number",
+            "title": "Total Coding Seconds"
+          },
+          "per_student": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Per Student"
+          },
+          "per_language": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Per Language"
+          },
+          "heatmap": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Heatmap"
+          },
+          "inactive_students": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Inactive Students"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_coding_seconds",
+          "per_student",
+          "per_language",
+          "heatmap",
+          "inactive_students"
+        ],
+        "title": "CodingActivityStats"
+      },
       "DemoCreate": {
         "properties": {
           "title": {
@@ -2314,6 +3328,536 @@
         "required": ["title", "id", "student_id"],
         "title": "DemoRead"
       },
+      "DemoSessionCreate": {
+        "properties": {
+          "session_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Session Date"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          },
+          "is_cancelled": {
+            "type": "boolean",
+            "title": "Is Cancelled",
+            "default": false
+          },
+          "max_scheduled": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Scheduled"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "default": "Friday Demo Session"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": ["session_date"],
+        "title": "DemoSessionCreate"
+      },
+      "DemoSessionRead": {
+        "properties": {
+          "session_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Session Date"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          },
+          "is_cancelled": {
+            "type": "boolean",
+            "title": "Is Cancelled",
+            "default": false
+          },
+          "max_scheduled": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Scheduled"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "default": "Friday Demo Session"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "signup_count": {
+            "type": "integer",
+            "title": "Signup Count",
+            "default": 0
+          },
+          "signups": {
+            "items": {
+              "$ref": "#/components/schemas/DemoSignupRead"
+            },
+            "type": "array",
+            "title": "Signups",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": ["session_date", "id", "created_at", "updated_at"],
+        "title": "DemoSessionRead"
+      },
+      "DemoSessionSummary": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "session_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Session Date"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "is_cancelled": {
+            "type": "boolean",
+            "title": "Is Cancelled"
+          },
+          "max_scheduled": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Scheduled"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "signup_count": {
+            "type": "integer",
+            "title": "Signup Count",
+            "default": 0
+          },
+          "user_signed_up": {
+            "type": "boolean",
+            "title": "User Signed Up",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": ["id", "session_date", "is_active", "is_cancelled"],
+        "title": "DemoSessionSummary",
+        "description": "Lightweight version for listing sessions"
+      },
+      "DemoSessionUpdate": {
+        "properties": {
+          "session_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Date"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "is_cancelled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Cancelled"
+          },
+          "max_scheduled": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Scheduled"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "title": "DemoSessionUpdate"
+      },
+      "DemoSignupAdminUpdate": {
+        "properties": {
+          "did_present": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Did Present"
+          },
+          "presentation_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Presentation Notes"
+          },
+          "presentation_rating": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 5,
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Presentation Rating"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "title": "DemoSignupAdminUpdate",
+        "description": "Admin-specific fields for updating signup after presentation"
+      },
+      "DemoSignupCreate": {
+        "properties": {
+          "demo_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Demo Id"
+          },
+          "signup_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signup Notes"
+          }
+        },
+        "type": "object",
+        "title": "DemoSignupCreate"
+      },
+      "DemoSignupRead": {
+        "properties": {
+          "demo_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Demo Id"
+          },
+          "signup_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signup Notes"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "session_id": {
+            "type": "integer",
+            "title": "Session Id"
+          },
+          "student_id": {
+            "type": "integer",
+            "title": "Student Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "did_present": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Did Present"
+          },
+          "presentation_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Presentation Notes"
+          },
+          "presentation_rating": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Presentation Rating"
+          },
+          "scheduled_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Scheduled At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "student": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StudentBasic"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "demo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DemoRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": ["id", "session_id", "student_id", "status", "scheduled_at", "updated_at"],
+        "title": "DemoSignupRead"
+      },
+      "DemoSignupUpdate": {
+        "properties": {
+          "demo_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Demo Id"
+          },
+          "signup_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signup Notes"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "title": "DemoSignupUpdate"
+      },
       "DemoUpdate": {
         "properties": {
           "title": {
@@ -2369,6 +3913,41 @@
         "type": "object",
         "title": "DemoUpdate"
       },
+      "EngagementStats": {
+        "properties": {
+          "inactive_students_7d": {
+            "type": "integer",
+            "title": "Inactive Students 7D"
+          },
+          "inactive_students_30d": {
+            "type": "integer",
+            "title": "Inactive Students 30D"
+          },
+          "active_streaks": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Active Streaks"
+          },
+          "at_risk_students": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "At Risk Students"
+          }
+        },
+        "type": "object",
+        "required": [
+          "inactive_students_7d",
+          "inactive_students_30d",
+          "active_streaks",
+          "at_risk_students"
+        ],
+        "title": "EngagementStats"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -2397,6 +3976,49 @@
         "type": "object",
         "required": ["email", "password"],
         "title": "LoginRequest"
+      },
+      "OverviewStats": {
+        "properties": {
+          "total_students": {
+            "type": "integer",
+            "title": "Total Students"
+          },
+          "total_certificates": {
+            "type": "integer",
+            "title": "Total Certificates"
+          },
+          "total_demos": {
+            "type": "integer",
+            "title": "Total Demos"
+          },
+          "students_with_certificates": {
+            "type": "integer",
+            "title": "Students With Certificates"
+          },
+          "students_with_demos": {
+            "type": "integer",
+            "title": "Students With Demos"
+          },
+          "avg_certificates_per_student": {
+            "type": "number",
+            "title": "Avg Certificates Per Student"
+          },
+          "avg_demos_per_student": {
+            "type": "number",
+            "title": "Avg Demos Per Student"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_students",
+          "total_certificates",
+          "total_demos",
+          "students_with_certificates",
+          "students_with_demos",
+          "avg_certificates_per_student",
+          "avg_demos_per_student"
+        ],
+        "title": "OverviewStats"
       },
       "ProjectCreate": {
         "properties": {
@@ -2557,6 +4179,22 @@
         "required": ["email", "password", "name"],
         "title": "SignupRequest"
       },
+      "StudentBasic": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          }
+        },
+        "type": "object",
+        "required": ["id", "user_id"],
+        "title": "StudentBasic",
+        "description": "Basic student info for nested relationships"
+      },
       "StudentRead": {
         "properties": {
           "user_id": {
@@ -2638,6 +4276,41 @@
         },
         "type": "object",
         "title": "StudentUpdate"
+      },
+      "TrendsStats": {
+        "properties": {
+          "labels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Labels"
+          },
+          "new_students": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "New Students"
+          },
+          "certificates_issued": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Certificates Issued"
+          },
+          "demos_submitted": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Demos Submitted"
+          }
+        },
+        "type": "object",
+        "required": ["labels", "new_students", "certificates_issued", "demos_submitted"],
+        "title": "TrendsStats"
       },
       "User": {
         "properties": {

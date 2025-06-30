@@ -14,9 +14,6 @@ interface AnalyticsTabsProps {
 export default function AnalyticsTabs({ batches }: AnalyticsTabsProps) {
   const [batchId, setBatchId] = useState<string>("");
 
-  // Debug logging to check if batchId is changing
-  console.log("AnalyticsTabs - Current batchId:", batchId);
-
   const batchOptions = [
     { label: "All Batches", value: "" },
     ...batches.map((batch) => ({

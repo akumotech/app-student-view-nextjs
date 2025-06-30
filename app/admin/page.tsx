@@ -4,8 +4,10 @@ import { fetchUsers } from "@/app/admin/api/fetchUsers";
 import AdminDashboardContents from "@/app/admin/components/AdminDashboardContents";
 import AdminError from "@/app/admin/components/AdminError";
 import { fetchBatches } from "./api/fetchBatches";
+import { fetchDemoSessions } from "./api/fetchDemoSessions";
 import type { UserOverview, BatchRead } from "./components/types";
 import AnalyticsTabs from "./components/AnalyticsTabs";
+import DemoSessionsClient from "./demo-sessions/DemoSessionsClient";
 
 interface UsersApiResponse {
   users: UserOverview[];
@@ -27,8 +29,9 @@ export default async function AdminPage() {
   const stats = await fetchAdminStats();
   let users: UsersApiResponse | null | any = await fetchUsers();
   let batches: BatchRead[] | null = await fetchBatches();
+  const sessions = await fetchDemoSessions(true, true);
 
-  if (!stats || !users || !batches) {
+  if (!stats || !users || !batches || !sessions) {
     return <AdminError message="Failed to load admin data." />;
   }
 
@@ -43,9 +46,17 @@ export default async function AdminPage() {
     return <AdminError message="Failed to load admin data." />;
   }
 
+  // Sort sessions by date (newest first)
+  const sortedSessions = sessions.sort(
+    (a, b) => new Date(b.session_date).getTime() - new Date(a.session_date).getTime(),
+  );
+
   return (
     <>
       <AdminDashboardContents stats={stats} users={users} batches={batches} />
+      <section className="mt-8">
+        <DemoSessionsClient initialSessions={sortedSessions} />
+      </section>
       <section className="mt-8">
         <AnalyticsTabs batches={batches} />
       </section>

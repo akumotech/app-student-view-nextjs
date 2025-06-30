@@ -33,6 +33,7 @@ export const endpoints = {
   // My student data endpoints (OpenAPI: /api/students/me/...)
   studentsCertificates: "/api/students/me/certificates", // GET /api/students/me/certificates
   studentsDemos: "/api/students/me/demos", // GET /api/students/me/demos
+  studentsMyDemoSignups: "/api/students/me/demo-signups", // GET /api/students/me/demo-signups
 
   // Student-specific endpoints (OpenAPI: /api/students/{student_id}/...)
   studentCertificates: "/api/students/{student_id}/certificates", // GET|POST /api/students/{student_id}/certificates
@@ -49,6 +50,11 @@ export const endpoints = {
   projects: "/api/projects/", // GET|POST /api/projects/
   projectById: "/api/projects/{project_id}", // GET|PUT|DELETE /api/projects/{project_id}
 
+  // Demo Session endpoints (OpenAPI: /api/demo-sessions...)
+  demoSessions: "/api/demo-sessions", // GET /api/demo-sessions
+  demoSessionSignup: "/api/demo-sessions/{session_id}/signup", // POST /api/demo-sessions/{session_id}/signup
+  demoSignupById: "/api/demo-signups/{signup_id}", // PUT|DELETE /api/demo-signups/{signup_id}
+
   // Admin endpoints (OpenAPI: /api/v1/admin/...)
   adminDashboard: "/api/v1/admin/dashboard", // GET /api/v1/admin/dashboard
   adminStats: "/api/v1/admin/stats", // GET /api/v1/admin/stats
@@ -59,6 +65,22 @@ export const endpoints = {
   adminBatches: "/api/v1/admin/batches", // GET /api/v1/admin/batches
   adminProjects: "/api/v1/admin/projects", // GET /api/v1/admin/projects
   adminStudentFull: "/api/v1/admin/students/{student_id}/full", // GET /api/v1/admin/students/{student_id}/full
+
+  // Analytics endpoints (OpenAPI: /api/v1/admin/...)
+  adminOverview: "/api/v1/admin/overview", // GET /api/v1/admin/overview
+  adminTrends: "/api/v1/admin/trends", // GET /api/v1/admin/trends
+  adminEngagement: "/api/v1/admin/engagement", // GET /api/v1/admin/engagement
+  adminCodingActivity: "/api/v1/admin/coding-activity", // GET /api/v1/admin/coding-activity
+  adminAnalyticsOverview: "/api/v1/admin/analytics/overview", // GET /api/v1/admin/analytics/overview
+  adminAnalyticsDemos: "/api/v1/admin/analytics/demos", // GET /api/v1/admin/analytics/demos
+  adminAnalyticsWakatime: "/api/v1/admin/analytics/wakatime", // GET /api/v1/admin/analytics/wakatime
+
+  // Demo Session Management endpoints (Current Backend: /admin/...)
+  adminDemoSessions: "/api/v1/admin/demo-sessions", // GET|POST /api/v1/admin/demo-sessions
+  adminDemoSessionById: "/api/v1/admin/demo-sessions/{session_id}", // GET|PUT|DELETE /api/v1/admin/demo-sessions/{session_id}
+  adminDemoSessionSignups: "/api/v1/admin/demo-sessions/{session_id}/signups", // GET /api/v1/admin/demo-sessions/{session_id}/signups
+  adminDemoSignupAdmin: "/api/v1/admin/demo-signups/{signup_id}/admin", // PUT /api/v1/admin/demo-signups/{signup_id}/admin
+  adminDemoSessionsBulkCreate: "/api/v1/admin/demo-sessions/bulk-create", // POST /api/v1/admin/demo-sessions/bulk-create
 } as const;
 
 export function makeUrl(path: keyof typeof endpoints, params?: Record<string, string | number>) {
