@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,9 +35,22 @@ type LoginResponse = {
   // ...other fields as needed
 };
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { loading, isAuthenticated, user, fetchUserOnMount } = useAuth();
+
+  // Handle error messages from query parameters
+  useEffect(() => {
+    const error = searchParams.get("error");
+    if (error) {
+      toast.error(error);
+      // Clear the error from URL without causing a page refresh
+      const url = new URL(window.location.href);
+      url.searchParams.delete("error");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!loading && isAuthenticated && user) {
@@ -146,5 +159,19 @@ export default function LoginPage() {
         </Card>
       </div>
     </>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <p>Loading...</p>
+        </div>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
   );
 }

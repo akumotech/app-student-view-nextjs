@@ -2,12 +2,12 @@ import { getUserServer } from "@/lib/getUserServer";
 import { fetchAdminStats } from "@/app/admin/api/fetchAdminStats";
 import { fetchUsers } from "@/app/admin/api/fetchUsers";
 import AdminDashboardContents from "@/app/admin/components/AdminDashboardContents";
-import AdminError from "@/app/admin/components/AdminError";
 import { fetchBatches } from "./api/fetchBatches";
 import { fetchDemoSessions } from "./api/fetchDemoSessions";
 import type { UserOverview, BatchRead } from "./components/types";
 import AnalyticsTabs from "./components/AnalyticsTabs";
 import DemoSessionsClient from "./demo-sessions/DemoSessionsClient";
+import { redirectToLoginWithAuth, redirectToLoginWithError } from "./utils/redirects";
 
 interface UsersApiResponse {
   users: UserOverview[];
@@ -23,7 +23,7 @@ function isUsersApiResponse(obj: any): obj is UsersApiResponse {
 export default async function AdminPage() {
   const { user, isAuthenticated } = await getUserServer();
   if (!isAuthenticated || !user || user.role !== "admin") {
-    return <AdminError message="Not authorized" />;
+    redirectToLoginWithAuth();
   }
 
   const stats = await fetchAdminStats();
@@ -32,18 +32,21 @@ export default async function AdminPage() {
   const sessions = await fetchDemoSessions(true, true);
 
   if (!stats || !users || !batches || !sessions) {
-    return <AdminError message="Failed to load admin data." />;
+    redirectToLoginWithError("Failed to load admin data. Please try logging in again.");
+    return; // This line will never be reached due to redirect, but helps TypeScript
   }
 
   // Ensure users is in the correct shape
   if (Array.isArray(users)) {
     users = { users, total_count: users.length, page: 1, page_size: users.length };
   } else if (!isUsersApiResponse(users)) {
-    return <AdminError message="Failed to load admin data." />;
+    redirectToLoginWithError("Failed to load user data. Please try logging in again.");
+    return;
   }
   // Ensure batches is always an array
   if (!Array.isArray(batches)) {
-    return <AdminError message="Failed to load admin data." />;
+    redirectToLoginWithError("Failed to load batch data. Please try logging in again.");
+    return;
   }
 
   // Sort sessions by date (newest first)
