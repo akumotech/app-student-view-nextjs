@@ -4,7 +4,6 @@ import { makeUrl } from "@/lib/utils";
 
 export async function fetchAdminStats(): Promise<any | null> {
   const url = makeUrl("adminStats");
-  console.log("[fetchAdminStats] Fetching:", url);
   try {
     const cookieStore = await cookies();
     const cookieHeader = cookieStore

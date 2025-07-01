@@ -79,7 +79,6 @@ function StudentSignupFormContents() {
         values.password,
         values.batch_registration_key,
       );
-      console.log(response);
       if (!response.success) {
         let apiErrorMessage = response.message || "Student signup failed. Please try again.";
         if (response.error) {
