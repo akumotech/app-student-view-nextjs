@@ -635,7 +635,6 @@ export default function AdminDashboardContents({
                       <TableRow>
                         <TableHead>Title</TableHead>
                         <TableHead>Description</TableHead>
-                        <TableHead>Demo URL</TableHead>
                         <TableHead>GitHub</TableHead>
                       </TableRow>
                     </TableHeader>

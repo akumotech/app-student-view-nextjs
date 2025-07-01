@@ -50,9 +50,6 @@ const formSchema = z.object({
     message: "Title must be at least 2 characters.",
   }),
   description: z.string().optional(),
-  demo_url: z.string().url({
-    message: "Please enter a valid URL.",
-  }),
   github_url: z
     .string()
     .url({
@@ -98,7 +95,6 @@ export default function DemosClientShell({
     defaultValues: {
       title: "",
       description: "",
-      demo_url: "",
       github_url: "",
       technologies: "",
       thumbnail_url: "",
@@ -153,9 +149,8 @@ export default function DemosClientShell({
     try {
       const student_id = getStudentId();
       if (!student_id) throw new Error("No student ID found for this operation.");
-      const payload: { title: string; link: string; description?: string } = {
+      const payload: { title: string; description?: string } = {
         title: values.title,
-        link: values.demo_url,
       };
       if (values.description) payload.description = values.description;
       let endpoint = "";
@@ -199,7 +194,6 @@ export default function DemosClientShell({
     form.reset({
       title: demo.title,
       description: demo.description,
-      demo_url: demo.demo_url,
       github_url: demo.github_url,
       technologies: Array.isArray(demo.technologies) ? demo.technologies.join(", ") : "",
       thumbnail_url: demo.thumbnail_url || "",
@@ -244,7 +238,6 @@ export default function DemosClientShell({
     form.reset({
       title: "",
       description: "",
-      demo_url: "",
       github_url: "",
       technologies: "",
       thumbnail_url: "",
@@ -301,19 +294,6 @@ export default function DemosClientShell({
                         <FormLabel>Description</FormLabel>
                         <FormControl>
                           <Textarea placeholder="Brief description of your project" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="demo_url"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Demo URL</FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://..." {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -403,10 +383,10 @@ export default function DemosClientShell({
                       demo.technologies.map((tech, index) => <Badge key={index}>{tech}</Badge>)}
                   </div>
                 </CardContent>
-                <CardFooter className="flex gap-2">
+                {/* <CardFooter className="flex gap-2">
                   <Button variant="default" size="sm" className="flex-1" asChild>
                     <a
-                      href={demo.demo_url}
+                      href={demo.github_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-center"
@@ -428,7 +408,7 @@ export default function DemosClientShell({
                       </a>
                     </Button>
                   )}
-                </CardFooter>
+                </CardFooter> */}
               </Card>
             ))}
           </div>
