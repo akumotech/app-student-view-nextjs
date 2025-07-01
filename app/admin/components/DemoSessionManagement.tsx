@@ -251,7 +251,9 @@ export default function DemoSessionManagement({
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => onSessionSelect(session)}
+                          onClick={() => {
+                            onSessionSelect(session);
+                          }}
                         >
                           <Eye className="h-4 w-4 mr-1" />
                           View Signups

@@ -21,7 +21,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Calendar, Plus, Edit, Trash2, Clock, Users, Star } from "lucide-react";
+import {
+  Calendar,
+  Plus,
+  Edit,
+  Trash2,
+  Clock,
+  Users,
+  Star,
+  MessageSquare,
+  User,
+} from "lucide-react";
 import { toast } from "sonner";
 import type { DemoRead } from "@/lib/dashboard-types";
 import {
@@ -95,6 +105,8 @@ export default function DemoSessionSignups({ demos }: DemoSessionSignupsProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState<DemoSessionSummary | null>(null);
   const [editingSignup, setEditingSignup] = useState<DemoSignupRead | null>(null);
+  const [viewingNotesSignup, setViewingNotesSignup] = useState<DemoSignupRead | null>(null);
+  const [isNotesDialogOpen, setIsNotesDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   // Form state
@@ -222,6 +234,11 @@ export default function DemoSessionSignups({ demos }: DemoSessionSignupsProps) {
         toast.error("An error occurred while cancelling signup");
       }
     });
+  };
+
+  const handleViewNotes = (signup: DemoSignupRead) => {
+    setViewingNotesSignup(signup);
+    setIsNotesDialogOpen(true);
   };
 
   const getStatusBadge = (signup: DemoSignupRead) => {
@@ -394,9 +411,11 @@ export default function DemoSessionSignups({ demos }: DemoSessionSignupsProps) {
                         {signup.demo ? (
                           <div>
                             <div className="font-medium">{signup.demo.title}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {signup.demo.description}
-                            </div>
+                            {signup.demo.description && (
+                              <div className="text-sm text-muted-foreground line-clamp-2">
+                                {signup.demo.description}
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <span className="text-muted-foreground">No demo selected</span>
@@ -411,21 +430,19 @@ export default function DemoSessionSignups({ demos }: DemoSessionSignupsProps) {
                         )}
                       </TableCell>
                       <TableCell>
-                        <div className="max-w-xs">
-                          {signup.presentation_notes && (
-                            <div className="text-sm text-muted-foreground mb-1">
-                              <strong>Feedback:</strong> {signup.presentation_notes}
-                            </div>
-                          )}
-                          {signup.signup_notes && (
-                            <div className="text-sm">
-                              <strong>Your notes:</strong> {signup.signup_notes}
-                            </div>
-                          )}
-                          {!signup.presentation_notes && !signup.signup_notes && (
-                            <span className="text-muted-foreground">—</span>
-                          )}
-                        </div>
+                        {signup.presentation_notes || signup.signup_notes ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewNotes(signup)}
+                            className="h-8 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          >
+                            <MessageSquare className="h-4 w-4 mr-1" />
+                            View Notes
+                          </Button>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">No notes</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -590,6 +607,79 @@ export default function DemoSessionSignups({ demos }: DemoSessionSignupsProps) {
             </Button>
             <Button onClick={handleEditSubmit} disabled={isPending}>
               {isPending ? "Updating..." : "Update"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Notes Viewing Dialog */}
+      <Dialog open={isNotesDialogOpen} onOpenChange={setIsNotesDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Notes & Feedback</DialogTitle>
+          </DialogHeader>
+          {viewingNotesSignup && (
+            <div className="space-y-4">
+              {/* Session Info */}
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <div className="font-medium">Demo Session</div>
+                <div className="text-sm text-muted-foreground">
+                  {formatDate(viewingNotesSignup.scheduled_at)}
+                </div>
+                {viewingNotesSignup.demo && (
+                  <div className="mt-2">
+                    <div className="text-sm font-medium">Demo: {viewingNotesSignup.demo.title}</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Notes and Feedback */}
+              <div className="space-y-4">
+                {viewingNotesSignup.presentation_notes && (
+                  <div className="rounded-md bg-blue-50 p-4 border-l-4 border-blue-200">
+                    <div className="flex items-start gap-3">
+                      <MessageSquare className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <div className="font-medium text-blue-900 mb-2">Feedback</div>
+                        <div className="text-blue-800 leading-relaxed whitespace-pre-wrap">
+                          {viewingNotesSignup.presentation_notes}
+                        </div>
+                        {viewingNotesSignup.presentation_rating && (
+                          <div className="mt-3 pt-3 border-t border-blue-200">
+                            <div className="text-sm font-medium text-blue-900 mb-1">Rating</div>
+                            {renderStars(viewingNotesSignup.presentation_rating)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {viewingNotesSignup.signup_notes && (
+                  <div className="rounded-md bg-gray-50 p-4 border-l-4 border-gray-200">
+                    <div className="flex items-start gap-3">
+                      <User className="h-5 w-5 text-gray-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900 mb-2">Your Notes</div>
+                        <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                          {viewingNotesSignup.signup_notes}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {!viewingNotesSignup.presentation_notes && !viewingNotesSignup.signup_notes && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No notes or feedback available for this signup.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNotesDialogOpen(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

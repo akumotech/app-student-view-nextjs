@@ -4,7 +4,6 @@ import { makeUrl } from "@/lib/utils";
 
 export async function fetchUsers(): Promise<any[] | null> {
   const url = makeUrl("adminUsers");
-  console.log("[fetchUsers] Fetching:", url);
   try {
     const cookieStore = await cookies();
     const cookieHeader = cookieStore

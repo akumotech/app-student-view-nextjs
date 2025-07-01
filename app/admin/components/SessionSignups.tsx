@@ -33,7 +33,13 @@ interface SessionSignupsProps {
 
 export default function SessionSignups({ session, onBack }: SessionSignupsProps) {
   const [signups, setSignups] = useState<DemoSignup[]>(session.signups || []);
-  const [isLoading, setIsLoading] = useState(!session.signups); // Only load if signups not provided
+
+  // Always load signups if the array is empty but signup_count > 0, or if signups is null/undefined
+  const shouldFetchSignups =
+    !session.signups ||
+    (Array.isArray(session.signups) && session.signups.length === 0 && session.signup_count > 0);
+
+  const [isLoading, setIsLoading] = useState(shouldFetchSignups);
   const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
   const [selectedSignup, setSelectedSignup] = useState<DemoSignup | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -46,24 +52,26 @@ export default function SessionSignups({ session, onBack }: SessionSignupsProps)
     status: "signed_up",
   });
 
-  // Fetch signups only if not already provided in session data
+  // Fetch signups if needed
   useEffect(() => {
-    if (!session.signups) {
+    if (shouldFetchSignups) {
       fetchSignups();
+    } else {
     }
-  }, [session.id, session.signups]);
+  }, [session.id, shouldFetchSignups]);
 
   const fetchSignups = async () => {
     setIsLoading(true);
     try {
       const result = await fetchSessionSignupsAction(session.id);
+
       if (result.success) {
         setSignups(result.data);
       } else {
         toast.error(result.error || "Failed to load signups");
       }
     } catch (error) {
-      console.error("Fetch signups error:", error);
+      console.error("🔍 ADMIN: Fetch signups error:", error);
       toast.error("An error occurred while loading signups");
     } finally {
       setIsLoading(false);

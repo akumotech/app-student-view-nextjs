@@ -69,18 +69,28 @@ export async function fetchSessionSignupsAction(
   sessionId: number,
 ): Promise<{ success: true; data: DemoSignup[] } | { success: false; error: string }> {
   try {
+    // Import makeUrl to show the actual URL being called
+    const { makeUrl } = await import("@/lib/utils");
+    const fullUrl = makeUrl("adminDemoSessionSignups", { session_id: sessionId });
+    console.log("🔍 SERVER: Full URL being called:", fullUrl);
+
     const result = await AuthenticatedApiClient.get<DemoSignup[] | { data: DemoSignup[] }>(
       "adminDemoSessionSignups",
       { session_id: sessionId },
     );
+
     const signups = Array.isArray(result)
       ? result
       : Array.isArray((result as any).data)
         ? (result as any).data
         : [];
+
+    console.log("🔍 SERVER: Processed signups:", signups);
+    console.log("🔍 SERVER: Signups count:", signups.length);
+
     return { success: true, data: signups };
   } catch (error) {
-    console.error("Fetch session signups action error:", error);
+    console.error("🔍 SERVER: Fetch session signups action error:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "An unexpected error occurred",

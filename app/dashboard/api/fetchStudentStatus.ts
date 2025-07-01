@@ -4,7 +4,6 @@ import { makeUrl } from "@/lib/utils";
 
 export async function fetchStudentStatus(): Promise<boolean> {
   const url = makeUrl("studentsCertificates");
-  console.log("[fetchStudentStatus] Fetching:", url);
   try {
     const cookieStore = await cookies();
     const cookieHeader = cookieStore

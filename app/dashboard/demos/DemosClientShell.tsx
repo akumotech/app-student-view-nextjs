@@ -116,7 +116,6 @@ export default function DemosClientShell({
         },
         credentials: "include",
       });
-      console.log("response:", response);
       if (!response.ok) {
         if (response.status === 401) {
           router.push("/login");
