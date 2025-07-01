@@ -258,7 +258,29 @@ export default function DemoSessionSignups({ demos }: DemoSessionSignupsProps) {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    if (!dateString) {
+      return "Invalid date";
+    }
+
+    const parts = dateString.split("-");
+    if (parts.length !== 3) {
+      return "Invalid date format";
+    }
+
+    const [year, month, day] = parts.map(Number);
+
+    // Validate the parsed numbers
+    if (isNaN(year) || isNaN(month) || isNaN(day)) {
+      return "Invalid date values";
+    }
+
+    const date = new Date(year, month - 1, day);
+
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+      return "Invalid date";
+    }
+
     return new Intl.DateTimeFormat("en-US", {
       weekday: "long",
       year: "numeric",
