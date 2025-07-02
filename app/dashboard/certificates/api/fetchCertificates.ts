@@ -5,7 +5,7 @@ import type { CertificateRead } from "@/lib/dashboard-types";
 
 export async function fetchCertificates(): Promise<CertificateRead[] | null> {
   const url = makeUrl("studentsCertificates");
-  console.log("[fetchCertificates] Fetching:", url);
+
   try {
     const cookieStore = await cookies();
     const cookieHeader = cookieStore

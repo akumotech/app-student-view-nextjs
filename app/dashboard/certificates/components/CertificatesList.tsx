@@ -1,18 +1,17 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, ReactElement } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -23,27 +22,47 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Award, Plus } from "lucide-react";
+import { Award, Plus, ExternalLink, MoreHorizontal, Edit, Trash2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { CertificateRead } from "@/lib/dashboard-types";
+import type { CertificateRead } from "@/lib/dashboard-types";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { CertificateCard } from "@/components/ui/certificate-card";
-import { makeUrl, makeUrlWithParams } from "@/lib/utils";
-import type { ReactElement } from "react";
+import { useAuth } from "@/lib/auth-context";
+import { createCertificate, updateCertificate, deleteCertificate } from "../api/certificateActions";
 
 const formSchema = z.object({
   name: z.string().min(2, {
-    message: "Title must be at least 2 characters.",
+    message: "Name must be at least 2 characters.",
   }),
-  issuer: z.string().min(2, {
-    message: "Issuer must be at least 2 characters.",
-  }),
-  date_issued: z.string(),
-  date_expired: z.string(),
+  issuer: z.string().min(1, { message: "Issuer is required." }),
+  date_issued: z.string().min(1, { message: "Issue date is required." }),
+  date_expired: z.string().optional(),
   credential_id: z.string().optional(),
-  credential_url: z.string().url().optional().or(z.literal("")),
+  credential_url: z
+    .string()
+    .url({
+      message: "Please enter a valid URL.",
+    })
+    .optional()
+    .or(z.literal("")),
   description: z.string().optional(),
 });
 
@@ -57,13 +76,12 @@ export default function CertificatesClientShell({
   user,
 }: Props): ReactElement {
   const router = useRouter();
-  const { isAuthenticated, logout } = useAuth();
+  const { logout } = useAuth();
   const [certificates, setCertificates] = useState<CertificateRead[]>(initialCertificates || []);
   const [isLoading, setIsLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentCertificateId, setCurrentCertificateId] = useState<number | null>(null);
-  const [isNotStudent, setIsNotStudent] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -78,54 +96,10 @@ export default function CertificatesClientShell({
     },
   });
 
-  const fetchCertificates = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setIsNotStudent(false);
-      const response = await fetch(makeUrl("studentsCertificates"), {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-      if (!response.ok) {
-        if (response.status === 401) {
-          logout();
-          return;
-        } else if (response.status === 403) {
-          setIsNotStudent(true);
-          setCertificates([]);
-          return;
-        }
-        throw new Error(`Failed to fetch certificates. Status: ${response.status}`);
-      }
-      const data = await response.json();
-      setCertificates(data);
-    } catch (error) {
-      console.error("Error fetching certificates:", error);
-      toast.error("Failed to load certificates");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [logout]);
-
   const getStudentId = () => {
     if (user && user.student_id) return user.student_id;
-    const storedUser = typeof window !== "undefined" ? localStorage.getItem("user") : null;
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser);
-        if (parsed.student_id) return parsed.student_id;
-      } catch {}
-    }
     return null;
   };
-
-  useEffect(() => {
-    fetchCertificates();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const handleLogout = async () => {
     try {
@@ -140,40 +114,30 @@ export default function CertificatesClientShell({
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
+      setIsLoading(true);
       const student_id = getStudentId();
       if (!student_id) throw new Error("No student ID found");
-      let endpoint = "";
+
+      let result;
       if (isEditMode && currentCertificateId) {
-        endpoint = makeUrlWithParams("/api/students/{student_id}/certificates/{certificate_id}", {
-          student_id,
-          certificate_id: currentCertificateId,
-        });
+        result = await updateCertificate(student_id, currentCertificateId, values);
       } else {
-        endpoint = makeUrlWithParams("/api/students/{student_id}/certificates", {
-          student_id,
-        });
+        result = await createCertificate(student_id, values);
       }
-      const method = isEditMode ? "PUT" : "POST";
-      const response = await fetch(endpoint, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(values),
-      });
-      if (!response.ok) {
-        throw new Error(
-          `Failed to ${isEditMode ? "update" : "create"} certificate. Status: ${response.status}`,
-        );
+
+      if (result) {
+        setIsDialogOpen(false);
+        form.reset();
+        toast.success(`Certificate ${isEditMode ? "updated" : "created"} successfully`);
+        router.refresh(); // Refresh to get updated data
+      } else {
+        throw new Error(`Failed to ${isEditMode ? "update" : "create"} certificate`);
       }
-      await fetchCertificates();
-      setIsDialogOpen(false);
-      form.reset();
-      toast.success(`Certificate ${isEditMode ? "updated" : "created"} successfully`);
     } catch (error) {
       console.error(`Error ${isEditMode ? "updating" : "creating"} certificate:`, error);
       toast.error(`Failed to ${isEditMode ? "update" : "create"} certificate`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -193,33 +157,25 @@ export default function CertificatesClientShell({
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this certificate?")) {
-      return;
-    }
+    if (!confirm("Are you sure you want to delete this certificate?")) return;
+
     try {
+      setIsLoading(true);
       const student_id = getStudentId();
       if (!student_id) throw new Error("No student ID found");
-      const response = await fetch(
-        makeUrlWithParams("/api/students/{student_id}/certificates/{certificate_id}", {
-          student_id,
-          certificate_id: id,
-        }),
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        },
-      );
-      if (!response.ok) {
-        throw new Error(`Failed to delete certificate. Status: ${response.status}`);
+
+      const success = await deleteCertificate(student_id, id);
+      if (success) {
+        toast.success("Certificate deleted successfully");
+        router.refresh(); // Refresh to get updated data
+      } else {
+        throw new Error("Failed to delete certificate");
       }
-      await fetchCertificates();
-      toast.success("Certificate deleted successfully");
     } catch (error) {
       console.error("Error deleting certificate:", error);
       toast.error("Failed to delete certificate");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -368,18 +324,6 @@ export default function CertificatesClientShell({
       </div>
       {isLoading ? (
         <div className="text-center py-10">Loading certificates...</div>
-      ) : isNotStudent ? (
-        <div className="text-center py-10 bg-muted rounded-lg">
-          <Award className="mx-auto h-12 w-12 text-muted-foreground mb-3" />
-          <h3 className="text-lg font-medium">You are not registered as a student.</h3>
-          <p className="text-muted-foreground mt-2 mb-4">
-            Please contact your instructor to register as a student.
-          </p>
-          <Button onClick={handleLogout}>
-            <Plus className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
-        </div>
       ) : certificates.length === 0 ? (
         <div className="text-center py-10 bg-muted rounded-lg">
           <Award className="mx-auto h-12 w-12 text-muted-foreground mb-3" />

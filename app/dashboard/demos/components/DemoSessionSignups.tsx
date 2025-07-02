@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,73 +35,31 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { DemoRead } from "@/lib/dashboard-types";
+import type { DemoSessionSummary } from "../api/fetchDemoSessions";
+import type { DemoSignupRead } from "../api/fetchMyDemoSignups";
 import {
-  fetchAvailableDemoSessionsAction,
-  fetchMyDemoSignupsAction,
-  signupForDemoSessionAction,
-  updateDemoSignupAction,
-  cancelDemoSignupAction,
-} from "../actions";
-
-// Type definitions
-export interface DemoSessionSummary {
-  id: number;
-  session_date: string;
-  is_active: boolean;
-  is_cancelled: boolean;
-  max_scheduled: number | null;
-  title: string | null;
-  signup_count: number;
-  user_signed_up: boolean;
-}
-
-export interface DemoSignupCreate {
-  demo_id: number | null;
-  signup_notes: string | null;
-}
-
-export interface DemoSignupUpdate {
-  demo_id: number | null;
-  signup_notes: string | null;
-  status: string | null;
-}
-
-export interface DemoSignupRead {
-  id: number;
-  session_id: number;
-  student_id: number;
-  demo_id: number | null;
-  signup_notes: string | null;
-  status: string;
-  did_present: boolean | null;
-  presentation_notes: string | null;
-  presentation_rating: number | null;
-  scheduled_at: string;
-  updated_at: string;
-  student: {
-    id: number;
-    name: string;
-    email: string;
-  } | null;
-  demo: {
-    id: number;
-    title: string;
-    description: string | null;
-    demo_url: string;
-    github_url: string | null;
-    technologies: string | null;
-    thumbnail_url: string | null;
-  } | null;
-}
+  signupForDemoSession,
+  updateDemoSignup,
+  cancelDemoSignup,
+  type DemoSignupCreate,
+  type DemoSignupUpdate,
+} from "../api/demoSignupActions";
 
 interface DemoSessionSignupsProps {
   demos: DemoRead[];
+  initialSessions: DemoSessionSummary[];
+  initialSignups: DemoSignupRead[];
 }
 
-export default function DemoSessionSignups({ demos }: DemoSessionSignupsProps) {
-  const [availableSessions, setAvailableSessions] = useState<DemoSessionSummary[]>([]);
-  const [mySignups, setMySignups] = useState<DemoSignupRead[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export default function DemoSessionSignups({
+  demos,
+  initialSessions,
+  initialSignups,
+}: DemoSessionSignupsProps) {
+  const router = useRouter();
+  const [availableSessions, setAvailableSessions] = useState<DemoSessionSummary[]>(initialSessions);
+  const [mySignups, setMySignups] = useState<DemoSignupRead[]>(initialSignups);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSignupDialogOpen, setIsSignupDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState<DemoSessionSummary | null>(null);
@@ -114,39 +73,6 @@ export default function DemoSessionSignups({ demos }: DemoSessionSignupsProps) {
     demo_id: null as number | null,
     signup_notes: "",
   });
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const [sessionsResult, signupsResult] = await Promise.all([
-        fetchAvailableDemoSessionsAction(),
-        fetchMyDemoSignupsAction(),
-      ]);
-
-      if (sessionsResult.success) {
-        setAvailableSessions(sessionsResult.data);
-      } else {
-        console.error("Failed to fetch demo sessions:", sessionsResult.error);
-        toast.error("Failed to load demo sessions");
-      }
-
-      if (signupsResult.success) {
-        setMySignups(signupsResult.data);
-      } else {
-        console.error("Failed to fetch demo signups:", signupsResult.error);
-        toast.error("Failed to load your demo signups");
-      }
-    } catch (error) {
-      console.error("Error loading demo session data:", error);
-      toast.error("Failed to load demo session data");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleSignupClick = (session: DemoSessionSummary) => {
     if (session.user_signed_up) {
@@ -167,16 +93,15 @@ export default function DemoSessionSignups({ demos }: DemoSessionSignupsProps) {
 
     startTransition(async () => {
       try {
-        const result = await signupForDemoSessionAction(selectedSession.id, signupForm);
-        if (result.success) {
+        const result = await signupForDemoSession(selectedSession.id, signupForm);
+        if (result) {
           toast.success("Successfully signed up for demo session!");
           setIsSignupDialogOpen(false);
-          await loadData(); // Refresh data
+          router.refresh();
         } else {
-          toast.error(result.error || "Failed to sign up for demo session");
+          toast.error("Failed to sign up for demo session");
         }
       } catch (error) {
-        console.error("Error signing up:", error);
         toast.error("An error occurred while signing up");
       }
     });
@@ -202,16 +127,15 @@ export default function DemoSessionSignups({ demos }: DemoSessionSignupsProps) {
           status: null, // Don't change status
         };
 
-        const result = await updateDemoSignupAction(editingSignup.id, updateData);
-        if (result.success) {
+        const result = await updateDemoSignup(editingSignup.id, updateData);
+        if (result) {
           toast.success("Demo signup updated successfully!");
           setIsEditDialogOpen(false);
-          await loadData(); // Refresh data
+          router.refresh();
         } else {
-          toast.error(result.error || "Failed to update demo signup");
+          toast.error("Failed to update demo signup");
         }
       } catch (error) {
-        console.error("Error updating signup:", error);
         toast.error("An error occurred while updating signup");
       }
     });
@@ -222,15 +146,14 @@ export default function DemoSessionSignups({ demos }: DemoSessionSignupsProps) {
 
     startTransition(async () => {
       try {
-        const result = await cancelDemoSignupAction(signupId);
-        if (result.success) {
+        const success = await cancelDemoSignup(signupId);
+        if (success) {
           toast.success("Demo signup cancelled successfully!");
-          await loadData(); // Refresh data
+          router.refresh();
         } else {
-          toast.error(result.error || "Failed to cancel demo signup");
+          toast.error("Failed to cancel demo signup");
         }
       } catch (error) {
-        console.error("Error cancelling signup:", error);
         toast.error("An error occurred while cancelling signup");
       }
     });
@@ -262,31 +185,43 @@ export default function DemoSessionSignups({ demos }: DemoSessionSignupsProps) {
       return "Invalid date";
     }
 
-    const parts = dateString.split("-");
-    if (parts.length !== 3) {
-      return "Invalid date format";
-    }
+    try {
+      // Handle both ISO timestamps and simple date strings
+      let dateOnly = dateString;
+      if (dateString.includes("T")) {
+        // Extract date part from ISO timestamp
+        dateOnly = dateString.split("T")[0];
+      }
 
-    const [year, month, day] = parts.map(Number);
+      const parts = dateOnly.split("-");
+      if (parts.length !== 3) {
+        return "Invalid date format";
+      }
 
-    // Validate the parsed numbers
-    if (isNaN(year) || isNaN(month) || isNaN(day)) {
-      return "Invalid date values";
-    }
+      const [year, month, day] = parts.map(Number);
 
-    const date = new Date(year, month - 1, day);
+      // Validate the parsed numbers
+      if (isNaN(year) || isNaN(month) || isNaN(day)) {
+        return "Invalid date values";
+      }
 
-    // Check if the date is valid
-    if (isNaN(date.getTime())) {
+      const date = new Date(year, month - 1, day);
+
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        return "Invalid date";
+      }
+
+      return new Intl.DateTimeFormat("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }).format(date);
+    } catch (error) {
+      console.error("Error formatting date:", dateString, error);
       return "Invalid date";
     }
-
-    return new Intl.DateTimeFormat("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }).format(date);
   };
 
   const renderStars = (rating: number) => {
@@ -300,9 +235,15 @@ export default function DemoSessionSignups({ demos }: DemoSessionSignupsProps) {
             }`}
           />
         ))}
-        <span className="ml-2 text-sm text-muted-foreground">({rating}/5)</span>
+        {rating > 0 && <span className="ml-2 text-sm text-muted-foreground">({rating}/5)</span>}
       </div>
     );
+  };
+
+  // Helper function to get session date for a signup
+  const getSessionDate = (signup: DemoSignupRead): string => {
+    const session = availableSessions.find((s) => s.id === signup.session_id);
+    return session?.session_date || "Unknown date";
   };
 
   if (isLoading) {
@@ -428,7 +369,7 @@ export default function DemoSessionSignups({ demos }: DemoSessionSignupsProps) {
                 <TableBody>
                   {mySignups.map((signup) => (
                     <TableRow key={signup.id}>
-                      <TableCell>{formatDate(signup.scheduled_at)}</TableCell>
+                      <TableCell>{formatDate(getSessionDate(signup))}</TableCell>
                       <TableCell>
                         {signup.demo ? (
                           <div>
@@ -577,7 +518,7 @@ export default function DemoSessionSignups({ demos }: DemoSessionSignupsProps) {
               <div className="bg-muted/50 p-4 rounded-lg">
                 <div className="font-medium">Demo Session</div>
                 <div className="text-sm text-muted-foreground">
-                  {formatDate(editingSignup.scheduled_at)}
+                  {formatDate(getSessionDate(editingSignup))}
                 </div>
               </div>
 
@@ -646,7 +587,7 @@ export default function DemoSessionSignups({ demos }: DemoSessionSignupsProps) {
               <div className="bg-muted/50 p-4 rounded-lg">
                 <div className="font-medium">Demo Session</div>
                 <div className="text-sm text-muted-foreground">
-                  {formatDate(viewingNotesSignup.scheduled_at)}
+                  {formatDate(getSessionDate(viewingNotesSignup))}
                 </div>
                 {viewingNotesSignup.demo && (
                   <div className="mt-2">

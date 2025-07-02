@@ -1,5 +1,7 @@
 import { getUserServer } from "@/lib/getUserServer";
 import { fetchDemos } from "@/app/dashboard/demos/api/fetchDemos";
+import { fetchAvailableDemoSessions } from "@/app/dashboard/demos/api/fetchDemoSessions";
+import { fetchMyDemoSignups } from "@/app/dashboard/demos/api/fetchMyDemoSignups";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DemosClientShell from "./DemosClientShell";
 
@@ -28,14 +30,23 @@ export default async function DemosPage() {
     );
   }
 
-  const demos = await fetchDemos();
-  // Optionally handle error state if demos is null
+  // Fetch all data server-side
+  const [demos, availableSessions, mySignups] = await Promise.all([
+    fetchDemos(),
+    fetchAvailableDemoSessions(),
+    fetchMyDemoSignups(),
+  ]);
 
   return (
     <div className="min-h-screen bg-muted/40">
       <DashboardHeader title="Dashboard" />
       <main className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-        <DemosClientShell initialDemos={demos || []} user={user} />
+        <DemosClientShell
+          initialDemos={demos || []}
+          initialSessions={availableSessions || []}
+          initialSignups={mySignups || []}
+          user={user}
+        />
       </main>
     </div>
   );
