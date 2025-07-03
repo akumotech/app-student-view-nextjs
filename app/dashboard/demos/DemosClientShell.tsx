@@ -42,8 +42,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
-import { makeUrl, makeUrlWithParams } from "@/lib/utils";
 import DemoSessionSignups from "./components/DemoSessionSignups";
+import type { DemoSessionSummary } from "./api/fetchDemoSessions";
+import type { DemoSignupRead } from "./api/fetchMyDemoSignups";
+import { createDemo, updateDemo, deleteDemo } from "./api/demoActions";
 
 const formSchema = z.object({
   title: z.string().min(2, {
@@ -77,9 +79,13 @@ function Badge({ children }: { children: React.ReactNode }) {
 
 export default function DemosClientShell({
   initialDemos,
+  initialSessions,
+  initialSignups,
   user,
 }: {
   initialDemos: DemoRead[];
+  initialSessions: DemoSessionSummary[];
+  initialSignups: DemoSignupRead[];
   user: any;
 }) {
   const router = useRouter();
@@ -88,7 +94,6 @@ export default function DemosClientShell({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentDemoId, setCurrentDemoId] = useState<number | null>(null);
-  const [isNotStudent, setIsNotStudent] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -101,90 +106,45 @@ export default function DemosClientShell({
     },
   });
 
-  const fetchDemos = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setIsNotStudent(false);
-      const response = await fetch(makeUrl("studentsDemos"), {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-      if (!response.ok) {
-        if (response.status === 401) {
-          router.push("/login");
-          return;
-        } else if (response.status === 403) {
-          setIsNotStudent(true);
-          setDemos([]);
-          return;
-        }
-        throw new Error(`Failed to fetch demos. Status: ${response.status}`);
-      }
-      const data = await response.json();
-      setDemos(data);
-    } catch (error) {
-      console.error("Error fetching demos:", error);
-      toast.error("Failed to load demos");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [router]);
-
   const getStudentId = () => {
     if (user && user.student_id) return user.student_id;
-    const storedUser = typeof window !== "undefined" ? localStorage.getItem("user") : null;
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser);
-        if (parsed.student_id) return parsed.student_id;
-      } catch {}
-    }
     return null;
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
+      setIsLoading(true);
       const student_id = getStudentId();
       if (!student_id) throw new Error("No student ID found for this operation.");
-      const payload: { title: string; description?: string } = {
+
+      const payload = {
         title: values.title,
+        description: values.description || undefined,
+        github_url: values.github_url || undefined,
+        technologies: values.technologies || undefined,
+        thumbnail_url: values.thumbnail_url || undefined,
       };
-      if (values.description) payload.description = values.description;
-      let endpoint = "";
+
+      let result;
       if (isEditMode && currentDemoId) {
-        endpoint = makeUrlWithParams("/api/students/{student_id}/demos/{demo_id}", {
-          student_id,
-          demo_id: currentDemoId,
-        });
+        result = await updateDemo(student_id, currentDemoId, payload);
       } else {
-        endpoint = makeUrlWithParams("/api/students/{student_id}/demos", {
-          student_id,
-        });
+        result = await createDemo(student_id, payload);
       }
-      const method = isEditMode ? "PUT" : "POST";
-      const response = await fetch(endpoint, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        throw new Error(
-          `Failed to ${isEditMode ? "update" : "create"} demo. Status: ${response.status}`,
-        );
+
+      if (result) {
+        setIsDialogOpen(false);
+        form.reset();
+        toast.success(`Demo ${isEditMode ? "updated" : "created"} successfully`);
+        router.refresh(); // Refresh to get updated data
+      } else {
+        throw new Error(`Failed to ${isEditMode ? "update" : "create"} demo`);
       }
-      await fetchDemos();
-      setIsDialogOpen(false);
-      form.reset();
-      toast.success(`Demo ${isEditMode ? "updated" : "created"} successfully`);
     } catch (error) {
       console.error(`Error ${isEditMode ? "updating" : "creating"} demo:`, error);
       toast.error(`Failed to ${isEditMode ? "update" : "create"} demo`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -202,33 +162,25 @@ export default function DemosClientShell({
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this demo?")) {
-      return;
-    }
+    if (!confirm("Are you sure you want to delete this demo?")) return;
+
     try {
+      setIsLoading(true);
       const student_id = getStudentId();
       if (!student_id) throw new Error("No student ID found for this operation.");
-      const response = await fetch(
-        makeUrlWithParams("/api/students/{student_id}/demos/{demo_id}", {
-          student_id,
-          demo_id: id,
-        }),
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        },
-      );
-      if (!response.ok) {
-        throw new Error(`Failed to delete demo. Status: ${response.status}`);
+
+      const success = await deleteDemo(student_id, id);
+      if (success) {
+        toast.success("Demo deleted successfully");
+        router.refresh(); // Refresh to get updated data
+      } else {
+        throw new Error("Failed to delete demo");
       }
-      await fetchDemos();
-      toast.success("Demo deleted successfully");
     } catch (error) {
       console.error("Error deleting demo:", error);
       toast.error("Failed to delete demo");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -325,13 +277,6 @@ export default function DemosClientShell({
 
         {isLoading ? (
           <div className="text-center py-10">Loading demos...</div>
-        ) : isNotStudent ? (
-          <div className="text-center py-10 bg-muted rounded-lg">
-            <h3 className="text-lg font-medium">You are not registered as a student.</h3>
-            <p className="text-muted-foreground mt-2 mb-4">
-              Please contact your instructor to register as a student.
-            </p>
-          </div>
         ) : demos.length === 0 ? (
           <div className="text-center py-10 bg-muted rounded-lg">
             <Play className="mx-auto h-12 w-12 text-muted-foreground mb-3" />
@@ -416,7 +361,11 @@ export default function DemosClientShell({
       </TabsContent>
 
       <TabsContent value="sessions" className="space-y-6">
-        <DemoSessionSignups demos={demos} />
+        <DemoSessionSignups
+          demos={demos}
+          initialSessions={initialSessions}
+          initialSignups={initialSignups}
+        />
       </TabsContent>
     </Tabs>
   );

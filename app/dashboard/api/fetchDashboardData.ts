@@ -5,7 +5,7 @@ import type { DashboardData } from "@/lib/dashboard-types";
 
 export async function fetchDashboardData(email: string): Promise<DashboardData | null> {
   const url = makeUrl("wakatimeUsage");
-  console.log("[fetchDashboardData] Fetching:", url, "for email:", email);
+
   try {
     const cookieStore = await cookies();
     const cookieHeader = cookieStore
