@@ -159,6 +159,31 @@ export default function DemoSessionSignups({
     signup_notes: "",
   });
 
+  // Refetch data function
+  const refetchData = async () => {
+    try {
+      setIsLoading(true);
+      const { fetchAvailableDemoSessions } = await import("../api/fetchDemoSessions");
+      const { fetchMyDemoSignups } = await import("../api/fetchMyDemoSignups");
+
+      const [newSessions, newSignups] = await Promise.all([
+        fetchAvailableDemoSessions(),
+        fetchMyDemoSignups(),
+      ]);
+
+      if (newSessions) {
+        setAvailableSessions(newSessions);
+      }
+      if (newSignups) {
+        setMySignups(newSignups);
+      }
+    } catch (error) {
+      console.error("Error refetching data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSignupClick = (session: DemoSessionSummary) => {
     if (session.user_signed_up) {
       toast.info("You're already signed up for this session");
@@ -184,7 +209,7 @@ export default function DemoSessionSignups({
           // We have a valid signup result
           toast.success("Successfully signed up for demo session!");
           setIsSignupDialogOpen(false);
-          router.refresh();
+          await refetchData(); // Refetch data to update UI
         } else if (result === null) {
           // Explicit null return (API error)
           toast.error("Failed to sign up for demo session. Please try again.");
@@ -193,14 +218,14 @@ export default function DemoSessionSignups({
           toast.warning(
             "Signup completed but with unexpected response. Refreshing to check status...",
           );
-          router.refresh();
+          await refetchData(); // Refetch data to update UI
         }
       } catch (error) {
         console.error(`[UI] Signup error:`, error);
         toast.error("An error occurred while signing up");
         // Still refresh in case the signup actually worked despite the error
-        setTimeout(() => {
-          router.refresh();
+        setTimeout(async () => {
+          await refetchData();
         }, 1000);
       }
     });
@@ -230,7 +255,7 @@ export default function DemoSessionSignups({
         if (result) {
           toast.success("Demo signup updated successfully!");
           setIsEditDialogOpen(false);
-          router.refresh();
+          await refetchData(); // Refetch data to update UI
         } else {
           toast.error("Failed to update demo signup");
         }
@@ -248,7 +273,7 @@ export default function DemoSessionSignups({
         const success = await cancelDemoSignup(signupId);
         if (success) {
           toast.success("Demo signup cancelled successfully!");
-          router.refresh();
+          await refetchData(); // Refetch data to update UI
         } else {
           toast.error("Failed to cancel demo signup");
         }
