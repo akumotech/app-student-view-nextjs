@@ -32,6 +32,12 @@ import {
   Star,
   MessageSquare,
   User,
+  ExternalLink,
+  Copy,
+  Check,
+  Video,
+  Globe,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { DemoRead } from "@/lib/dashboard-types";
@@ -44,12 +50,91 @@ import {
   type DemoSignupCreate,
   type DemoSignupUpdate,
 } from "../api/demoSignupActions";
+import { formatTimeForDisplay, formatSessionDateTime } from "@/lib/utils";
 
 interface DemoSessionSignupsProps {
   demos: DemoRead[];
   initialSessions: DemoSessionSummary[];
   initialSignups: DemoSignupRead[];
 }
+
+// Meeting platform detection and validation utilities
+const detectMeetingPlatform = (url: string): { platform: string; icon: React.ReactNode } => {
+  const lowerUrl = url.toLowerCase();
+
+  if (lowerUrl.includes("zoom.us")) {
+    return { platform: "Zoom", icon: <Video className="h-4 w-4 text-blue-600" /> };
+  } else if (lowerUrl.includes("meet.google.com")) {
+    return { platform: "Google Meet", icon: <Video className="h-4 w-4 text-green-600" /> };
+  } else if (lowerUrl.includes("teams.microsoft.com")) {
+    return { platform: "Microsoft Teams", icon: <Video className="h-4 w-4 text-purple-600" /> };
+  } else if (lowerUrl.includes("webex.com")) {
+    return { platform: "Webex", icon: <Video className="h-4 w-4 text-orange-600" /> };
+  } else if (lowerUrl.includes("gotomeeting.com")) {
+    return { platform: "GoToMeeting", icon: <Video className="h-4 w-4 text-yellow-600" /> };
+  } else {
+    return { platform: "Video Call", icon: <Globe className="h-4 w-4 text-gray-600" /> };
+  }
+};
+
+const CopyButton = ({ text, label }: { text: string; label: string }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      toast.success(`${label} copied to clipboard!`);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      toast.error("Failed to copy to clipboard");
+    }
+  };
+
+  return (
+    <Button variant="outline" size="sm" onClick={handleCopy} className="flex items-center gap-1">
+      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+      {copied ? "Copied" : "Copy"}
+    </Button>
+  );
+};
+
+const MeetingLinkDisplay = ({ session }: { session: DemoSessionSummary }) => {
+  if (session.zoom_link) {
+    const { platform, icon } = detectMeetingPlatform(session.zoom_link);
+
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 text-sm">
+          {icon}
+          <span className="font-medium text-green-600">Meeting link available</span>
+          <Badge variant="outline" className="text-green-600 border-green-600">
+            {platform}
+          </Badge>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button
+            variant="default"
+            size="sm"
+            className="flex-1 bg-green-600 hover:bg-green-700"
+            onClick={() => window.open(session.zoom_link!, "_blank")}
+          >
+            <ExternalLink className="h-4 w-4 mr-2" />
+            Join {platform}
+          </Button>
+          <CopyButton text={session.zoom_link} label="Meeting Link" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <Clock className="h-4 w-4 text-yellow-500" />
+      <span>Meeting link will be provided closer to the session</span>
+    </div>
+  );
+};
 
 export default function DemoSessionSignups({
   demos,
@@ -94,15 +179,29 @@ export default function DemoSessionSignups({
     startTransition(async () => {
       try {
         const result = await signupForDemoSession(selectedSession.id, signupForm);
-        if (result) {
+
+        if (result && (result.id || result.session_id)) {
+          // We have a valid signup result
           toast.success("Successfully signed up for demo session!");
           setIsSignupDialogOpen(false);
           router.refresh();
+        } else if (result === null) {
+          // Explicit null return (API error)
+          toast.error("Failed to sign up for demo session. Please try again.");
         } else {
-          toast.error("Failed to sign up for demo session");
+          // Unexpected result structure but not null
+          toast.warning(
+            "Signup completed but with unexpected response. Refreshing to check status...",
+          );
+          router.refresh();
         }
       } catch (error) {
+        console.error(`[UI] Signup error:`, error);
         toast.error("An error occurred while signing up");
+        // Still refresh in case the signup actually worked despite the error
+        setTimeout(() => {
+          router.refresh();
+        }, 1000);
       }
     });
   };
@@ -288,9 +387,15 @@ export default function DemoSessionSignups({
                       )}
                     </div>
                     <CardDescription>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Clock className="h-4 w-4" />
-                        {formatDate(session.session_date)}
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Clock className="h-4 w-4" />
+                          {formatDate(session.session_date)}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {formatTimeForDisplay(session.session_time || "15:00:00")} Central Time
+                        </div>
                       </div>
                     </CardDescription>
                   </CardHeader>
@@ -316,6 +421,11 @@ export default function DemoSessionSignups({
                         )}
                       </div>
                     </div>
+
+                    <div className="mb-3">
+                      <MeetingLinkDisplay session={session} />
+                    </div>
+
                     <Button
                       onClick={() => handleSignupClick(session)}
                       disabled={
@@ -452,6 +562,13 @@ export default function DemoSessionSignups({
                 <div className="text-sm text-muted-foreground">
                   {formatDate(selectedSession.session_date)}
                 </div>
+                <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                  <Clock className="h-3 w-3" />
+                  {formatTimeForDisplay(selectedSession.session_time || "15:00:00")} Central Time
+                </div>
+                <div className="mt-2">
+                  <MeetingLinkDisplay session={selectedSession} />
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -519,6 +636,16 @@ export default function DemoSessionSignups({
                 <div className="font-medium">Demo Session</div>
                 <div className="text-sm text-muted-foreground">
                   {formatDate(getSessionDate(editingSignup))}
+                </div>
+                <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                  <Clock className="h-3 w-3" />
+                  {(() => {
+                    const session = availableSessions.find(
+                      (s) => s.id === editingSignup.session_id,
+                    );
+                    return formatTimeForDisplay(session?.session_time || "15:00:00");
+                  })()}{" "}
+                  Central Time
                 </div>
               </div>
 
@@ -588,6 +715,16 @@ export default function DemoSessionSignups({
                 <div className="font-medium">Demo Session</div>
                 <div className="text-sm text-muted-foreground">
                   {formatDate(getSessionDate(viewingNotesSignup))}
+                </div>
+                <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                  <Clock className="h-3 w-3" />
+                  {(() => {
+                    const session = availableSessions.find(
+                      (s) => s.id === viewingNotesSignup.session_id,
+                    );
+                    return formatTimeForDisplay(session?.session_time || "15:00:00");
+                  })()}{" "}
+                  Central Time
                 </div>
                 {viewingNotesSignup.demo && (
                   <div className="mt-2">

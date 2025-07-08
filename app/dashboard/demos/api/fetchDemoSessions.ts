@@ -18,12 +18,14 @@ async function getAuthHeaders() {
 export interface DemoSessionSummary {
   id: number;
   session_date: string;
+  session_time: string;
   is_active: boolean;
   is_cancelled: boolean;
   max_scheduled: number;
   title?: string;
   signup_count: number;
   user_signed_up?: boolean;
+  zoom_link?: string | null;
 }
 
 export async function fetchAvailableDemoSessions(): Promise<DemoSessionSummary[] | null> {

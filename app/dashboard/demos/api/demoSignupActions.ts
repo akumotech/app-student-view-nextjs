@@ -32,12 +32,11 @@ export async function signupForDemoSession(
   sessionId: number,
   signupData: DemoSignupCreate,
 ): Promise<DemoSignupRead | null> {
-  const url = makeUrlWithParams("/api/students/demo-sessions/{session_id}/signups", {
-    session_id: sessionId,
-  });
+  const url = makeUrl("demoSessionSignup", { session_id: sessionId });
 
   try {
     const headers = await getAuthHeaders();
+
     const res = await fetch(url, {
       method: "POST",
       headers,
@@ -49,12 +48,36 @@ export async function signupForDemoSession(
     if (!res.ok) {
       const body = await res.text();
       console.error(`[signupForDemoSession] Non-OK response:`, res.status, body);
+
+      // Try to parse error details
+      try {
+        const errorData = JSON.parse(body);
+        console.error(`[signupForDemoSession] Error details:`, errorData);
+      } catch (parseError) {
+        console.error(`[signupForDemoSession] Could not parse error response:`, body);
+      }
+
       return null;
     }
 
     const result = await res.json();
+
+    // Handle different response structures
+    let finalResult: DemoSignupRead | null = null;
+
+    if (result && result.data) {
+      // Response is wrapped in { data: ... }
+      finalResult = result.data;
+    } else if (result && (result.id || result.session_id)) {
+      // Response is the DemoSignupRead object directly
+      finalResult = result;
+    } else {
+      console.warn(`[signupForDemoSession] Unexpected response structure:`, result);
+      finalResult = result; // Fallback to original behavior
+    }
+
     revalidatePath("/dashboard/demos");
-    return result.data || result;
+    return finalResult;
   } catch (error) {
     console.error("[signupForDemoSession] Error:", error);
     return null;
@@ -65,9 +88,7 @@ export async function updateDemoSignup(
   signupId: number,
   updateData: DemoSignupUpdate,
 ): Promise<DemoSignupRead | null> {
-  const url = makeUrlWithParams("/api/students/demo-sessions/signups/{signup_id}", {
-    signup_id: signupId,
-  });
+  const url = makeUrl("demoSignupById", { signup_id: signupId });
 
   try {
     const headers = await getAuthHeaders();
@@ -95,9 +116,7 @@ export async function updateDemoSignup(
 }
 
 export async function cancelDemoSignup(signupId: number): Promise<boolean> {
-  const url = makeUrlWithParams("/api/students/demo-sessions/signups/{signup_id}", {
-    signup_id: signupId,
-  });
+  const url = makeUrl("demoSignupById", { signup_id: signupId });
 
   try {
     const headers = await getAuthHeaders();

@@ -2241,7 +2241,7 @@
       "post": {
         "tags": ["Admin", "Demo Sessions"],
         "summary": "Create Demo Session",
-        "description": "Create a new demo session",
+        "description": "Create a new demo session with manual meeting link entry (no OAuth required)",
         "operationId": "create_demo_session_api_v1_admin_demo_sessions_post",
         "security": [
           {
@@ -3239,17 +3239,6 @@
             ],
             "title": "Description"
           },
-          "link": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Link"
-          },
           "date": {
             "type": "null",
             "title": "Date"
@@ -3288,17 +3277,6 @@
             ],
             "title": "Description"
           },
-          "link": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Link"
-          },
           "date": {
             "type": "null",
             "title": "Date"
@@ -3335,6 +3313,12 @@
             "format": "date",
             "title": "Session Date"
           },
+          "session_time": {
+            "type": "string",
+            "format": "time",
+            "title": "Session Time",
+            "default": "15:00:00"
+          },
           "is_active": {
             "type": "boolean",
             "title": "Is Active",
@@ -3389,6 +3373,17 @@
               }
             ],
             "title": "Notes"
+          },
+          "zoom_link": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zoom Link"
           }
         },
         "type": "object",
@@ -3402,6 +3397,12 @@
             "format": "date",
             "title": "Session Date"
           },
+          "session_time": {
+            "type": "string",
+            "format": "time",
+            "title": "Session Time",
+            "default": "15:00:00"
+          },
           "is_active": {
             "type": "boolean",
             "title": "Is Active",
@@ -3456,6 +3457,17 @@
               }
             ],
             "title": "Notes"
+          },
+          "zoom_link": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zoom Link"
           },
           "id": {
             "type": "integer",
@@ -3535,9 +3547,9 @@
             "title": "Signup Count",
             "default": 0
           },
-          "user_signed_up": {
+          "user_scheduled": {
             "type": "boolean",
-            "title": "User Signed Up",
+            "title": "User Scheduled",
             "default": false
           }
         },
@@ -3559,6 +3571,18 @@
               }
             ],
             "title": "Session Date"
+          },
+          "session_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Time"
           },
           "is_active": {
             "anyOf": [
@@ -3625,6 +3649,17 @@
               }
             ],
             "title": "Notes"
+          },
+          "zoom_link": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zoom Link"
           }
         },
         "type": "object",
@@ -3842,17 +3877,6 @@
               }
             ],
             "title": "Signup Notes"
-          },
-          "status": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Status"
           }
         },
         "type": "object",
@@ -3881,17 +3905,6 @@
               }
             ],
             "title": "Description"
-          },
-          "link": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Link"
           },
           "date": {
             "type": "null",
@@ -4188,10 +4201,18 @@
           "user_id": {
             "type": "integer",
             "title": "User Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
           }
         },
         "type": "object",
-        "required": ["id", "user_id"],
+        "required": ["id", "user_id", "name", "email"],
         "title": "StudentBasic",
         "description": "Basic student info for nested relationships"
       },

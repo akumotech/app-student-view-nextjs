@@ -6,12 +6,24 @@ import type { DemoSession, DemoSignup, UpdateSignupAdmin } from "../api/fetchDem
 
 export interface CreateDemoSessionData {
   session_date: string;
+  session_time?: string;
   max_scheduled: number;
+  title?: string;
+  description?: string;
+  notes?: string;
+  zoom_link?: string;
+  is_active?: boolean;
+  is_cancelled?: boolean;
 }
 
 export interface UpdateDemoSessionData {
   session_date?: string;
+  session_time?: string;
   max_scheduled?: number;
+  title?: string;
+  description?: string;
+  notes?: string;
+  zoom_link?: string;
   is_active?: boolean;
   is_cancelled?: boolean;
 }

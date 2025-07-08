@@ -3,12 +3,17 @@ import { AuthenticatedApiClient } from "@/lib/api-client";
 export interface DemoSession {
   id: number;
   session_date: string;
+  session_time: string;
   max_scheduled: number;
   is_active: boolean;
   is_cancelled: boolean;
   signup_count: number;
   created_at: string;
   updated_at: string;
+  zoom_link: string | null;
+  title?: string;
+  description?: string;
+  notes?: string;
   signups?: DemoSignup[]; // Optional because some endpoints might not include it
 }
 
@@ -38,12 +43,24 @@ export interface DemoSignup {
 
 export interface CreateDemoSession {
   session_date: string;
+  session_time?: string;
   max_scheduled: number;
+  title?: string;
+  description?: string;
+  notes?: string;
+  zoom_link?: string;
+  is_active?: boolean;
+  is_cancelled?: boolean;
 }
 
 export interface UpdateDemoSession {
   session_date?: string;
+  session_time?: string;
   max_scheduled?: number;
+  title?: string;
+  description?: string;
+  notes?: string;
+  zoom_link?: string;
   is_active?: boolean;
   is_cancelled?: boolean;
 }
