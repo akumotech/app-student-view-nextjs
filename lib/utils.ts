@@ -110,3 +110,49 @@ export function makeUrlWithParams(path: string, params?: Record<string, string |
 
   return `${baseUrl}${endpoint}`;
 }
+
+// Time formatting utilities for demo sessions
+export function formatTimeForDisplay(time: string): string {
+  // Convert HH:MM:SS to 12-hour format
+  const [hours, minutes] = time.split(":").map(Number);
+  const period = hours >= 12 ? "PM" : "AM";
+  const displayHours = hours % 12 || 12;
+  return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`;
+}
+
+export function formatTimeForInput(time: string): string {
+  // Convert HH:MM:SS to HH:MM for input field
+  return time.split(":").slice(0, 2).join(":");
+}
+
+export function formatTimeForApi(time: string): string {
+  // Convert HH:MM to HH:MM:SS for API
+  return time.includes(":") && time.split(":").length === 2 ? `${time}:00` : time;
+}
+
+export function formatSessionDateTime(date: string, time: string): string {
+  // Format date and time together with timezone
+  const formattedDate = new Date(date).toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const formattedTime = formatTimeForDisplay(time);
+  return `${formattedDate} at ${formattedTime} Central Time`;
+}
+
+export function getDefaultSessionTime(): string {
+  // Return default time of 3:00 PM (15:00) in HH:MM format
+  return "15:00";
+}
+
+export function getCommonSessionTimes(): { label: string; value: string }[] {
+  return [
+    { label: "1:00 PM Central", value: "13:00" },
+    { label: "2:00 PM Central", value: "14:00" },
+    { label: "3:00 PM Central", value: "15:00" },
+    { label: "4:00 PM Central", value: "16:00" },
+    { label: "5:00 PM Central", value: "17:00" },
+  ];
+}

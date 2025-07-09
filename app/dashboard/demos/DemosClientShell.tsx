@@ -111,6 +111,22 @@ export default function DemosClientShell({
     return null;
   };
 
+  // Refetch demos function
+  const refetchDemos = async () => {
+    try {
+      setIsLoading(true);
+      const { fetchDemos } = await import("./api/fetchDemos");
+      const newDemos = await fetchDemos();
+      if (newDemos) {
+        setDemos(newDemos);
+      }
+    } catch (error) {
+      console.error("Error refetching demos:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsLoading(true);
@@ -136,7 +152,7 @@ export default function DemosClientShell({
         setIsDialogOpen(false);
         form.reset();
         toast.success(`Demo ${isEditMode ? "updated" : "created"} successfully`);
-        router.refresh(); // Refresh to get updated data
+        await refetchDemos(); // Refetch data to update UI
       } else {
         throw new Error(`Failed to ${isEditMode ? "update" : "create"} demo`);
       }
@@ -172,7 +188,7 @@ export default function DemosClientShell({
       const success = await deleteDemo(student_id, id);
       if (success) {
         toast.success("Demo deleted successfully");
-        router.refresh(); // Refresh to get updated data
+        await refetchDemos(); // Refetch data to update UI
       } else {
         throw new Error("Failed to delete demo");
       }

@@ -21,10 +21,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, CheckCircle, XCircle, Star, MessageSquare, User } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle,
+  XCircle,
+  Star,
+  MessageSquare,
+  User,
+  Clock,
+  ExternalLink,
+} from "lucide-react";
 import { toast } from "sonner";
 import type { DemoSession, DemoSignup, UpdateSignupAdmin } from "../api/fetchDemoSessions";
 import { fetchSessionSignupsAction, updateSignupAction } from "../demo-sessions/actions";
+import { formatTimeForDisplay } from "@/lib/utils";
 
 interface SessionSignupsProps {
   session: DemoSession;
@@ -207,13 +217,29 @@ export default function SessionSignups({ session, onBack }: SessionSignupsProps)
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Sessions
             </Button>
-            <div>
-              <CardTitle>Demo Session - {formatDate(session.session_date)}</CardTitle>
+            <div className="flex-1">
+              <CardTitle>
+                {session.title || "Friday Demo Session"} - {formatDate(session.session_date)}
+              </CardTitle>
               <CardDescription>
-                {signups.length} student{signups.length !== 1 ? "s" : ""} signed up (Max:{" "}
-                {session.max_scheduled})
+                <div className="flex items-center gap-4">
+                  <span>
+                    {signups.length} student{signups.length !== 1 ? "s" : ""} signed up (Max:{" "}
+                    {session.max_scheduled})
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {formatTimeForDisplay(session.session_time || "15:00:00")} Central Time
+                  </span>
+                </div>
               </CardDescription>
             </div>
+            {session.zoom_link && (
+              <Button variant="outline" onClick={() => window.open(session.zoom_link!, "_blank")}>
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Join Zoom Meeting
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>

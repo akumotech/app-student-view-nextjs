@@ -21,7 +21,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Calendar, Plus, Edit, Trash2, Users, Eye } from "lucide-react";
+import {
+  Calendar,
+  Plus,
+  Edit,
+  Trash2,
+  Users,
+  Eye,
+  Clock,
+  ExternalLink,
+  Copy,
+  Check,
+  Video,
+  Globe,
+  Zap,
+} from "lucide-react";
 import { toast } from "sonner";
 import type { DemoSession, CreateDemoSession, UpdateDemoSession } from "../api/fetchDemoSessions";
 import {
@@ -30,11 +44,71 @@ import {
   type CreateDemoSessionData,
   type UpdateDemoSessionData,
 } from "../demo-sessions/actions";
+import {
+  formatTimeForDisplay,
+  formatTimeForInput,
+  formatTimeForApi,
+  formatSessionDateTime,
+  getDefaultSessionTime,
+  getCommonSessionTimes,
+} from "@/lib/utils";
 
 interface DemoSessionManagementProps {
   initialSessions: DemoSession[];
   onSessionSelect: (session: DemoSession) => void;
 }
+
+// Meeting platform detection and validation utilities
+const detectMeetingPlatform = (url: string): { platform: string; icon: React.ReactNode } => {
+  const lowerUrl = url.toLowerCase();
+
+  if (lowerUrl.includes("zoom.us")) {
+    return { platform: "Zoom", icon: <Video className="h-4 w-4 text-blue-600" /> };
+  } else if (lowerUrl.includes("meet.google.com")) {
+    return { platform: "Google Meet", icon: <Video className="h-4 w-4 text-green-600" /> };
+  } else if (lowerUrl.includes("teams.microsoft.com")) {
+    return { platform: "Microsoft Teams", icon: <Video className="h-4 w-4 text-purple-600" /> };
+  } else if (lowerUrl.includes("webex.com")) {
+    return { platform: "Webex", icon: <Video className="h-4 w-4 text-orange-600" /> };
+  } else if (lowerUrl.includes("gotomeeting.com")) {
+    return { platform: "GoToMeeting", icon: <Video className="h-4 w-4 text-yellow-600" /> };
+  } else {
+    return { platform: "Video Call", icon: <Globe className="h-4 w-4 text-gray-600" /> };
+  }
+};
+
+const validateMeetingUrl = (url: string): boolean => {
+  if (!url.trim()) return true; // Empty URL is valid (optional field)
+
+  try {
+    const urlObj = new URL(url);
+    return urlObj.protocol === "http:" || urlObj.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+
+const CopyButton = ({ text, label }: { text: string; label: string }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      toast.success(`${label} copied to clipboard!`);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      toast.error("Failed to copy to clipboard");
+    }
+  };
+
+  return (
+    <Button variant="outline" size="sm" onClick={handleCopy} className="flex items-center gap-1">
+      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+      {copied ? "Copied" : "Copy"}
+    </Button>
+  );
+};
 
 export default function DemoSessionManagement({
   initialSessions,
@@ -49,13 +123,27 @@ export default function DemoSessionManagement({
   // Form state
   const [formData, setFormData] = useState<CreateDemoSession>({
     session_date: "",
+    session_time: getDefaultSessionTime(),
     max_scheduled: 8,
+    title: "Friday Demo Session",
+    description: "",
+    notes: "",
+    zoom_link: "",
+    is_active: true,
+    is_cancelled: false,
   });
 
   const resetForm = () => {
     setFormData({
       session_date: "",
+      session_time: getDefaultSessionTime(),
       max_scheduled: 8,
+      title: "Friday Demo Session",
+      description: "",
+      notes: "",
+      zoom_link: "",
+      is_active: true,
+      is_cancelled: false,
     });
   };
 
@@ -65,10 +153,22 @@ export default function DemoSessionManagement({
       return;
     }
 
+    if (formData.zoom_link && !validateMeetingUrl(formData.zoom_link)) {
+      toast.error("Please enter a valid meeting URL");
+      return;
+    }
+
     startTransition(async () => {
       const result = await createDemoSessionAction({
         session_date: formData.session_date,
+        session_time: formatTimeForApi(formData.session_time || getDefaultSessionTime()),
         max_scheduled: formData.max_scheduled,
+        title: formData.title,
+        description: formData.description,
+        notes: formData.notes,
+        zoom_link: formData.zoom_link || undefined,
+        is_active: formData.is_active,
+        is_cancelled: formData.is_cancelled,
       });
 
       if (result.success) {
@@ -89,10 +189,20 @@ export default function DemoSessionManagement({
   const handleEditSession = () => {
     if (!editingSession) return;
 
+    if (formData.zoom_link && !validateMeetingUrl(formData.zoom_link)) {
+      toast.error("Please enter a valid meeting URL");
+      return;
+    }
+
     startTransition(async () => {
       const result = await updateDemoSessionAction(editingSession.id, {
         session_date: formData.session_date,
+        session_time: formatTimeForApi(formData.session_time || getDefaultSessionTime()),
         max_scheduled: formData.max_scheduled,
+        title: formData.title,
+        description: formData.description,
+        notes: formData.notes,
+        zoom_link: formData.zoom_link || undefined,
       });
 
       if (result.success) {
@@ -149,7 +259,14 @@ export default function DemoSessionManagement({
     setEditingSession(session);
     setFormData({
       session_date: session.session_date.split("T")[0], // Format for date input
+      session_time: formatTimeForInput(session.session_time || getDefaultSessionTime()),
       max_scheduled: session.max_scheduled,
+      title: session.title || "Friday Demo Session",
+      description: session.description || "",
+      notes: session.notes || "",
+      zoom_link: session.zoom_link || "",
+      is_active: session.is_active,
+      is_cancelled: session.is_cancelled,
     });
     setIsEditDialogOpen(true);
   };
@@ -247,10 +364,11 @@ export default function DemoSessionManagement({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
+                  <TableHead>Date & Time</TableHead>
+                  <TableHead>Title</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Signups</TableHead>
-                  <TableHead>Max Capacity</TableHead>
+                  <TableHead>Meeting Link</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -258,16 +376,63 @@ export default function DemoSessionManagement({
                 {sessions.map((session) => (
                   <TableRow key={session.id}>
                     <TableCell className="font-medium">
-                      {formatDate(session.session_date)}
+                      <div className="flex flex-col">
+                        <span>{formatDate(session.session_date)}</span>
+                        <span className="text-sm text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {formatTimeForDisplay(session.session_time || "15:00:00")} Central
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-medium">
+                          {session.title || "Friday Demo Session"}
+                        </span>
+                        {session.description && (
+                          <span className="text-sm text-muted-foreground">
+                            {session.description}
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>{getSessionStatus(session)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4" />
-                        <span>{session.signup_count}</span>
+                        <span>
+                          {session.signup_count}/{session.max_scheduled}
+                        </span>
                       </div>
                     </TableCell>
-                    <TableCell>{session.max_scheduled}</TableCell>
+                    <TableCell>
+                      {session.zoom_link ? (
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1">
+                            {detectMeetingPlatform(session.zoom_link).icon}
+                            <span className="text-xs text-muted-foreground">
+                              {detectMeetingPlatform(session.zoom_link).platform}
+                            </span>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(session.zoom_link!, "_blank")}
+                          >
+                            <ExternalLink className="h-4 w-4 mr-1" />
+                            Join
+                          </Button>
+                          <CopyButton text={session.zoom_link} label="Meeting Link" />
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-yellow-500" />
+                          <span className="text-sm text-muted-foreground">
+                            Link will be added later
+                          </span>
+                        </div>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Button
@@ -289,6 +454,7 @@ export default function DemoSessionManagement({
                           size="sm"
                           onClick={() => handleToggleActive(session)}
                           disabled={isPending}
+                          className="min-w-24"
                         >
                           {session.is_active ? "Deactivate" : "Activate"}
                         </Button>
@@ -306,7 +472,7 @@ export default function DemoSessionManagement({
                 ))}
                 {sessions.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       No demo sessions found. Create your first session to get started.
                     </TableCell>
                   </TableRow>
@@ -319,18 +485,54 @@ export default function DemoSessionManagement({
 
       {/* Create Session Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Create New Demo Session</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="session_date">Session Date</Label>
+                <Input
+                  id="session_date"
+                  type="date"
+                  value={formData.session_date}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, session_date: e.target.value }))
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="session_time">Session Time (Central)</Label>
+                <Input
+                  id="session_time"
+                  type="time"
+                  value={formData.session_time}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, session_time: e.target.value }))
+                  }
+                />
+                <p className="text-xs text-muted-foreground mt-1">Default: 3:00 PM Central Time</p>
+              </div>
+            </div>
             <div>
-              <Label htmlFor="session_date">Session Date</Label>
+              <Label htmlFor="title">Session Title</Label>
               <Input
-                id="session_date"
-                type="date"
-                value={formData.session_date}
-                onChange={(e) => setFormData((prev) => ({ ...prev, session_date: e.target.value }))}
+                id="title"
+                type="text"
+                value={formData.title}
+                onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+                placeholder="Friday Demo Session"
+              />
+            </div>
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                type="text"
+                value={formData.description}
+                onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                placeholder="Brief description of the session"
               />
             </div>
             <div>
@@ -346,6 +548,32 @@ export default function DemoSessionManagement({
                 }
               />
             </div>
+            <div>
+              <Label htmlFor="notes">Admin Notes</Label>
+              <Input
+                id="notes"
+                type="text"
+                value={formData.notes}
+                onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
+                placeholder="Internal notes for admins"
+              />
+            </div>
+            <div>
+              <Label htmlFor="zoom_link">Zoom Link (Optional)</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="zoom_link"
+                  type="url"
+                  value={formData.zoom_link}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, zoom_link: e.target.value }))}
+                  placeholder="https://zoom.us/j/1234567890"
+                />
+                {formData.zoom_link && <CopyButton text={formData.zoom_link} label="Zoom Link" />}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Enter a valid URL (e.g., https://zoom.us/j/1234567890) if you want to pre-fill it.
+              </p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
@@ -360,18 +588,54 @@ export default function DemoSessionManagement({
 
       {/* Edit Session Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Edit Demo Session</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit_session_date">Session Date</Label>
+                <Input
+                  id="edit_session_date"
+                  type="date"
+                  value={formData.session_date}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, session_date: e.target.value }))
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit_session_time">Session Time (Central)</Label>
+                <Input
+                  id="edit_session_time"
+                  type="time"
+                  value={formData.session_time}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, session_time: e.target.value }))
+                  }
+                />
+                <p className="text-xs text-muted-foreground mt-1">Time in Central timezone</p>
+              </div>
+            </div>
             <div>
-              <Label htmlFor="edit_session_date">Session Date</Label>
+              <Label htmlFor="edit_title">Session Title</Label>
               <Input
-                id="edit_session_date"
-                type="date"
-                value={formData.session_date}
-                onChange={(e) => setFormData((prev) => ({ ...prev, session_date: e.target.value }))}
+                id="edit_title"
+                type="text"
+                value={formData.title}
+                onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+                placeholder="Friday Demo Session"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit_description">Description</Label>
+              <Input
+                id="edit_description"
+                type="text"
+                value={formData.description}
+                onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                placeholder="Brief description of the session"
               />
             </div>
             <div>
@@ -386,6 +650,44 @@ export default function DemoSessionManagement({
                   setFormData((prev) => ({ ...prev, max_scheduled: parseInt(e.target.value) || 8 }))
                 }
               />
+            </div>
+            <div>
+              <Label htmlFor="edit_notes">Admin Notes</Label>
+              <Input
+                id="edit_notes"
+                type="text"
+                value={formData.notes}
+                onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
+                placeholder="Internal notes for admins"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit_zoom_link">Meeting Link (Optional)</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="edit_zoom_link"
+                  type="url"
+                  value={formData.zoom_link}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, zoom_link: e.target.value }))}
+                  placeholder="https://zoom.us/j/1234567890 or https://meet.google.com/abc-defg-hij"
+                />
+                {formData.zoom_link && (
+                  <>
+                    <CopyButton text={formData.zoom_link} label="Meeting Link" />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(formData.zoom_link!, "_blank")}
+                    >
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      Open
+                    </Button>
+                  </>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Enter a valid meeting URL. You can add this now or update it later.
+              </p>
             </div>
           </div>
           <DialogFooter>
