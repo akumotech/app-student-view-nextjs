@@ -661,39 +661,32 @@ export default function DemoSessionManagement({
                 placeholder="Internal notes for admins"
               />
             </div>
-            {editingSession?.zoom_link && (
-              <div>
-                <Label>Zoom Link</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  <Input value={editingSession.zoom_link} readOnly className="flex-1" />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(editingSession.zoom_link!, "_blank")}
-                  >
-                    <ExternalLink className="h-4 w-4 mr-1" />
-                    Open
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Zoom link is auto-generated and cannot be edited here
-                </p>
-              </div>
-            )}
             <div>
-              <Label htmlFor="edit_zoom_link">Zoom Link (Optional)</Label>
+              <Label htmlFor="edit_zoom_link">Meeting Link (Optional)</Label>
               <div className="flex items-center gap-2">
                 <Input
                   id="edit_zoom_link"
                   type="url"
                   value={formData.zoom_link}
                   onChange={(e) => setFormData((prev) => ({ ...prev, zoom_link: e.target.value }))}
-                  placeholder="https://zoom.us/j/1234567890"
+                  placeholder="https://zoom.us/j/1234567890 or https://meet.google.com/abc-defg-hij"
                 />
-                {formData.zoom_link && <CopyButton text={formData.zoom_link} label="Zoom Link" />}
+                {formData.zoom_link && (
+                  <>
+                    <CopyButton text={formData.zoom_link} label="Meeting Link" />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(formData.zoom_link!, "_blank")}
+                    >
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      Open
+                    </Button>
+                  </>
+                )}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Enter a valid URL (e.g., https://zoom.us/j/1234567890) if you want to pre-fill it.
+                Enter a valid meeting URL. You can add this now or update it later.
               </p>
             </div>
           </div>
