@@ -16,7 +16,7 @@ export default async function DashboardPage() {
 
   if (user.wakatime_access_token_encrypted) {
     hasWakaTimeAuth = true;
-    dashboardData = await fetchDashboardData(user.email);
+    dashboardData = await fetchDashboardData();
   }
 
   return (

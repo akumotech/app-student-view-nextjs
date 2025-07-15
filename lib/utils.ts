@@ -20,7 +20,7 @@ export const endpoints = {
   // WakaTime endpoints (OpenAPI: /api/wakatime/...)
   wakatimeAuthorize: "/api/wakatime/authorize", // GET /api/wakatime/authorize
   wakatimeCallback: "/api/wakatime/callback", // POST /api/wakatime/callback
-  wakatimeUsage: "/api/wakatime/usage", // POST /api/wakatime/usage
+  wakatimeStatsRange: "/api/wakatime/stats-range", // POST /api/wakatime/stats-range
   wakatimeToday: "/api/wakatime/today", // POST /api/wakatime/today
 
   // Student registration (OpenAPI: /api/students/...)
