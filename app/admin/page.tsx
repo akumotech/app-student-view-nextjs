@@ -1,12 +1,11 @@
 import { getUserServer } from "@/lib/getUserServer";
 import { fetchAdminStats } from "@/app/admin/api/fetchAdminStats";
 import { fetchUsers } from "@/app/admin/api/fetchUsers";
+import { fetchAllAnalytics } from "@/app/admin/api/fetchAnalytics";
 import AdminDashboardContents from "@/app/admin/components/AdminDashboardContents";
 import { fetchBatches } from "./api/fetchBatches";
 import { fetchDemoSessions } from "./api/fetchDemoSessions";
-import type { UserOverview, BatchRead } from "./components/types";
-import AnalyticsTabs from "./components/AnalyticsTabs";
-import DemoSessionsClient from "./demo-sessions/DemoSessionsClient";
+import type { UserOverview, BatchRead, AnalyticsDashboardData } from "./components/types";
 import { redirectToLoginWithAuth, redirectToLoginWithError } from "./utils/redirects";
 
 interface UsersApiResponse {
@@ -30,6 +29,7 @@ export default async function AdminPage() {
   let users: UsersApiResponse | null | any = await fetchUsers();
   let batches: BatchRead[] | null = await fetchBatches();
   const sessions = await fetchDemoSessions(true, true);
+  const analytics = await fetchAllAnalytics();
 
   if (!stats || !users || !batches || !sessions) {
     redirectToLoginWithError("Failed to load admin data. Please try logging in again.");
@@ -55,14 +55,6 @@ export default async function AdminPage() {
   );
 
   return (
-    <>
-      <AdminDashboardContents stats={stats} users={users} batches={batches} />
-      <section className="mt-8">
-        <DemoSessionsClient initialSessions={sortedSessions} />
-      </section>
-      <section className="mt-8">
-        <AnalyticsTabs batches={batches} />
-      </section>
-    </>
+    <AdminDashboardContents stats={stats} users={users} batches={batches} analytics={analytics} />
   );
 }

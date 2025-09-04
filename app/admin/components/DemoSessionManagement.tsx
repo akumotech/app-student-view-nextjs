@@ -120,6 +120,10 @@ export default function DemoSessionManagement({
   const [editingSession, setEditingSession] = useState<DemoSession | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dateFilter, setDateFilter] = useState("all"); // all, upcoming, past
+
   // Form state
   const [formData, setFormData] = useState<CreateDemoSession>({
     session_date: "",
@@ -146,6 +150,24 @@ export default function DemoSessionManagement({
       is_cancelled: false,
     });
   };
+
+  // Filter sessions based on search term and date filter
+  const filteredSessions = sessions.filter((session) => {
+    const matchesSearch =
+      (session.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (session.description && session.description.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const sessionDate = new Date(session.session_date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const matchesDate =
+      dateFilter === "all" ||
+      (dateFilter === "upcoming" && sessionDate >= today) ||
+      (dateFilter === "past" && sessionDate < today);
+
+    return matchesSearch && matchesDate;
+  });
 
   const handleCreateSession = () => {
     if (!formData.session_date) {
@@ -340,20 +362,66 @@ export default function DemoSessionManagement({
   }, [isCreateDialogOpen]);
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
+    <div className="max-w-7xl mx-auto px-6 lg:px-8 space-y-8">
+      {/* Filters */}
+      <Card className="border-border/50 shadow-sm">
+        <CardContent className="pt-8 pb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
+              <label className="text-sm font-medium mb-2 block">Search</label>
+              <Input
+                placeholder="Search by title or description..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Date Range</label>
+              <select
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="w-full p-2 border rounded-md"
+              >
+                <option value="all">All Sessions</option>
+                <option value="upcoming">Upcoming Sessions</option>
+                <option value="past">Past Sessions</option>
+              </select>
+            </div>
+            <div className="flex items-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearchTerm("");
+                  setDateFilter("all");
+                }}
+                className="w-full"
+              >
+                Clear Filters
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/50 shadow-sm">
+        <CardHeader className="pb-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <CardTitle className="flex items-center gap-3 text-xl font-semibold text-foreground">
+                <div className="p-2 bg-foreground/5 rounded-lg">
+                  <Calendar className="h-6 w-6 text-foreground" />
+                </div>
                 Demo Session Management
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-base text-muted-foreground">
                 Manage Friday demo sessions where students showcase their projects
               </CardDescription>
             </div>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
+            <Button
+              onClick={() => setIsCreateDialogOpen(true)}
+              className="shadow-sm hover:shadow-md transition-all duration-200"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Create Session
             </Button>
@@ -363,18 +431,18 @@ export default function DemoSessionManagement({
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Date & Time</TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Signups</TableHead>
-                  <TableHead>Meeting Link</TableHead>
-                  <TableHead>Actions</TableHead>
+                <TableRow className="hover:bg-muted/50">
+                  <TableHead className="font-medium text-muted-foreground">Date & Time</TableHead>
+                  <TableHead className="font-medium text-muted-foreground">Title</TableHead>
+                  <TableHead className="font-medium text-muted-foreground">Status</TableHead>
+                  <TableHead className="font-medium text-muted-foreground">Signups</TableHead>
+                  <TableHead className="font-medium text-muted-foreground">Meeting Link</TableHead>
+                  <TableHead className="font-medium text-muted-foreground">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sessions.map((session) => (
-                  <TableRow key={session.id}>
+                {filteredSessions.map((session) => (
+                  <TableRow key={session.id} className="hover:bg-muted/30 transition-colors">
                     <TableCell className="font-medium">
                       <div className="flex flex-col">
                         <span>{formatDate(session.session_date)}</span>
@@ -470,10 +538,12 @@ export default function DemoSessionManagement({
                     </TableCell>
                   </TableRow>
                 ))}
-                {sessions.length === 0 && (
+                {filteredSessions.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      No demo sessions found. Create your first session to get started.
+                      {sessions.length === 0
+                        ? "No demo sessions found. Create your first session to get started."
+                        : "No sessions match the current filters."}
                     </TableCell>
                   </TableRow>
                 )}

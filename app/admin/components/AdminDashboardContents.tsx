@@ -29,9 +29,27 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import Link from "next/link";
-import { Copy, Search, ChevronLeft, ChevronRight, Edit } from "lucide-react";
+import {
+  Copy,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Edit,
+  Plus,
+  Users,
+  TrendingUp,
+  BarChart3,
+  Activity,
+  AlertTriangle,
+} from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import DashboardStats from "./DashboardStats";
-import UserEditDialog from "./UserEditDialog";
+import OverviewAnalytics from "./OverviewAnalytics";
+import TrendsChart from "./TrendsChart";
+import EngagementMetrics from "./EngagementMetrics";
+import CodingActivityDashboard from "./CodingActivityDashboard";
+import BatchSelector from "./BatchSelector";
+
 import type {
   DashboardStats as DashboardStatsType,
   UserOverview,
@@ -39,11 +57,10 @@ import type {
   NewlyCreatedBatchInfo,
   CertificateRead,
   DemoRead,
+  AnalyticsDashboardData,
 } from "./types";
 import "./admin-print.css";
 import { useAuth } from "@/lib/auth-context";
-import { makeUrl } from "@/lib/utils";
-import { fetchBatchStudents } from "../api/fetchBatchStudents";
 
 interface AdminDashboardContentsProps {
   stats: DashboardStatsType;
@@ -54,35 +71,27 @@ interface AdminDashboardContentsProps {
     page_size?: number;
   };
   batches: BatchRead[];
+  analytics?: AnalyticsDashboardData | null;
 }
 
 export default function AdminDashboardContents({
   stats,
   users,
   batches,
+  analytics,
 }: AdminDashboardContentsProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { logout } = useAuth();
 
-  // State for user management
-  const [userList, setUserList] = useState<UserOverview[]>(users.users);
-  const [usersTotal, setUsersTotal] = useState(users.total_count);
-  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(20);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState<string>("all");
-  const [batchFilter, setBatchFilter] = useState<string>("all");
-  const [isLoadingBatch, setIsLoadingBatch] = useState(false);
+  // State for user management (simplified for dashboard)
+  const [usersTotal] = useState(users.total_count);
 
-  // State for modals
-  const [editingUser, setEditingUser] = useState<UserOverview | null>(null);
-  const [isUserEditDialogOpen, setIsUserEditDialogOpen] = useState(false);
+  // State for batch filtering
+  const [selectedBatchId, setSelectedBatchId] = useState<number | null>(null);
 
   // Legacy state for existing batch functionality
   const [legacyBatches, setLegacyBatches] = useState<BatchRead[]>(batches);
-  const [isLoadingLegacyBatches] = useState(false);
   const [newlyCreatedBatchInfo, setNewlyCreatedBatchInfo] = useState<NewlyCreatedBatchInfo | null>(
     null,
   );
@@ -103,104 +112,9 @@ export default function AdminDashboardContents({
     }
   }, [searchParams]);
 
-  // Filtering and pagination (client-side for now)
-  useEffect(() => {
-    let filtered = users.users;
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (u) =>
-          u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          u.email.toLowerCase().includes(searchTerm.toLowerCase()),
-      );
-    }
-    if (roleFilter !== "all") {
-      filtered = filtered.filter((u) => u.role === roleFilter);
-    }
-    // Batch filter (client-side fallback)
-    if (batchFilter !== "all") {
-      filtered = filtered.filter(
-        (u) =>
-          u.student_detail &&
-          u.student_detail.batch &&
-          String(u.student_detail.batch.id) === batchFilter,
-      );
-    }
-    setUsersTotal(filtered.length);
-    setUserList(filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize));
-  }, [searchTerm, roleFilter, batchFilter, users.users, currentPage, pageSize]);
-
-  // Fetch users for selected batch (server-side for all, client-side for batch)
-  useEffect(() => {
-    if (batchFilter === "all") {
-      setUserList(users.users);
-      setUsersTotal(users.total_count);
-      return;
-    }
-    setIsLoadingBatch(true);
-    fetchBatchStudents(batchFilter)
-      .then((batchUsers) => {
-        if (batchUsers) {
-          // Apply role and search filter to batch users
-          let filtered = batchUsers;
-          if (searchTerm) {
-            filtered = filtered.filter(
-              (u) =>
-                u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                u.email.toLowerCase().includes(searchTerm.toLowerCase()),
-            );
-          }
-          if (roleFilter !== "all") {
-            filtered = filtered.filter((u) => u.role === roleFilter);
-          }
-          setUserList(filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize));
-          setUsersTotal(filtered.length);
-        }
-      })
-      .finally(() => setIsLoadingBatch(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [batchFilter]);
-
   const handleCopyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success("Registration key copied to clipboard!");
-  };
-
-  const handleUserEdit = (user: UserOverview) => {
-    setEditingUser(user);
-    setIsUserEditDialogOpen(true);
-  };
-
-  const handleUserUpdate = async (updated: {
-    name: string;
-    email: string;
-    role: string;
-    batchId: number | null;
-    disabled: boolean;
-  }) => {
-    if (!editingUser || !editingUser.student_detail) return;
-    try {
-      const studentId = editingUser.student_detail.id;
-      const url = makeUrl("adminStudentById", { student_id: studentId });
-      const response = await fetch(url, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ batch_id: updated.batchId }),
-      });
-      const result = await response.json();
-      if (!response.ok || !result.success) {
-        const errorMessage = result.message || result.error || "Failed to update student batch.";
-        toast.error(errorMessage);
-        return;
-      }
-      toast.success(result.message || "Student batch updated successfully.");
-      setIsUserEditDialogOpen(false);
-      setEditingUser(null);
-      // Optionally refetch or update userList here
-    } catch (error) {
-      console.error("Error updating student batch:", error);
-      toast.error("Failed to update student batch");
-    }
   };
 
   const handleLogout = async () => {
@@ -221,8 +135,6 @@ export default function AdminDashboardContents({
     }
   };
 
-  const totalPages = Math.ceil(usersTotal / pageSize);
-
   useEffect(() => {
     if (studentProfile) {
       document.body.classList.add("modal-open");
@@ -235,195 +147,215 @@ export default function AdminDashboardContents({
   }, [studentProfile]);
 
   return (
-    <div className="container mx-auto p-4 py-8 space-y-8">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+    <div className="max-w-7xl mx-auto px-6 lg:px-8 space-y-8">
+      {/* Header Section */}
+      <div className="flex flex-col space-y-6 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold tracking-tight text-foreground">Admin Dashboard</h1>
+          <p className="text-lg text-muted-foreground">
+            Monitor student progress, batch performance, and system analytics
+          </p>
+        </div>
         <div className="flex items-center gap-4">
-          <Link href="/admin/batches" passHref>
-            <Button>Create New Batch</Button>
+          <Link href="/admin/batches/newBatch">
+            <Button className="flex items-center gap-2 shadow-sm hover:shadow-md transition-all duration-200">
+              <Plus className="h-4 w-4" />
+              Create Batch
+            </Button>
           </Link>
-          <Button variant="outline" onClick={handleLogout}>
+          <Button
+            variant="outline"
+            onClick={handleLogout}
+            className="hover:bg-muted/50 transition-colors"
+          >
             Logout
           </Button>
         </div>
       </div>
-      <DashboardStats stats={stats} />
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4 items-center mb-4">
-        <Input
-          placeholder="Search users by name or email"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-64"
-        />
-        <select
-          className="border rounded px-2 py-1"
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-        >
-          <option value="all">All Roles</option>
-          <option value="admin">Admin</option>
-          <option value="instructor">Instructor</option>
-          <option value="student">Student</option>
-        </select>
-        <select
-          className="border rounded px-2 py-1"
-          value={batchFilter}
-          onChange={(e) => setBatchFilter(e.target.value)}
-        >
-          <option value="all">All Batches</option>
-          {batches.map((batch) => (
-            <option key={batch.id} value={String(batch.id)}>
-              {batch.name}
-            </option>
-          ))}
-        </select>
-        {isLoadingBatch && (
-          <span className="ml-2 text-sm text-gray-500">Loading batch users...</span>
-        )}
-      </div>
-      {/* User Management */}
-      <Card>
-        <CardHeader>
-          <CardTitle>User Management</CardTitle>
-          <CardDescription>Manage users, roles, and permissions.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {/* Users Table */}
-          {isLoadingUsers ? (
-            <div className="text-center py-10">Loading users...</div>
-          ) : (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Batch</TableHead>
-                    <TableHead>WakaTime</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {userList.map((user) => (
-                    <TableRow
-                      key={user.id}
-                      className="cursor-pointer hover:bg-muted"
-                      onClick={() => {
-                        if (user.role === "student" && user.student_detail) {
-                          setStudentProfile(user.student_detail);
-                        }
-                      }}
-                    >
-                      <TableCell className="font-medium">{user.name}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                        <Badge className={getRoleBadgeColor(user.role)}>{user.role}</Badge>
-                      </TableCell>
-                      <TableCell>{user.student_detail?.batch?.name || "N/A"}</TableCell>
-                      <TableCell>
-                        {user.wakatime_connected ? (
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-green-600">
-                              Connected
-                            </Badge>
-                            {user.student_detail?.wakatime_stats && (
-                              <span className="text-sm text-muted-foreground">
-                                {user.student_detail.wakatime_stats.text}
-                              </span>
-                            )}
-                          </div>
-                        ) : (
-                          <Badge variant="outline" className="text-gray-600">
-                            Not Connected
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={user.disabled ? "destructive" : "secondary"}>
-                          {user.disabled ? "Disabled" : "Active"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (user.role === "student" && user.student_detail) {
-                              handleUserEdit(user);
-                            }
-                          }}
-                          disabled={user.role !== "student" || !user.student_detail}
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              {/* Pagination */}
-              <div className="flex items-center justify-between space-x-2 py-4">
-                <div className="text-sm text-muted-foreground">
-                  Showing {(currentPage - 1) * pageSize + 1} to{" "}
-                  {Math.min(currentPage * pageSize, usersTotal)} of {usersTotal} users
+
+      {/* Quick Actions & Navigation */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Link href="/admin/users">
+          <Card className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10 border-0 bg-gradient-to-br from-blue-50 to-blue-100/50 hover:from-blue-100 hover:to-blue-200/50">
+            <CardContent className="p-8">
+              <div className="flex items-center gap-5">
+                <div className="p-3 bg-blue-500/10 rounded-xl group-hover:bg-blue-500/20 transition-colors">
+                  <Users className="h-7 w-7 text-blue-600" />
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    Previous
-                  </Button>
-                  <div className="text-sm">
-                    Page {currentPage} of {totalPages}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+                <div className="space-y-1">
+                  <h3 className="font-semibold text-lg text-blue-900">Manage Users</h3>
+                  <p className="text-sm text-blue-700/80">{usersTotal} total users</p>
                 </div>
               </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/admin/batches">
+          <Card className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-green-500/10 border-0 bg-gradient-to-br from-green-50 to-green-100/50 hover:from-green-100 hover:to-green-200/50">
+            <CardContent className="p-8">
+              <div className="flex items-center gap-5">
+                <div className="p-3 bg-green-500/10 rounded-xl group-hover:bg-green-500/20 transition-colors">
+                  <BarChart3 className="h-7 w-7 text-green-600" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-semibold text-lg text-green-900">View Batches</h3>
+                  <p className="text-sm text-green-700/80">{batches.length} active batches</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/admin/demo-sessions">
+          <Card className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 border-0 bg-gradient-to-br from-purple-50 to-purple-100/50 hover:from-purple-100 hover:to-purple-200/50">
+            <CardContent className="p-8">
+              <div className="flex items-center gap-5">
+                <div className="p-3 bg-purple-500/10 rounded-xl group-hover:bg-purple-500/20 transition-colors">
+                  <Activity className="h-7 w-7 text-purple-600" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-semibold text-lg text-purple-900">Demo Sessions</h3>
+                  <p className="text-sm text-purple-700/80">Manage sessions</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
+
+      {/* Core Statistics */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-foreground/5 rounded-lg">
+            <BarChart3 className="h-6 w-6 text-foreground" />
+          </div>
+          <h2 className="text-2xl font-semibold text-foreground">System Overview</h2>
+        </div>
+        <DashboardStats stats={stats} />
+      </div>
+
+      {/* Analytics Section */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-foreground/5 rounded-lg">
+              <TrendingUp className="h-6 w-6 text-foreground" />
+            </div>
+            <h2 className="text-2xl font-semibold text-foreground">Analytics & Insights</h2>
+          </div>
+          <BatchSelector
+            batches={batches}
+            selectedBatchId={selectedBatchId}
+            onBatchChange={setSelectedBatchId}
+            className="w-auto"
+          />
+        </div>
+
+        {analytics ? (
+          <Tabs defaultValue="overview" className="space-y-8">
+            <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1 rounded-xl">
+              <TabsTrigger
+                value="overview"
+                className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg transition-all"
+              >
+                <BarChart3 className="h-4 w-4" />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger
+                value="trends"
+                className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg transition-all"
+              >
+                <TrendingUp className="h-4 w-4" />
+                Trends
+              </TabsTrigger>
+              <TabsTrigger
+                value="engagement"
+                className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg transition-all"
+              >
+                <AlertTriangle className="h-4 w-4" />
+                Engagement
+              </TabsTrigger>
+              <TabsTrigger
+                value="coding"
+                className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg transition-all"
+              >
+                <Activity className="h-4 w-4" />
+                Coding Activity
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview" className="space-y-8">
+              <OverviewAnalytics stats={analytics.overview} />
+            </TabsContent>
+
+            <TabsContent value="trends" className="space-y-8">
+              <TrendsChart trends={analytics.trends} />
+            </TabsContent>
+
+            <TabsContent value="engagement" className="space-y-8">
+              <EngagementMetrics
+                engagement={analytics.engagement}
+                totalStudents={analytics.overview.total_students}
+              />
+            </TabsContent>
+
+            <TabsContent value="coding" className="space-y-8">
+              <CodingActivityDashboard codingActivity={analytics.codingActivity} />
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <Card className="border-orange-200/50 bg-gradient-to-br from-orange-50/50 to-orange-100/30">
+            <CardContent className="py-16">
+              <div className="text-center space-y-6">
+                <div className="p-4 bg-orange-100 rounded-full w-20 h-20 mx-auto flex items-center justify-center shadow-lg">
+                  <AlertTriangle className="h-10 w-10 text-orange-600" />
+                </div>
+                <div className="space-y-3">
+                  <h3 className="text-xl font-semibold text-orange-900">Analytics Unavailable</h3>
+                  <p className="text-orange-700/80 max-w-md mx-auto text-base">
+                    Analytics data is currently unavailable. This may be due to server connectivity
+                    or data processing issues. Please try refreshing the page.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => window.location.reload()}
+                  className="border-orange-300 text-orange-700 hover:bg-orange-50 hover:border-orange-400 transition-colors"
+                >
+                  Refresh Page
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
       {/* Legacy batch creation success message */}
       {newlyCreatedBatchInfo && (
-        <Card className="bg-green-50 border-green-200">
-          <CardHeader>
-            <CardTitle className="text-green-800">
-              Batch &apos;{newlyCreatedBatchInfo.name}&apos; Created Successfully!
+        <Card className="bg-gradient-to-br from-green-50 to-green-100/50 border-green-200/50 shadow-lg">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-green-800 text-xl">
+              ✅ Batch &apos;{newlyCreatedBatchInfo.name}&apos; Created Successfully!
             </CardTitle>
-            <CardDescription className="text-green-700">
+            <CardDescription className="text-green-700/90 text-base">
               Use the registration key below to enroll students in this new batch.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div>
-              <p className="text-sm font-semibold text-green-800 mb-1">Registration Key:</p>
-              <div className="flex items-center space-x-2">
+            <div className="space-y-3">
+              <p className="text-sm font-semibold text-green-800">Registration Key:</p>
+              <div className="flex items-center gap-3">
                 <Input
                   readOnly
                   value={newlyCreatedBatchInfo.registrationKey}
-                  className="bg-white text-green-900 font-mono text-sm"
+                  className="bg-white text-green-900 font-mono text-sm border-green-300 focus:border-green-400 focus:ring-green-400/20"
                 />
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => handleCopyToClipboard(newlyCreatedBatchInfo.registrationKey)}
+                  className="border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400 transition-colors"
                 >
                   <Copy className="mr-2 h-4 w-4" /> Copy Key
                 </Button>
@@ -432,88 +364,7 @@ export default function AdminDashboardContents({
           </CardContent>
         </Card>
       )}
-      {/* Legacy Existing Batches */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Existing Batches</CardTitle>
-          <CardDescription>List of all batches in the system.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {legacyBatches.length === 0 && !isLoadingLegacyBatches ? (
-            <p>
-              No batches found.{" "}
-              <Link href="/admin/batches" className="text-blue-600 hover:underline">
-                Create one now
-              </Link>
-              .
-            </p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Slack Channel</TableHead>
-                  <TableHead>Start Date</TableHead>
-                  <TableHead>End Date</TableHead>
-                  <TableHead>Registration Key</TableHead>
-                  <TableHead>Active</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {legacyBatches.map((batch) => (
-                  <TableRow key={batch.id}>
-                    <TableCell>{batch.id}</TableCell>
-                    <TableCell className="font-medium">{batch.name}</TableCell>
-                    <TableCell>{batch.slack_channel}</TableCell>
-                    <TableCell>{new Date(batch.start_date).toLocaleDateString()}</TableCell>
-                    <TableCell>{new Date(batch.end_date).toLocaleDateString()}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-1">
-                        <Input
-                          type="text"
-                          readOnly
-                          value={batch.registration_key}
-                          className="font-mono text-xs p-1 h-auto"
-                          size={10}
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleCopyToClipboard(batch.registration_key)}
-                          className="h-6 w-6"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                    <TableCell>{batch.registration_key_active ? "Yes" : "No"}</TableCell>
-                    <TableCell>
-                      <Button variant="outline" size="sm" disabled>
-                        Edit
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-        {legacyBatches.length > 0 && (
-          <CardFooter className="text-sm text-muted-foreground">
-            Total batches: {legacyBatches.length}
-          </CardFooter>
-        )}
-      </Card>
-      {/* User Edit Dialog */}
-      <UserEditDialog
-        user={editingUser}
-        batches={legacyBatches}
-        open={isUserEditDialogOpen}
-        onOpenChange={setIsUserEditDialogOpen}
-        onSave={handleUserUpdate}
-      />
+
       {/* Student Profile Dialog */}
       <Dialog
         open={!!studentProfile}
@@ -521,77 +372,91 @@ export default function AdminDashboardContents({
           if (!open) setStudentProfile(null);
         }}
       >
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Student Profile</DialogTitle>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader className="pb-6">
+            <DialogTitle className="text-2xl font-bold text-foreground">
+              Student Profile
+            </DialogTitle>
           </DialogHeader>
           {studentProfile && (
-            <div className="space-y-6">
+            <div className="space-y-8">
               {/* Top Section: Name, Email, Role, Status, Batch */}
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b pb-4">
-                <div>
-                  <h2 className="text-2xl font-bold">{studentProfile.user.name}</h2>
-                  <div className="text-muted-foreground">{studentProfile.user.email}</div>
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 border-b border-border/50 pb-6">
+                <div className="space-y-2">
+                  <h2 className="text-3xl font-bold text-foreground">{studentProfile.user.name}</h2>
+                  <div className="text-lg text-muted-foreground">{studentProfile.user.email}</div>
                   {studentProfile.batch && (
                     <div className="text-muted-foreground">Batch: {studentProfile.batch.name}</div>
                   )}
                 </div>
-                <div className="flex gap-2">
-                  <Badge className="capitalize">{studentProfile.user.role}</Badge>
-                  <Badge variant={studentProfile.user.disabled ? "destructive" : "secondary"}>
+                <div className="flex gap-3">
+                  <Badge className="capitalize text-sm px-3 py-1">{studentProfile.user.role}</Badge>
+                  <Badge
+                    variant={studentProfile.user.disabled ? "destructive" : "secondary"}
+                    className="text-sm px-3 py-1"
+                  >
                     {studentProfile.user.disabled ? "Disabled" : "Active"}
                   </Badge>
                 </div>
               </div>
               {/* Project Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Project</CardTitle>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="border-border/50 shadow-sm hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg font-semibold text-foreground">Project</CardTitle>
                   </CardHeader>
                   <CardContent>
                     {studentProfile.project ? (
-                      <>
-                        <div className="font-semibold">{studentProfile.project.name}</div>
-                        <div className="text-xs mt-2">
+                      <div className="space-y-3">
+                        <div className="text-lg font-semibold text-foreground">
+                          {studentProfile.project.name}
+                        </div>
+                        <div className="text-sm text-muted-foreground space-y-1">
                           {studentProfile.project.start_date && (
-                            <>
-                              Start: {studentProfile.project.start_date}
-                              <br />
-                            </>
+                            <div>Start: {studentProfile.project.start_date}</div>
                           )}
                           {studentProfile.project.end_date && (
-                            <>End: {studentProfile.project.end_date}</>
+                            <div>End: {studentProfile.project.end_date}</div>
                           )}
                         </div>
-                      </>
+                      </div>
                     ) : (
-                      <div className="text-muted-foreground">No project assigned</div>
+                      <div className="text-muted-foreground text-base">No project assigned</div>
                     )}
                   </CardContent>
                 </Card>
                 {/* WakaTime Stats */}
                 {studentProfile.wakatime_stats && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>7 Days Average Summary</CardTitle>
+                  <Card className="border-border/50 shadow-sm hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="text-lg font-semibold text-foreground">
+                        7 Days Average Summary
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-1">
-                        <div>
-                          <span className="font-semibold">Total Time:</span>{" "}
-                          {studentProfile.wakatime_stats.text ||
-                            studentProfile.wakatime_stats.digital}
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium text-muted-foreground">Total Time:</span>
+                          <span className="font-semibold text-foreground">
+                            {studentProfile.wakatime_stats.text ||
+                              studentProfile.wakatime_stats.digital}
+                          </span>
                         </div>
-                        <div>
-                          <span className="font-semibold">Hours:</span>{" "}
-                          {studentProfile.wakatime_stats.hours}
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium text-muted-foreground">Hours:</span>
+                          <span className="font-semibold text-foreground">
+                            {studentProfile.wakatime_stats.hours}
+                          </span>
                         </div>
-                        <div>
-                          <span className="font-semibold">Last Updated:</span>{" "}
-                          {studentProfile.wakatime_stats.last_updated
-                            ? new Date(studentProfile.wakatime_stats.last_updated).toLocaleString()
-                            : "—"}
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium text-muted-foreground">Last Updated:</span>
+                          <span className="font-semibold text-foreground">
+                            {studentProfile.wakatime_stats.last_updated
+                              ? new Date(
+                                  studentProfile.wakatime_stats.last_updated,
+                                ).toLocaleString()
+                              : "—"}
+                          </span>
                         </div>
                       </div>
                     </CardContent>
@@ -599,86 +464,107 @@ export default function AdminDashboardContents({
                 )}
               </div>
               {/* Certificates Section as Table */}
-              <div>
-                <h3 className="font-semibold mb-2">Certificates</h3>
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold text-foreground border-b border-border/50 pb-2">
+                  Certificates
+                </h3>
                 {studentProfile.certificates.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Issuer</TableHead>
-                        <TableHead>Date Issued</TableHead>
-                        <TableHead>Date Expired</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {studentProfile.certificates.map((cert: CertificateRead) => (
-                        <TableRow key={cert.id}>
-                          <TableCell>{cert.name}</TableCell>
-                          <TableCell>{cert.issuer}</TableCell>
-                          <TableCell>{cert.date_issued}</TableCell>
-                          <TableCell>{cert.date_expired || "—"}</TableCell>
+                  <Card className="border-border/50 shadow-sm">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="hover:bg-muted/50">
+                          <TableHead className="font-medium text-muted-foreground">Name</TableHead>
+                          <TableHead className="font-medium text-muted-foreground">
+                            Issuer
+                          </TableHead>
+                          <TableHead className="font-medium text-muted-foreground">
+                            Date Issued
+                          </TableHead>
+                          <TableHead className="font-medium text-muted-foreground">
+                            Date Expired
+                          </TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {studentProfile.certificates.map((cert: CertificateRead) => (
+                          <TableRow key={cert.id} className="hover:bg-muted/30">
+                            <TableCell className="font-medium">{cert.name}</TableCell>
+                            <TableCell>{cert.issuer}</TableCell>
+                            <TableCell>{cert.date_issued}</TableCell>
+                            <TableCell>{cert.date_expired || "—"}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </Card>
                 ) : (
-                  <div className="text-muted-foreground">No certificates</div>
+                  <div className="text-muted-foreground text-base">No certificates found</div>
                 )}
               </div>
               {/* Demos Section as Table */}
-              <div>
-                <h3 className="font-semibold mb-2">Demos</h3>
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold text-foreground border-b border-border/50 pb-2">
+                  Demos
+                </h3>
                 {studentProfile.demos.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Title</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>GitHub</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {studentProfile.demos.map((demo: DemoRead) => (
-                        <TableRow key={demo.id}>
-                          <TableCell>{demo.title}</TableCell>
-                          <TableCell className="max-w-xs truncate">
-                            {demo.description || "—"}
-                          </TableCell>
-                          <TableCell>
-                            {demo.demo_url ? (
-                              <a
-                                href={demo.demo_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 underline"
-                              >
-                                Link
-                              </a>
-                            ) : (
-                              "—"
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {demo.github_url ? (
-                              <a
-                                href={demo.github_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 underline"
-                              >
-                                GitHub
-                              </a>
-                            ) : (
-                              "—"
-                            )}
-                          </TableCell>
+                  <Card className="border-border/50 shadow-sm">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="hover:bg-muted/50">
+                          <TableHead className="font-medium text-muted-foreground">Title</TableHead>
+                          <TableHead className="font-medium text-muted-foreground">
+                            Description
+                          </TableHead>
+                          <TableHead className="font-medium text-muted-foreground">
+                            Demo Link
+                          </TableHead>
+                          <TableHead className="font-medium text-muted-foreground">
+                            GitHub
+                          </TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {studentProfile.demos.map((demo: DemoRead) => (
+                          <TableRow key={demo.id} className="hover:bg-muted/30">
+                            <TableCell className="font-medium">{demo.title}</TableCell>
+                            <TableCell className="max-w-xs truncate">
+                              {demo.description || "—"}
+                            </TableCell>
+                            <TableCell>
+                              {demo.demo_url ? (
+                                <a
+                                  href={demo.demo_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-700 hover:underline transition-colors font-medium"
+                                >
+                                  View Demo
+                                </a>
+                              ) : (
+                                "—"
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {demo.github_url ? (
+                                <a
+                                  href={demo.github_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-700 hover:underline transition-colors font-medium"
+                                >
+                                  View Code
+                                </a>
+                              ) : (
+                                "—"
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </Card>
                 ) : (
-                  <div className="text-muted-foreground">No demos</div>
+                  <div className="text-muted-foreground text-base">No demos found</div>
                 )}
               </div>
             </div>

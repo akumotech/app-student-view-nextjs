@@ -4,7 +4,6 @@ import type { BatchRead } from "../components/types";
 
 export async function fetchBatches(): Promise<BatchRead[] | null> {
   const url = makeUrl("adminBatches");
-  console.log("[fetchBatches] Fetching:", url);
   try {
     const cookieStore = await cookies();
     const cookieHeader = cookieStore
