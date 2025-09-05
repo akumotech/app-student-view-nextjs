@@ -26,9 +26,10 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import Link from "next/link";
-import { Copy, Plus } from "lucide-react";
+import { Copy, Plus, Edit } from "lucide-react";
 import type { BatchRead } from "../components/types";
 import { makeUrl } from "@/lib/utils";
+import BatchEditDialog from "./components/BatchEditDialog";
 
 export default function ExistingBatchesPage() {
   const router = useRouter();
@@ -40,6 +41,10 @@ export default function ExistingBatchesPage() {
     name: string;
     registrationKey: string;
   } | null>(null);
+
+  // Edit dialog state
+  const [editingBatch, setEditingBatch] = useState<BatchRead | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState("");
@@ -107,6 +112,24 @@ export default function ExistingBatchesPage() {
       console.error("Failed to copy text: ", err);
       toast.error("Failed to copy to clipboard");
     }
+  };
+
+  const handleEditBatch = (batch: BatchRead) => {
+    setEditingBatch(batch);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleBatchUpdate = (updatedBatch: BatchRead) => {
+    setBatches((prev) =>
+      prev.map((batch) => (batch.id === updatedBatch.id ? updatedBatch : batch)),
+    );
+    setEditingBatch(null);
+    setIsEditDialogOpen(false);
+  };
+
+  const handleCloseEditDialog = () => {
+    setEditingBatch(null);
+    setIsEditDialogOpen(false);
   };
 
   // Filter batches based on search term and status
@@ -312,7 +335,13 @@ export default function ExistingBatchesPage() {
                       </span>
                     </TableCell>
                     <TableCell>
-                      <Button variant="outline" size="sm" disabled>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditBatch(batch)}
+                        className="flex items-center gap-2"
+                      >
+                        <Edit className="h-4 w-4" />
                         Edit
                       </Button>
                     </TableCell>
@@ -328,6 +357,14 @@ export default function ExistingBatchesPage() {
           </CardFooter>
         )}
       </Card>
+
+      {/* Batch Edit Dialog */}
+      <BatchEditDialog
+        batch={editingBatch}
+        isOpen={isEditDialogOpen}
+        onClose={handleCloseEditDialog}
+        onSave={handleBatchUpdate}
+      />
     </div>
   );
 }
