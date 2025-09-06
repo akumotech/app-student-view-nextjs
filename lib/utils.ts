@@ -82,6 +82,10 @@ export const endpoints = {
   adminDemoSessionSignups: "/api/v1/admin/demo-sessions/{session_id}/signups", // GET /api/v1/admin/demo-sessions/{session_id}/signups
   adminDemoSignupAdmin: "/api/v1/admin/demo-signups/{signup_id}/admin", // PUT /api/v1/admin/demo-signups/{signup_id}/admin
   adminDemoSessionsBulkCreate: "/api/v1/admin/demo-sessions/bulk-create", // POST /api/v1/admin/demo-sessions/bulk-create
+
+  // Certificate Management endpoints (Current Backend: /admin/...)
+  adminCertificates: "/api/v1/admin/certificates", // GET|POST /api/v1/admin/certificates
+  adminCertificateById: "/api/v1/admin/certificates/{certificate_id}", // PUT|DELETE /api/v1/admin/certificates/{certificate_id}
 } as const;
 
 export function makeUrl(path: keyof typeof endpoints, params?: Record<string, string | number>) {

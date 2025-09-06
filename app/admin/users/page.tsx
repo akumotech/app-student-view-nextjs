@@ -21,7 +21,7 @@ import type { UserOverview } from "../components/types";
 import { makeUrl } from "@/lib/utils";
 import { fetchBatchStudents } from "../api/fetchBatchStudents";
 import UserEditDialog from "../components/UserEditDialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import StudentProfileDialog from "../components/StudentProfileDialog";
 
 export default function UsersManagementPage() {
   const router = useRouter();
@@ -474,166 +474,11 @@ export default function UsersManagementPage() {
       />
 
       {/* Student Profile Dialog */}
-      <Dialog
-        open={!!studentProfile}
-        onOpenChange={(open) => {
-          if (!open) setStudentProfile(null);
-        }}
-      >
-        <DialogContent className="max-w-4xl">
-          <DialogHeader className="pb-6">
-            <DialogTitle className="text-2xl font-bold text-foreground">
-              Student Profile
-            </DialogTitle>
-          </DialogHeader>
-          {studentProfile && (
-            <div className="space-y-6">
-              {/* Top Section: Name, Email, Role, Status, Batch */}
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b pb-4">
-                <div>
-                  <h2 className="text-2xl font-bold">{studentProfile.user.name}</h2>
-                  <div className="text-muted-foreground">{studentProfile.user.email}</div>
-                  {studentProfile.batch && (
-                    <div className="text-muted-foreground">Batch: {studentProfile.batch.name}</div>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <Badge className="capitalize">{studentProfile.user.role}</Badge>
-                  <Badge variant={studentProfile.user.disabled ? "destructive" : "secondary"}>
-                    {studentProfile.user.disabled ? "Disabled" : "Active"}
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Project Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Project</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {studentProfile.project ? (
-                      <>
-                        <div className="font-semibold">{studentProfile.project.name}</div>
-                        <div className="text-xs mt-2">
-                          {studentProfile.project.start_date && (
-                            <>
-                              Start: {studentProfile.project.start_date}
-                              <br />
-                            </>
-                          )}
-                          {studentProfile.project.end_date && (
-                            <>End: {studentProfile.project.end_date}</>
-                          )}
-                        </div>
-                      </>
-                    ) : (
-                      <div className="text-muted-foreground">No project assigned</div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* WakaTime Stats */}
-                {studentProfile.wakatime_stats && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>7 Days Average Summary</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-1">
-                        <div>
-                          <span className="font-semibold">Total Time:</span>{" "}
-                          {studentProfile.wakatime_stats.text ||
-                            studentProfile.wakatime_stats.digital}
-                        </div>
-                        <div>
-                          <span className="font-semibold">Hours:</span>{" "}
-                          {studentProfile.wakatime_stats.hours}
-                        </div>
-                        <div>
-                          <span className="font-semibold">Last Updated:</span>{" "}
-                          {studentProfile.wakatime_stats.last_updated
-                            ? new Date(studentProfile.wakatime_stats.last_updated).toLocaleString()
-                            : "—"}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-
-              {/* Certificates Section */}
-              <div>
-                <h3 className="font-semibold mb-2">Certificates</h3>
-                {studentProfile.certificates.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Issuer</TableHead>
-                        <TableHead>Date Issued</TableHead>
-                        <TableHead>Date Expired</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {studentProfile.certificates.map((cert) => (
-                        <TableRow key={cert.id}>
-                          <TableCell>{cert.name}</TableCell>
-                          <TableCell>{cert.issuer}</TableCell>
-                          <TableCell>{cert.date_issued}</TableCell>
-                          <TableCell>{cert.date_expired || "—"}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <p className="text-muted-foreground">No certificates found</p>
-                )}
-              </div>
-
-              {/* Demos Section */}
-              <div>
-                <h3 className="font-semibold mb-2">Demos</h3>
-                {studentProfile.demos.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Title</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>GitHub</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {studentProfile.demos.map((demo) => (
-                        <TableRow key={demo.id}>
-                          <TableCell className="font-medium">{demo.title}</TableCell>
-                          <TableCell className="max-w-xs truncate">{demo.description}</TableCell>
-                          <TableCell>
-                            {demo.github_url ? (
-                              <a
-                                href={demo.github_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:underline"
-                              >
-                                View
-                              </a>
-                            ) : (
-                              "—"
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <p className="text-muted-foreground">No demos found</p>
-                )}
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <StudentProfileDialog
+        isOpen={!!studentProfile}
+        onClose={() => setStudentProfile(null)}
+        studentProfile={studentProfile}
+      />
     </div>
   );
 }

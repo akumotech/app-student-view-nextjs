@@ -54,9 +54,10 @@ export interface AnalyticsDashboardData {
 export interface CertificateRead {
   id: number;
   name: string;
-  issuer: string;
-  date_issued: string;
+  issuer?: string;
+  date_issued?: string;
   date_expired?: string | null;
+  description?: string;
 }
 
 export interface DemoRead {
@@ -65,6 +66,8 @@ export interface DemoRead {
   description?: string;
   demo_url?: string;
   github_url?: string;
+  demo_date?: string;
+  status?: string;
 }
 
 export interface UserOverview {
