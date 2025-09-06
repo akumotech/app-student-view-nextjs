@@ -15,7 +15,8 @@ export const endpoints = {
   signup: "/api/signup", // POST /api/signup
   logout: "/api/logout", // POST /api/logout
   signupStudent: "/api/signup/student", // POST /api/signup/student
-  usersMe: "/api/users/me", // GET /api/users/me
+  usersMe: "/api/users/me", // GET|PUT /api/users/me
+  usersMePassword: "/api/users/me/password", // PUT /api/users/me/password
 
   // WakaTime endpoints (OpenAPI: /api/wakatime/...)
   wakatimeAuthorize: "/api/wakatime/authorize", // GET /api/wakatime/authorize

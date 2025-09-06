@@ -24,7 +24,7 @@ export default function DemoSessionsClient({ initialSessions }: DemoSessionsClie
   };
 
   return (
-    <div className="container mx-auto p-4 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-6 lg:px-8 space-y-8">
       {currentView === "sessions" ? (
         <DemoSessionManagement
           initialSessions={initialSessions}

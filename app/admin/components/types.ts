@@ -11,6 +11,46 @@ export interface DashboardStats {
   users_with_wakatime: number;
 }
 
+// Analytics types based on OpenAPI schema
+export interface OverviewStats {
+  total_students: number;
+  total_certificates: number;
+  total_demos: number;
+  students_with_certificates: number;
+  students_with_demos: number;
+  avg_certificates_per_student: number;
+  avg_demos_per_student: number;
+}
+
+export interface TrendsStats {
+  labels: string[];
+  new_students: number[];
+  certificates_issued: number[];
+  demos_submitted: number[];
+}
+
+export interface EngagementStats {
+  inactive_students_7d: number;
+  inactive_students_30d: number;
+  active_streaks: Array<Record<string, any>>;
+  at_risk_students: number[];
+}
+
+export interface CodingActivityStats {
+  total_coding_seconds: number;
+  per_student: Record<string, number>;
+  per_language: Record<string, number>;
+  heatmap: Record<string, Record<string, number>>;
+  inactive_students: number[];
+}
+
+export interface AnalyticsDashboardData {
+  overview: OverviewStats;
+  trends: TrendsStats;
+  engagement: EngagementStats;
+  codingActivity: CodingActivityStats;
+}
+
 export interface CertificateRead {
   id: number;
   name: string;

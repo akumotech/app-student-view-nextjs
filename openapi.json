@@ -249,10 +249,20 @@
         ]
       }
     },
-    "/api/wakatime/usage": {
+    "/api/wakatime/stats-range": {
       "post": {
-        "summary": "Get WakaTime usage stats for authenticated user",
-        "operationId": "wakatime_usage_for_user_api_wakatime_usage_post",
+        "summary": "Get WakaTime stats for a date range",
+        "operationId": "wakatime_stats_range_api_wakatime_stats_range_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WakaTimeStatsRangeRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -260,6 +270,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/APIResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -338,7 +358,9 @@
     },
     "/api/batches/": {
       "get": {
-        "tags": ["Batches"],
+        "tags": [
+          "Batches"
+        ],
         "summary": "List Batches",
         "operationId": "list_batches_endpoint_api_batches__get",
         "responses": {
@@ -364,7 +386,9 @@
         ]
       },
       "post": {
-        "tags": ["Batches"],
+        "tags": [
+          "Batches"
+        ],
         "summary": "Create Batch",
         "operationId": "create_batch_endpoint_api_batches__post",
         "requestBody": {
@@ -408,7 +432,9 @@
     },
     "/api/batches/{batch_id}": {
       "get": {
-        "tags": ["Batches"],
+        "tags": [
+          "Batches"
+        ],
         "summary": "Get Batch by ID",
         "operationId": "get_batch_endpoint_api_batches__batch_id__get",
         "security": [
@@ -451,7 +477,9 @@
         }
       },
       "put": {
-        "tags": ["Batches"],
+        "tags": [
+          "Batches"
+        ],
         "summary": "Update Batch",
         "operationId": "update_batch_endpoint_api_batches__batch_id__put",
         "security": [
@@ -504,7 +532,9 @@
         }
       },
       "delete": {
-        "tags": ["Batches"],
+        "tags": [
+          "Batches"
+        ],
         "summary": "Delete Batch",
         "operationId": "delete_batch_endpoint_api_batches__batch_id__delete",
         "security": [
@@ -542,7 +572,10 @@
     },
     "/api/batches/{batch_id}/students": {
       "get": {
-        "tags": ["Batches", "Students"],
+        "tags": [
+          "Batches",
+          "Students"
+        ],
         "summary": "List Students in a Batch",
         "operationId": "list_students_in_batch_api_batches__batch_id__students_get",
         "security": [
@@ -591,7 +624,9 @@
     },
     "/api/projects/": {
       "get": {
-        "tags": ["Projects"],
+        "tags": [
+          "Projects"
+        ],
         "summary": "List Projects",
         "operationId": "list_projects_endpoint_api_projects__get",
         "responses": {
@@ -617,7 +652,9 @@
         ]
       },
       "post": {
-        "tags": ["Projects"],
+        "tags": [
+          "Projects"
+        ],
         "summary": "Create Project",
         "operationId": "create_project_endpoint_api_projects__post",
         "requestBody": {
@@ -661,7 +698,9 @@
     },
     "/api/projects/{project_id}": {
       "get": {
-        "tags": ["Projects"],
+        "tags": [
+          "Projects"
+        ],
         "summary": "Get Project by ID",
         "operationId": "get_project_endpoint_api_projects__project_id__get",
         "security": [
@@ -704,7 +743,9 @@
         }
       },
       "put": {
-        "tags": ["Projects"],
+        "tags": [
+          "Projects"
+        ],
         "summary": "Update Project",
         "operationId": "update_project_endpoint_api_projects__project_id__put",
         "security": [
@@ -757,7 +798,9 @@
         }
       },
       "delete": {
-        "tags": ["Projects"],
+        "tags": [
+          "Projects"
+        ],
         "summary": "Delete Project",
         "operationId": "delete_project_endpoint_api_projects__project_id__delete",
         "security": [
@@ -795,7 +838,9 @@
     },
     "/api/students/": {
       "get": {
-        "tags": ["Students"],
+        "tags": [
+          "Students"
+        ],
         "summary": "List Students",
         "operationId": "list_students_endpoint_api_students__get",
         "responses": {
@@ -823,7 +868,9 @@
     },
     "/api/students/{student_id}": {
       "get": {
-        "tags": ["Students"],
+        "tags": [
+          "Students"
+        ],
         "summary": "Get Student by ID",
         "operationId": "get_student_endpoint_api_students__student_id__get",
         "security": [
@@ -866,7 +913,9 @@
         }
       },
       "put": {
-        "tags": ["Students"],
+        "tags": [
+          "Students"
+        ],
         "summary": "Update Student Profile",
         "operationId": "update_student_endpoint_api_students__student_id__put",
         "security": [
@@ -921,7 +970,9 @@
     },
     "/api/students/me/certificates": {
       "get": {
-        "tags": ["My Student Data"],
+        "tags": [
+          "My Student Data"
+        ],
         "summary": "List My Certificates",
         "operationId": "list_my_certificates_api_students_me_certificates_get",
         "responses": {
@@ -949,7 +1000,9 @@
     },
     "/api/students/me/demos": {
       "get": {
-        "tags": ["My Student Data"],
+        "tags": [
+          "My Student Data"
+        ],
         "summary": "List My Demos",
         "operationId": "list_my_demos_api_students_me_demos_get",
         "responses": {
@@ -977,7 +1030,9 @@
     },
     "/api/students/{student_id}/certificates": {
       "get": {
-        "tags": ["Student Specific"],
+        "tags": [
+          "Student Specific"
+        ],
         "summary": "List Student Certificates",
         "operationId": "list_student_certificates_api_students__student_id__certificates_get",
         "security": [
@@ -1024,7 +1079,9 @@
         }
       },
       "post": {
-        "tags": ["Student Specific"],
+        "tags": [
+          "Student Specific"
+        ],
         "summary": "Create Student Certificate",
         "operationId": "create_student_certificate_api_students__student_id__certificates_post",
         "security": [
@@ -1079,7 +1136,9 @@
     },
     "/api/students/{student_id}/certificates/{certificate_id}": {
       "put": {
-        "tags": ["Student Specific"],
+        "tags": [
+          "Student Specific"
+        ],
         "summary": "Update Student Certificate",
         "operationId": "update_student_certificate_api_students__student_id__certificates__certificate_id__put",
         "security": [
@@ -1141,7 +1200,9 @@
         }
       },
       "delete": {
-        "tags": ["Student Specific"],
+        "tags": [
+          "Student Specific"
+        ],
         "summary": "Delete Student Certificate",
         "operationId": "delete_student_certificate_api_students__student_id__certificates__certificate_id__delete",
         "security": [
@@ -1188,7 +1249,9 @@
     },
     "/api/students/{student_id}/demos": {
       "get": {
-        "tags": ["Student Specific"],
+        "tags": [
+          "Student Specific"
+        ],
         "summary": "List Student Demos",
         "operationId": "list_student_demos_api_students__student_id__demos_get",
         "security": [
@@ -1235,7 +1298,9 @@
         }
       },
       "post": {
-        "tags": ["Student Specific"],
+        "tags": [
+          "Student Specific"
+        ],
         "summary": "Create Student Demo",
         "operationId": "create_student_demo_api_students__student_id__demos_post",
         "security": [
@@ -1290,7 +1355,9 @@
     },
     "/api/students/{student_id}/demos/{demo_id}": {
       "put": {
-        "tags": ["Student Specific"],
+        "tags": [
+          "Student Specific"
+        ],
         "summary": "Update Student Demo",
         "operationId": "update_student_demo_api_students__student_id__demos__demo_id__put",
         "security": [
@@ -1352,7 +1419,9 @@
         }
       },
       "delete": {
-        "tags": ["Student Specific"],
+        "tags": [
+          "Student Specific"
+        ],
         "summary": "Delete Student Demo",
         "operationId": "delete_student_demo_api_students__student_id__demos__demo_id__delete",
         "security": [
@@ -1399,7 +1468,9 @@
     },
     "/api/demo-sessions": {
       "get": {
-        "tags": ["Demo Sessions"],
+        "tags": [
+          "Demo Sessions"
+        ],
         "summary": "List Available Demo Sessions",
         "description": "List available demo sessions for the current student",
         "operationId": "list_available_demo_sessions_api_demo_sessions_get",
@@ -1428,7 +1499,9 @@
     },
     "/api/demo-sessions/{session_id}/signup": {
       "post": {
-        "tags": ["Demo Sessions"],
+        "tags": [
+          "Demo Sessions"
+        ],
         "summary": "Sign Up for Demo Session",
         "description": "Sign up for a demo session",
         "operationId": "signup_for_demo_session_api_demo_sessions__session_id__signup_post",
@@ -1484,7 +1557,9 @@
     },
     "/api/students/me/demo-signups": {
       "get": {
-        "tags": ["My Student Data"],
+        "tags": [
+          "My Student Data"
+        ],
         "summary": "My Demo Signups",
         "description": "List all demo signups for the current student",
         "operationId": "list_my_demo_signups_api_students_me_demo_signups_get",
@@ -1513,7 +1588,9 @@
     },
     "/api/demo-signups/{signup_id}": {
       "put": {
-        "tags": ["Demo Sessions"],
+        "tags": [
+          "Demo Sessions"
+        ],
         "summary": "Update My Demo Signup",
         "description": "Update a demo signup (student can only update their own)",
         "operationId": "update_my_demo_signup_api_demo_signups__signup_id__put",
@@ -1567,7 +1644,9 @@
         }
       },
       "delete": {
-        "tags": ["Demo Sessions"],
+        "tags": [
+          "Demo Sessions"
+        ],
         "summary": "Cancel My Demo Signup",
         "description": "Cancel a demo signup",
         "operationId": "cancel_my_demo_signup_api_demo_signups__signup_id__delete",
@@ -1606,7 +1685,9 @@
     },
     "/api/v1/admin/dashboard": {
       "get": {
-        "tags": ["Admin"],
+        "tags": [
+          "Admin"
+        ],
         "summary": "Admin Dashboard Overview",
         "description": "Get comprehensive dashboard data for admin overview",
         "operationId": "get_admin_dashboard_api_v1_admin_dashboard_get",
@@ -1631,7 +1712,9 @@
     },
     "/api/v1/admin/users": {
       "get": {
-        "tags": ["Admin"],
+        "tags": [
+          "Admin"
+        ],
         "summary": "Get All Users with Pagination and Filtering",
         "description": "Get paginated list of all users with their details",
         "operationId": "get_all_users_api_v1_admin_users_get",
@@ -1731,7 +1814,9 @@
     },
     "/api/v1/admin/users/{user_id}": {
       "get": {
-        "tags": ["Admin"],
+        "tags": [
+          "Admin"
+        ],
         "summary": "Get User Details",
         "description": "Get detailed information about a specific user",
         "operationId": "get_user_details_api_v1_admin_users__user_id__get",
@@ -1777,7 +1862,9 @@
     },
     "/api/v1/admin/users/{user_id}/role": {
       "put": {
-        "tags": ["Admin"],
+        "tags": [
+          "Admin"
+        ],
         "summary": "Admin: Update User Role",
         "description": "Update a user's role (admin only)",
         "operationId": "admin_update_user_role_api_v1_admin_users__user_id__role_put",
@@ -1833,7 +1920,9 @@
     },
     "/api/v1/admin/students/{student_id}": {
       "put": {
-        "tags": ["Admin"],
+        "tags": [
+          "Admin"
+        ],
         "summary": "Update Student Information",
         "description": "Update student batch or project assignment",
         "operationId": "update_student_info_api_v1_admin_students__student_id__put",
@@ -1889,7 +1978,9 @@
     },
     "/api/v1/admin/batches": {
       "get": {
-        "tags": ["Admin"],
+        "tags": [
+          "Admin"
+        ],
         "summary": "Get All Batches",
         "description": "Get all batches for admin management",
         "operationId": "get_all_batches_api_v1_admin_batches_get",
@@ -1914,7 +2005,9 @@
     },
     "/api/v1/admin/projects": {
       "get": {
-        "tags": ["Admin"],
+        "tags": [
+          "Admin"
+        ],
         "summary": "Get All Projects",
         "description": "Get all projects for admin management",
         "operationId": "get_all_projects_api_v1_admin_projects_get",
@@ -1939,7 +2032,9 @@
     },
     "/api/v1/admin/stats": {
       "get": {
-        "tags": ["Admin"],
+        "tags": [
+          "Admin"
+        ],
         "summary": "Get Dashboard Statistics",
         "description": "Get statistical overview for admin dashboard",
         "operationId": "get_dashboard_stats_api_v1_admin_stats_get",
@@ -1964,7 +2059,9 @@
     },
     "/api/v1/admin/students/{student_id}/full": {
       "get": {
-        "tags": ["Admin"],
+        "tags": [
+          "Admin"
+        ],
         "summary": "Get all data for a student (admin only)",
         "operationId": "get_full_student_data_api_v1_admin_students__student_id__full_get",
         "security": [
@@ -2009,7 +2106,10 @@
     },
     "/api/v1/admin/analytics/overview": {
       "get": {
-        "tags": ["Admin", "Analytics"],
+        "tags": [
+          "Admin",
+          "Analytics"
+        ],
         "summary": "Get Overview Analytics",
         "description": "Get overview analytics",
         "operationId": "get_overview_analytics_api_v1_admin_analytics_overview_get",
@@ -2064,7 +2164,10 @@
     },
     "/api/v1/admin/analytics/demos": {
       "get": {
-        "tags": ["Admin", "Analytics"],
+        "tags": [
+          "Admin",
+          "Analytics"
+        ],
         "summary": "Get Demo Trends",
         "description": "Get demo trends over time",
         "operationId": "get_demo_trends_api_v1_admin_analytics_demos_get",
@@ -2122,7 +2225,10 @@
     },
     "/api/v1/admin/analytics/wakatime": {
       "get": {
-        "tags": ["Admin", "Analytics"],
+        "tags": [
+          "Admin",
+          "Analytics"
+        ],
         "summary": "Get Wakatime Trends",
         "description": "Get WakaTime activity trends",
         "operationId": "get_wakatime_trends_api_v1_admin_analytics_wakatime_get",
@@ -2180,7 +2286,10 @@
     },
     "/api/v1/admin/demo-sessions": {
       "get": {
-        "tags": ["Admin", "Demo Sessions"],
+        "tags": [
+          "Admin",
+          "Demo Sessions"
+        ],
         "summary": "List Demo Sessions",
         "description": "List all demo sessions with optional filtering",
         "operationId": "list_demo_sessions_api_v1_admin_demo_sessions_get",
@@ -2239,9 +2348,12 @@
         }
       },
       "post": {
-        "tags": ["Admin", "Demo Sessions"],
+        "tags": [
+          "Admin",
+          "Demo Sessions"
+        ],
         "summary": "Create Demo Session",
-        "description": "Create a new demo session with manual meeting link entry (no OAuth required)",
+        "description": "Create a new demo session with manual meeting link entry and optional Slack notification",
         "operationId": "create_demo_session_api_v1_admin_demo_sessions_post",
         "security": [
           {
@@ -2284,7 +2396,10 @@
     },
     "/api/v1/admin/demo-sessions/{session_id}": {
       "get": {
-        "tags": ["Admin", "Demo Sessions"],
+        "tags": [
+          "Admin",
+          "Demo Sessions"
+        ],
         "summary": "Get Demo Session",
         "description": "Get detailed info about a demo session including signups",
         "operationId": "get_demo_session_detail_api_v1_admin_demo_sessions__session_id__get",
@@ -2328,7 +2443,10 @@
         }
       },
       "put": {
-        "tags": ["Admin", "Demo Sessions"],
+        "tags": [
+          "Admin",
+          "Demo Sessions"
+        ],
         "summary": "Update Demo Session",
         "description": "Update a demo session",
         "operationId": "update_demo_session_api_v1_admin_demo_sessions__session_id__put",
@@ -2382,7 +2500,10 @@
         }
       },
       "delete": {
-        "tags": ["Admin", "Demo Sessions"],
+        "tags": [
+          "Admin",
+          "Demo Sessions"
+        ],
         "summary": "Delete Demo Session",
         "description": "Delete a demo session and all associated signups",
         "operationId": "delete_demo_session_api_v1_admin_demo_sessions__session_id__delete",
@@ -2421,7 +2542,10 @@
     },
     "/api/v1/admin/demo-sessions/{session_id}/signups": {
       "get": {
-        "tags": ["Admin", "Demo Sessions"],
+        "tags": [
+          "Admin",
+          "Demo Sessions"
+        ],
         "summary": "List Session Signups",
         "description": "List all signups for a specific demo session",
         "operationId": "list_session_signups_api_v1_admin_demo_sessions__session_id__signups_get",
@@ -2471,7 +2595,10 @@
     },
     "/api/v1/admin/demo-signups/{signup_id}/admin": {
       "put": {
-        "tags": ["Admin", "Demo Sessions"],
+        "tags": [
+          "Admin",
+          "Demo Sessions"
+        ],
         "summary": "Update Signup (Admin)",
         "description": "Update signup after presentation (admin only)",
         "operationId": "update_signup_admin_api_v1_admin_demo_signups__signup_id__admin_put",
@@ -2527,7 +2654,10 @@
     },
     "/api/v1/admin/demo-sessions/bulk-create": {
       "post": {
-        "tags": ["Admin", "Demo Sessions"],
+        "tags": [
+          "Admin",
+          "Demo Sessions"
+        ],
         "summary": "Bulk Create Demo Sessions",
         "description": "Create multiple demo sessions at once",
         "operationId": "bulk_create_demo_sessions_api_v1_admin_demo_sessions_bulk_create_post",
@@ -2580,7 +2710,9 @@
     },
     "/api/v1/admin/overview": {
       "get": {
-        "tags": ["Analytics"],
+        "tags": [
+          "Analytics"
+        ],
         "summary": "Overview",
         "operationId": "overview_api_v1_admin_overview_get",
         "security": [
@@ -2627,7 +2759,9 @@
     },
     "/api/v1/admin/trends": {
       "get": {
-        "tags": ["Analytics"],
+        "tags": [
+          "Analytics"
+        ],
         "summary": "Trends",
         "operationId": "trends_api_v1_admin_trends_get",
         "security": [
@@ -2674,7 +2808,9 @@
     },
     "/api/v1/admin/engagement": {
       "get": {
-        "tags": ["Analytics"],
+        "tags": [
+          "Analytics"
+        ],
         "summary": "Engagement",
         "operationId": "engagement_api_v1_admin_engagement_get",
         "security": [
@@ -2721,7 +2857,9 @@
     },
     "/api/v1/admin/coding-activity": {
       "get": {
-        "tags": ["Analytics"],
+        "tags": [
+          "Analytics"
+        ],
         "summary": "Coding Activity",
         "operationId": "coding_activity_api_v1_admin_coding_activity_get",
         "security": [
@@ -2808,7 +2946,9 @@
           }
         },
         "type": "object",
-        "required": ["success"],
+        "required": [
+          "success"
+        ],
         "title": "APIResponse"
       },
       "BatchCreate": {
@@ -2856,7 +2996,12 @@
           }
         },
         "type": "object",
-        "required": ["name", "slack_channel", "start_date", "end_date"],
+        "required": [
+          "name",
+          "slack_channel",
+          "start_date",
+          "end_date"
+        ],
         "title": "BatchCreate"
       },
       "BatchRead": {
@@ -3043,7 +3188,9 @@
           }
         },
         "type": "object",
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "title": "CertificateCreate"
       },
       "CertificateRead": {
@@ -3108,7 +3255,11 @@
           }
         },
         "type": "object",
-        "required": ["name", "id", "student_id"],
+        "required": [
+          "name",
+          "id",
+          "student_id"
+        ],
         "title": "CertificateRead"
       },
       "CertificateUpdate": {
@@ -3257,7 +3408,9 @@
           }
         },
         "type": "object",
-        "required": ["title"],
+        "required": [
+          "title"
+        ],
         "title": "DemoCreate"
       },
       "DemoRead": {
@@ -3303,7 +3456,11 @@
           }
         },
         "type": "object",
-        "required": ["title", "id", "student_id"],
+        "required": [
+          "title",
+          "id",
+          "student_id"
+        ],
         "title": "DemoRead"
       },
       "DemoSessionCreate": {
@@ -3387,7 +3544,9 @@
           }
         },
         "type": "object",
-        "required": ["session_date"],
+        "required": [
+          "session_date"
+        ],
         "title": "DemoSessionCreate"
       },
       "DemoSessionRead": {
@@ -3498,7 +3657,12 @@
           }
         },
         "type": "object",
-        "required": ["session_date", "id", "created_at", "updated_at"],
+        "required": [
+          "session_date",
+          "id",
+          "created_at",
+          "updated_at"
+        ],
         "title": "DemoSessionRead"
       },
       "DemoSessionSummary": {
@@ -3554,7 +3718,12 @@
           }
         },
         "type": "object",
-        "required": ["id", "session_date", "is_active", "is_cancelled"],
+        "required": [
+          "id",
+          "session_date",
+          "is_active",
+          "is_cancelled"
+        ],
         "title": "DemoSessionSummary",
         "description": "Lightweight version for listing sessions"
       },
@@ -3851,7 +4020,14 @@
           }
         },
         "type": "object",
-        "required": ["id", "session_id", "student_id", "status", "scheduled_at", "updated_at"],
+        "required": [
+          "id",
+          "session_id",
+          "student_id",
+          "status",
+          "scheduled_at",
+          "updated_at"
+        ],
         "title": "DemoSignupRead"
       },
       "DemoSignupUpdate": {
@@ -3983,11 +4159,16 @@
           },
           "password": {
             "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
             "title": "Password"
           }
         },
         "type": "object",
-        "required": ["email", "password"],
+        "required": [
+          "email",
+          "password"
+        ],
         "title": "LoginRequest"
       },
       "OverviewStats": {
@@ -4066,7 +4247,12 @@
           }
         },
         "type": "object",
-        "required": ["name", "batch_id", "start_date", "end_date"],
+        "required": [
+          "name",
+          "batch_id",
+          "start_date",
+          "end_date"
+        ],
         "title": "ProjectCreate"
       },
       "ProjectRead": {
@@ -4106,7 +4292,13 @@
           }
         },
         "type": "object",
-        "required": ["name", "batch_id", "id", "start_date", "end_date"],
+        "required": [
+          "name",
+          "batch_id",
+          "id",
+          "start_date",
+          "end_date"
+        ],
         "title": "ProjectRead"
       },
       "ProjectUpdate": {
@@ -4181,15 +4373,23 @@
           },
           "password": {
             "type": "string",
+            "maxLength": 100,
+            "minLength": 8,
             "title": "Password"
           },
           "name": {
             "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
             "title": "Name"
           }
         },
         "type": "object",
-        "required": ["email", "password", "name"],
+        "required": [
+          "email",
+          "password",
+          "name"
+        ],
         "title": "SignupRequest"
       },
       "StudentBasic": {
@@ -4212,7 +4412,12 @@
           }
         },
         "type": "object",
-        "required": ["id", "user_id", "name", "email"],
+        "required": [
+          "id",
+          "user_id",
+          "name",
+          "email"
+        ],
         "title": "StudentBasic",
         "description": "Basic student info for nested relationships"
       },
@@ -4243,7 +4448,11 @@
           }
         },
         "type": "object",
-        "required": ["user_id", "batch_id", "id"],
+        "required": [
+          "user_id",
+          "batch_id",
+          "id"
+        ],
         "title": "StudentRead"
       },
       "StudentSignupRequest": {
@@ -4253,21 +4462,32 @@
             "format": "email",
             "title": "Email"
           },
-          "password": {
-            "type": "string",
-            "title": "Password"
-          },
           "name": {
             "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
             "title": "Name"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 8,
+            "title": "Password"
           },
           "batch_registration_key": {
             "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
             "title": "Batch Registration Key"
           }
         },
         "type": "object",
-        "required": ["email", "password", "name", "batch_registration_key"],
+        "required": [
+          "email",
+          "name",
+          "password",
+          "batch_registration_key"
+        ],
         "title": "StudentSignupRequest"
       },
       "StudentUpdate": {
@@ -4330,7 +4550,12 @@
           }
         },
         "type": "object",
-        "required": ["labels", "new_students", "certificates_issued", "demos_submitted"],
+        "required": [
+          "labels",
+          "new_students",
+          "certificates_issued",
+          "demos_submitted"
+        ],
         "title": "TrendsStats"
       },
       "User": {
@@ -4398,7 +4623,12 @@
           }
         },
         "type": "object",
-        "required": ["id", "email", "name", "role"],
+        "required": [
+          "id",
+          "email",
+          "name",
+          "role"
+        ],
         "title": "User"
       },
       "UserRoleUpdate": {
@@ -4409,7 +4639,9 @@
           }
         },
         "type": "object",
-        "required": ["role"],
+        "required": [
+          "role"
+        ],
         "title": "UserRoleUpdate"
       },
       "ValidationError": {
@@ -4438,7 +4670,11 @@
           }
         },
         "type": "object",
-        "required": ["loc", "msg", "type"],
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
         "title": "ValidationError"
       },
       "WakaTimeCallbackPayload": {
@@ -4460,8 +4696,28 @@
           }
         },
         "type": "object",
-        "required": ["code"],
+        "required": [
+          "code"
+        ],
         "title": "WakaTimeCallbackPayload"
+      },
+      "WakaTimeStatsRangeRequest": {
+        "properties": {
+          "start": {
+            "type": "string",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "title": "End"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end"
+        ],
+        "title": "WakaTimeStatsRangeRequest"
       }
     },
     "securitySchemes": {
