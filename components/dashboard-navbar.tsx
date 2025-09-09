@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Code2, Award, Play, Users, List, User } from "lucide-react";
+import { Code2, Award, Play, Users, List, User, ClipboardPen } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 
 import { cn } from "@/lib/utils";
@@ -28,6 +28,12 @@ export function MainNav() {
       name: "Demos",
       href: "/dashboard/demos",
       icon: Play,
+      admin: false,
+    },
+    {
+      name: "Projects",
+      href: "/dashboard/projects",
+      icon: ClipboardPen,
       admin: false,
     },
     {

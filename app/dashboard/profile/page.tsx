@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { User, Mail, Shield, Calendar, BookOpen, Code2 } from "lucide-react";
+import { User, Mail, Shield, BookOpen, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { makeUrl } from "@/lib/utils";
 import { MainNav } from "@/components/dashboard-navbar";
@@ -17,6 +17,7 @@ interface UserProfile {
   id: number;
   email: string;
   name: string;
+  phone_number: string | null;
   role: string;
   disabled: boolean | null;
   student_id: number | null;
@@ -39,6 +40,7 @@ export default function ProfilePage() {
   const [editForm, setEditForm] = useState({
     name: "",
     email: "",
+    phone_number: "",
   });
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
@@ -67,6 +69,7 @@ export default function ProfilePage() {
       setEditForm({
         name: userData.name || "",
         email: userData.email || "",
+        phone_number: userData.phone_number || "",
       });
 
       // If user has student_id, fetch student information
@@ -106,6 +109,7 @@ export default function ProfilePage() {
       setEditForm({
         name: user.name || "",
         email: user.email || "",
+        phone_number: user.phone_number || "",
       });
     }
   };
@@ -123,6 +127,7 @@ export default function ProfilePage() {
         body: JSON.stringify({
           name: editForm.name,
           email: editForm.email,
+          phone_number: editForm.phone_number,
         }),
       });
 
@@ -230,7 +235,7 @@ export default function ProfilePage() {
         <header className="bg-background shadow">
           <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
             <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">Profile</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h1>
               <MainNav />
             </div>
             <div className="flex space-x-2">
@@ -258,7 +263,7 @@ export default function ProfilePage() {
         <header className="bg-background shadow">
           <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
             <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">Profile</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h1>
               <MainNav />
             </div>
             <div className="flex space-x-2">
@@ -285,7 +290,7 @@ export default function ProfilePage() {
       <header className="bg-background shadow">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <div className="flex items-center space-x-8">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Profile</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h1>
             <MainNav />
           </div>
           <div className="flex space-x-2">
@@ -347,6 +352,24 @@ export default function ProfilePage() {
                     <div className="p-3 bg-muted/50 rounded-lg flex items-center gap-2">
                       <Mail className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">{user.email}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone_number">Phone Number</Label>
+                  {isEditing ? (
+                    <Input
+                      id="phone_number"
+                      type="tel"
+                      value={editForm.phone_number}
+                      onChange={(e) => setEditForm({ ...editForm, phone_number: e.target.value })}
+                      placeholder="(555) 123-4567"
+                    />
+                  ) : (
+                    <div className="p-3 bg-muted/50 rounded-lg flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">{user.phone_number || "Not provided"}</span>
                     </div>
                   )}
                 </div>

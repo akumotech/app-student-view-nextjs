@@ -53,6 +53,7 @@ export default function StudentProfileDialog({
   if (!isValidStudentProfile(studentProfile)) return null;
 
   const { user, batch, project, certificates = [], demos = [], wakatime_stats } = studentProfile;
+  console.log(user);
 
   return (
     <>
@@ -87,6 +88,9 @@ export default function StudentProfileDialog({
                 <div>
                   <h2 className="text-2xl font-bold">{user.name}</h2>
                   <div className="text-muted-foreground">{user.email}</div>
+                  {user.phone_number && (
+                    <div className="text-muted-foreground">{user.phone_number}</div>
+                  )}
                   {batch && <div className="text-muted-foreground">Batch: {batch.name}</div>}
                 </div>
                 <div className="flex gap-2">
@@ -387,6 +391,11 @@ export default function StudentProfileDialog({
                   <p>
                     <strong>Email:</strong> {user.email}
                   </p>
+                  {user.phone_number && (
+                    <p>
+                      <strong>Phone:</strong> {user.phone_number}
+                    </p>
+                  )}
                   <p>
                     <strong>Role:</strong> {user.role}
                   </p>

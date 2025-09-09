@@ -21,10 +21,12 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { makeUrl } from "@/lib/utils";
 import { signupStudent } from "./api/signupStudent";
+import { Phone } from "lucide-react";
 
 const studentSignupFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
+  phone_number: z.string().min(1, { message: "Phone number is required." }),
   password: z.string().min(8, { message: "Password must be at least 8 characters." }),
   batch_registration_key: z.string().min(1, { message: "Batch registration key is required." }),
 });
@@ -58,6 +60,7 @@ function StudentSignupFormContents() {
     defaultValues: {
       name: "",
       email: "",
+      phone_number: "",
       password: "",
       batch_registration_key: registrationKeyFromQuery || "",
     },
@@ -76,6 +79,7 @@ function StudentSignupFormContents() {
       const response = await signupStudent(
         values.name,
         values.email,
+        values.phone_number,
         values.password,
         values.batch_registration_key,
       );
@@ -159,6 +163,19 @@ function StudentSignupFormContents() {
                     <FormLabel>Email</FormLabel>
                     <FormControl>
                       <Input type="email" placeholder="your.email@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="phone_number"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
+                    <FormControl>
+                      <Input type="tel" placeholder="(555) 123-4567" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

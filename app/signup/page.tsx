@@ -26,6 +26,7 @@ const signupSchema = z
   .object({
     name: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Invalid email address"),
+    phone_number: z.string().min(1, "Phone number is required"),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string(),
   })
@@ -57,6 +58,7 @@ export default function SignupPage() {
     defaultValues: {
       name: "",
       email: "",
+      phone_number: "",
       password: "",
       confirmPassword: "",
     },
@@ -65,7 +67,12 @@ export default function SignupPage() {
 
   const onSubmit = async (values: SignupFormValues) => {
     try {
-      const response: SignupResponse = await signupUser(values.name, values.email, values.password);
+      const response: SignupResponse = await signupUser(
+        values.name,
+        values.email,
+        values.phone_number,
+        values.password,
+      );
       if (response.success) {
         toast.success("Account created successfully! Logging you in...");
         // Auto-login after signup
@@ -122,6 +129,19 @@ export default function SignupPage() {
                       <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input type="email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="phone_number"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input type="tel" placeholder="(555) 123-4567" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

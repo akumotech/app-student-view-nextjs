@@ -74,6 +74,7 @@ export interface UserOverview {
   id: number;
   email: string;
   name: string;
+  phone_number?: string;
   role: "student" | "instructor" | "admin" | "user";
   disabled: boolean;
   wakatime_connected: boolean;
@@ -83,6 +84,7 @@ export interface UserOverview {
       id: number;
       email: string;
       name: string;
+      phone_number?: string;
       role: string;
       disabled: boolean;
     };
@@ -127,4 +129,249 @@ export interface NewlyCreatedBatchInfo {
   id: string;
   name: string;
   registrationKey: string;
+}
+
+// Project Management Types
+export type ProjectStatus = "planning" | "active" | "completed" | "cancelled";
+export type StudentProjectStatus = "assigned" | "active" | "completed" | "dropped";
+export type InterviewStatus = "scheduled" | "completed" | "cancelled" | "rescheduled";
+export type InterviewType = "initial" | "technical" | "behavioral" | "final" | "placeholder";
+
+export interface ProjectRead {
+  id: number;
+  name: string;
+  description?: string;
+  start_date: string;
+  end_date: string;
+  happy_hour?: string;
+  status: ProjectStatus;
+  batch_id: number;
+  created_at: string;
+  updated_at: string;
+  batch?: {
+    id: number;
+    name: string;
+    start_date?: string;
+    end_date?: string;
+  };
+  student_count?: number;
+  interview_count?: number;
+  statistics?: {
+    total_students: number;
+    active_students: number;
+    total_interviews: number;
+    completed_interviews: number;
+    project_status: ProjectStatus;
+  };
+}
+
+export interface ProjectCreate {
+  name: string;
+  description?: string;
+  start_date: string;
+  end_date: string;
+  happy_hour?: string;
+  status?: ProjectStatus;
+  batch_id: number;
+}
+
+export interface ProjectUpdate {
+  name?: string;
+  description?: string;
+  start_date?: string;
+  end_date?: string;
+  happy_hour?: string;
+  status?: ProjectStatus;
+}
+
+export interface StudentProjectAssignment {
+  assignment: {
+    id: number;
+    student_id: number;
+    project_id: number;
+    resume_url?: string;
+    linkedin_url?: string;
+    offer_date?: string;
+    status: StudentProjectStatus;
+    assigned_at: string;
+    updated_at: string;
+  };
+  student: {
+    id: number;
+    user_id: number;
+    batch_id: number;
+    user?: {
+      id: number;
+      email: string;
+      name: string;
+    };
+  };
+}
+
+export interface StudentAssignmentRequest {
+  student_id: number;
+  resume_url?: string;
+  linkedin_url?: string;
+  offer_date?: string;
+  status?: StudentProjectStatus;
+}
+
+export interface InterviewRead {
+  id: number;
+  project_id: number;
+  student_id: number;
+  slot_id?: number;
+  interview_type: InterviewType;
+  status: InterviewStatus;
+  feedback?: string;
+  behavioral_rating?: number;
+  technical_rating?: number;
+  communication_rating?: number;
+  body_language_rating?: number;
+  professionalism_rating?: number;
+  about_you_rating?: number;
+  rating?: number; // Legacy field
+  created_at: string;
+  updated_at: string;
+  student?: {
+    id: number;
+    user_id: number;
+    batch_id: number;
+    user?: {
+      id: number;
+      email: string;
+      name: string;
+    };
+  };
+}
+
+export interface InterviewCreate {
+  student_id: number;
+  scheduled_at?: string;
+  interview_type?: string;
+  status?: InterviewStatus;
+  feedback?: string;
+  rating?: number;
+  interviewer?: string;
+}
+
+export interface InterviewUpdate {
+  interview_type?: InterviewType;
+  status?: InterviewStatus;
+  feedback?: string;
+  behavioral_rating?: number;
+  technical_rating?: number;
+  communication_rating?: number;
+  rating?: number; // Legacy field
+}
+
+// Interview Session Types
+export interface InterviewSessionRead {
+  id: number;
+  name: string;
+  description?: string;
+  interviewer?: string;
+  created_by: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InterviewSessionCreate {
+  name: string;
+  description?: string;
+  interviewer?: string;
+  is_active?: boolean;
+}
+
+export interface InterviewSessionUpdate {
+  name?: string;
+  description?: string;
+  interviewer?: string;
+  is_active?: boolean;
+}
+
+// Interview Slot Types
+export interface InterviewSlotRead {
+  id: number;
+  session_id: number;
+  scheduled_at: string;
+  is_available: boolean;
+  created_at: string;
+  updated_at: string;
+  student_name?: string;
+  student_email?: string;
+}
+
+export interface InterviewSlotCreate {
+  session_id: number;
+  scheduled_at: string;
+  is_available?: boolean;
+}
+
+export interface InterviewSlotUpdate {
+  scheduled_at?: string;
+  is_available?: boolean;
+}
+
+// Extended types with relationships
+export interface InterviewSessionWithSlots extends InterviewSessionRead {
+  slots: InterviewSlotRead[];
+}
+
+export interface InterviewSlotWithSession extends InterviewSlotRead {
+  session?: InterviewSessionRead;
+}
+
+export interface InterviewWithDetails extends InterviewRead {
+  student?: {
+    id: number;
+    user_id: number;
+    batch_id: number;
+    user?: {
+      id: number;
+      email: string;
+      name: string;
+    };
+  };
+  project?: ProjectRead;
+  slot?: InterviewSlotRead;
+}
+
+// Response types
+export interface InterviewSessionListResponse {
+  sessions: InterviewSessionWithSlots[];
+  total_count: number;
+}
+
+export interface InterviewSlotListResponse {
+  slots: InterviewSlotWithSession[];
+  total_count: number;
+}
+
+export interface InterviewListResponse {
+  interviews: InterviewWithDetails[];
+  total_count: number;
+}
+
+export interface InterviewWithStudentDetails extends InterviewRead {
+  student_name?: string;
+  student_email?: string;
+  slot_scheduled_at?: string;
+}
+
+export interface InterviewWithStudentListResponse {
+  interviews: InterviewWithStudentDetails[];
+  total_count: number;
+}
+
+export interface InterviewReviewUpdate {
+  feedback?: string;
+  behavioral_rating?: number;
+  technical_rating?: number;
+  communication_rating?: number;
+  body_language_rating?: number;
+  professionalism_rating?: number;
+  about_you_rating?: number;
+  status?: InterviewStatus;
 }
