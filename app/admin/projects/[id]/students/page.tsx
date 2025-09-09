@@ -207,7 +207,7 @@ export default function ProjectStudentsPage() {
           resume_url: null,
           linkedin_url: null,
           offer_date: null,
-          status: "assigned",
+          status: "active",
         };
 
         return fetch(makeUrl("adminProjectStudents", { project_id: projectId }), {
