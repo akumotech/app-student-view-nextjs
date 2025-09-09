@@ -353,7 +353,7 @@ export default function ProjectsPage() {
 
         {projectData ? (
           <Tabs defaultValue="project" className="space-y-6">
-            <TabsList>
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="project">Project Details</TabsTrigger>
               <TabsTrigger value="interviews">Interviews</TabsTrigger>
             </TabsList>
@@ -364,7 +364,7 @@ export default function ProjectsPage() {
 
             <TabsContent value="interviews" className="space-y-6">
               <Tabs defaultValue="available" className="space-y-6">
-                <TabsList>
+                <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3">
                   <TabsTrigger value="available">Available Slots</TabsTrigger>
                   <TabsTrigger value="my-interviews">My Interviews</TabsTrigger>
                   <TabsTrigger value="completed">Completed</TabsTrigger>
@@ -494,7 +494,7 @@ export default function ProjectsPage() {
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <div className="h-96 w-full">
+                        <div className="h-80 sm:h-96 w-full">
                           <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={processChartData()}>
                               <CartesianGrid strokeDasharray="3 3" />
@@ -635,15 +635,17 @@ export default function ProjectsPage() {
 
                         {/* Improvement Indicators */}
                         {processChartData().length > 1 && (
-                          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="text-center p-4 bg-muted rounded-lg">
-                              <div className="text-2xl font-bold text-blue-600">
+                          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="text-center p-6 bg-muted rounded-lg">
+                              <div className="text-3xl font-bold text-blue-600">
                                 {processChartData()[processChartData().length - 1].average}
                               </div>
-                              <div className="text-sm text-muted-foreground">Latest Average</div>
+                              <div className="text-sm text-muted-foreground mt-1">
+                                Latest Average
+                              </div>
                             </div>
-                            <div className="text-center p-4 bg-muted rounded-lg">
-                              <div className="text-2xl font-bold text-green-600">
+                            <div className="text-center p-6 bg-muted rounded-lg">
+                              <div className="text-3xl font-bold text-green-600">
                                 {processChartData().length > 1
                                   ? (
                                       processChartData()[processChartData().length - 1].average -
@@ -651,13 +653,15 @@ export default function ProjectsPage() {
                                     ).toFixed(1)
                                   : "0.0"}
                               </div>
-                              <div className="text-sm text-muted-foreground">Total Improvement</div>
+                              <div className="text-sm text-muted-foreground mt-1">
+                                Total Improvement
+                              </div>
                             </div>
-                            <div className="text-center p-4 bg-muted rounded-lg">
-                              <div className="text-2xl font-bold text-purple-600">
+                            <div className="text-center p-6 bg-muted rounded-lg sm:col-span-2 lg:col-span-1">
+                              <div className="text-3xl font-bold text-purple-600">
                                 {processChartData().length}
                               </div>
-                              <div className="text-sm text-muted-foreground">
+                              <div className="text-sm text-muted-foreground mt-1">
                                 Interviews Completed
                               </div>
                             </div>
@@ -710,15 +714,25 @@ export default function ProjectsPage() {
                                 </div>
                               </CardHeader>
                               <CardContent>
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                                   {/* Feedback Section - Left Side */}
                                   <div className="space-y-4">
                                     {interview.feedback && (
                                       <div>
-                                        <h4 className="font-medium mb-2">Feedback</h4>
-                                        <p className="text-sm text-muted-foreground leading-relaxed">
-                                          {interview.feedback}
-                                        </p>
+                                        <h4 className="font-medium mb-4">Feedback</h4>
+                                        <ul className="space-y-3">
+                                          {interview.feedback
+                                            .split("\n")
+                                            .filter((line) => line.trim())
+                                            .map((feedbackItem, index) => (
+                                              <li key={index} className="flex items-start gap-3">
+                                                <span className="text-primary mt-1 text-sm">•</span>
+                                                <span className="text-sm text-muted-foreground leading-relaxed">
+                                                  {feedbackItem.trim()}
+                                                </span>
+                                              </li>
+                                            ))}
+                                        </ul>
                                       </div>
                                     )}
                                   </div>
@@ -732,7 +746,7 @@ export default function ProjectsPage() {
                                     interview.about_you_rating) && (
                                     <div className="space-y-4">
                                       <h4 className="font-medium">Performance Breakdown</h4>
-                                      <div className="h-64 w-full">
+                                      <div className="h-72 w-full">
                                         <ResponsiveContainer width="100%" height="100%">
                                           <PieChart>
                                             <Pie
@@ -741,7 +755,7 @@ export default function ProjectsPage() {
                                               cy="50%"
                                               labelLine={false}
                                               label={({ name, value }) => `${name}: ${value}`}
-                                              outerRadius={80}
+                                              outerRadius={100}
                                               fill="#8884d8"
                                               dataKey="value"
                                             >
@@ -752,7 +766,6 @@ export default function ProjectsPage() {
                                               )}
                                             </Pie>
                                             <Tooltip />
-                                            <Legend />
                                           </PieChart>
                                         </ResponsiveContainer>
                                       </div>
@@ -853,7 +866,6 @@ function BookingForm({
             <SelectItem value="technical">Technical Interview</SelectItem>
             <SelectItem value="behavioral">Behavioral Interview</SelectItem>
             <SelectItem value="final">Final Interview</SelectItem>
-            <SelectItem value="placeholder">General Interview</SelectItem>
           </SelectContent>
         </Select>
       </div>

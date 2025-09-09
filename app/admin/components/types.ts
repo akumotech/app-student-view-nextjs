@@ -135,7 +135,7 @@ export interface NewlyCreatedBatchInfo {
 export type ProjectStatus = "planning" | "active" | "completed" | "cancelled";
 export type StudentProjectStatus = "assigned" | "active" | "completed" | "dropped";
 export type InterviewStatus = "scheduled" | "completed" | "cancelled" | "rescheduled";
-export type InterviewType = "initial" | "technical" | "behavioral" | "final" | "placeholder";
+export type InterviewType = "initial" | "technical" | "behavioral" | "final";
 
 export interface ProjectRead {
   id: number;

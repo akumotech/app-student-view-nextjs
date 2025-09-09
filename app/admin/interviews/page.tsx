@@ -865,11 +865,15 @@ function ReviewForm({
 
       <div>
         <Label htmlFor="feedback">Feedback & Comments</Label>
+        <p className="text-sm text-muted-foreground mb-2">
+          Enter each feedback point on a new line. Each line will be displayed as a bullet point for
+          the student.
+        </p>
         <Textarea
           id="feedback"
           value={formData.feedback || ""}
           onChange={(e) => setFormData({ ...formData, feedback: e.target.value })}
-          placeholder="Provide detailed feedback about the interview..."
+          placeholder="• Great communication skills&#10;• Strong technical knowledge&#10;• Consider improving time management"
           rows={4}
         />
       </div>

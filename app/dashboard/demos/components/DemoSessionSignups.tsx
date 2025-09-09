@@ -144,6 +144,18 @@ export default function DemoSessionSignups({
   const router = useRouter();
   const [availableSessions, setAvailableSessions] = useState<DemoSessionSummary[]>(initialSessions);
   const [mySignups, setMySignups] = useState<DemoSignupRead[]>(initialSignups);
+
+  // Debug initial data
+  console.log("Debug initialSessions:", initialSessions);
+  console.log(
+    "Debug initialSessions IDs:",
+    initialSessions.map((s) => s.id),
+  );
+  console.log("Debug initialSignups:", initialSignups);
+  console.log(
+    "Debug initialSignups session_ids:",
+    initialSignups.map((s) => s.session_id),
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isSignupDialogOpen, setIsSignupDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -309,6 +321,11 @@ export default function DemoSessionSignups({
       return "Invalid date";
     }
 
+    // Handle special cases
+    if (dateString === "Unknown date" || dateString === "Date not available") {
+      return "Date not available";
+    }
+
     try {
       // Handle both ISO timestamps and simple date strings
       let dateOnly = dateString;
@@ -367,7 +384,17 @@ export default function DemoSessionSignups({
   // Helper function to get session date for a signup
   const getSessionDate = (signup: DemoSignupRead): string => {
     const session = availableSessions.find((s) => s.id === signup.session_id);
-    return session?.session_date || "Unknown date";
+    console.log("Debug getSessionDate:", {
+      signup_id: signup.id,
+      signup_session_id: signup.session_id,
+      availableSessions_count: availableSessions.length,
+      found_session: session,
+      session_date: session?.session_date,
+    });
+    if (!session || !session.session_date) {
+      return "Date not available";
+    }
+    return session.session_date;
   };
 
   if (isLoading) {
@@ -415,7 +442,7 @@ export default function DemoSessionSignups({
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2 text-sm">
                           <Clock className="h-4 w-4" />
-                          {formatDate(session.session_date)}
+                          {formatDate(session.session_date || "Date not available")}
                         </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Clock className="h-3 w-3" />
@@ -585,7 +612,7 @@ export default function DemoSessionSignups({
               <div className="bg-muted/50 p-4 rounded-lg">
                 <div className="font-medium">{selectedSession.title || "Friday Demo Session"}</div>
                 <div className="text-sm text-muted-foreground">
-                  {formatDate(selectedSession.session_date)}
+                  {formatDate(selectedSession.session_date || "Date not available")}
                 </div>
                 <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
                   <Clock className="h-3 w-3" />

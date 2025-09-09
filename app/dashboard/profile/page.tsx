@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { User, Mail, Shield, BookOpen, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { makeUrl } from "@/lib/utils";
-import { MainNav } from "@/components/dashboard-navbar";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
 
 interface UserProfile {
   id: number;
@@ -28,7 +28,9 @@ interface StudentInfo {
   id: number;
   user_id: number;
   batch_id: number;
+  batch_name?: string;
   project_id: number | null;
+  project_name?: string;
 }
 
 export default function ProfilePage() {
@@ -92,6 +94,24 @@ export default function ProfilePage() {
 
       if (response.ok) {
         const studentData = await response.json();
+
+        // Fetch project information to get project name and batch name
+        try {
+          const projectResponse = await fetch(makeUrl("studentsMyProject"), {
+            credentials: "include",
+          });
+
+          if (projectResponse.ok) {
+            const projectData = await projectResponse.json();
+            if (projectData.success && projectData.data) {
+              studentData.batch_name = projectData.data.project.batch_name;
+              studentData.project_name = projectData.data.project.name;
+            }
+          }
+        } catch (projectError) {
+          console.error("Error fetching project info:", projectError);
+        }
+
         setStudentInfo(studentData);
       }
     } catch (error) {
@@ -206,16 +226,6 @@ export default function ProfilePage() {
     setIsChangingPassword(false);
   };
 
-  const handleLogout = async () => {
-    try {
-      toast.success("Logged out successfully");
-      router.push("/login");
-    } catch (error) {
-      console.error("Failed to logout:", error);
-      toast.error("Failed to logout. Please try again.");
-    }
-  };
-
   const getRoleBadgeVariant = (role: string) => {
     switch (role.toLowerCase()) {
       case "admin":
@@ -232,25 +242,11 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-muted/40">
-        <header className="bg-background shadow">
-          <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
-            <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h1>
-              <MainNav />
-            </div>
-            <div className="flex space-x-2">
-              <Button onClick={handleLogout} variant="outline" size="sm">
-                Logout
-              </Button>
-            </div>
-          </div>
-        </header>
+        <DashboardHeader title="Dashboard" />
         <main className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto px-6 lg:px-8 space-y-8">
-            <div className="space-y-2">
-              <h1 className="text-4xl font-bold tracking-tight text-foreground">Profile</h1>
-              <p className="text-lg text-muted-foreground">Loading your profile information...</p>
-            </div>
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
+            <p className="text-muted-foreground">Loading your profile information...</p>
           </div>
         </main>
       </div>
@@ -260,25 +256,11 @@ export default function ProfilePage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-muted/40">
-        <header className="bg-background shadow">
-          <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
-            <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h1>
-              <MainNav />
-            </div>
-            <div className="flex space-x-2">
-              <Button onClick={handleLogout} variant="outline" size="sm">
-                Logout
-              </Button>
-            </div>
-          </div>
-        </header>
+        <DashboardHeader title="Dashboard" />
         <main className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto px-6 lg:px-8 space-y-8">
-            <div className="space-y-2">
-              <h1 className="text-4xl font-bold tracking-tight text-foreground">Profile</h1>
-              <p className="text-lg text-muted-foreground">Unable to load profile information.</p>
-            </div>
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
+            <p className="text-muted-foreground">Unable to load profile information.</p>
           </div>
         </main>
       </div>
@@ -287,28 +269,14 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-muted/40">
-      <header className="bg-background shadow">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <div className="flex items-center space-x-8">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h1>
-            <MainNav />
-          </div>
-          <div className="flex space-x-2">
-            <Button onClick={handleLogout} variant="outline" size="sm">
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader title="Dashboard" />
       <main className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto px-6 lg:px-8 space-y-8">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-bold tracking-tight text-foreground">Profile</h1>
-            <p className="text-lg text-muted-foreground">
-              View and manage your account information
-            </p>
-          </div>
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
+          <p className="text-muted-foreground">View and manage your account information</p>
+        </div>
 
+        <div className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
             {/* Basic Information */}
             <Card className="border-border/50 shadow-sm">
@@ -553,17 +521,22 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Batch ID</Label>
+                    <Label>Batch</Label>
                     <div className="p-3 bg-muted/50 rounded-lg">
-                      <span className="font-mono text-sm">#{studentInfo.batch_id}</span>
+                      <span className="font-medium">
+                        {studentInfo.batch_name || `Batch #${studentInfo.batch_id}`}
+                      </span>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Project ID</Label>
+                    <Label>Project</Label>
                     <div className="p-3 bg-muted/50 rounded-lg">
-                      <span className="font-mono text-sm">
-                        {studentInfo.project_id ? `#${studentInfo.project_id}` : "Not assigned"}
+                      <span className="font-medium">
+                        {studentInfo.project_name ||
+                          (studentInfo.project_id
+                            ? `Project #${studentInfo.project_id}`
+                            : "Not assigned")}
                       </span>
                     </div>
                   </div>

@@ -33,7 +33,6 @@ import type {
   InterviewSlotRead,
   InterviewSlotCreate,
   InterviewSlotUpdate,
-  InterviewSlotListResponse,
 } from "@/app/admin/components/types";
 
 export default function InterviewSlotsPage() {

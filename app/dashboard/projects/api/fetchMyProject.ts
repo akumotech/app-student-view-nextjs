@@ -10,10 +10,11 @@ export interface MyProjectData {
     happy_hour?: string;
     status: string;
     batch_id: number;
+    batch_name: string;
     created_at: string;
     updated_at: string;
   };
-  assignment: {
+  student_project: {
     id: number;
     resume_url?: string;
     linkedin_url?: string;
