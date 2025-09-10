@@ -7,14 +7,8 @@ export async function getUserServer(): Promise<{
   user: User | null;
   isAuthenticated: boolean;
 }> {
-  // Check if we're in build context or static generation
-  // During build time, cookies() is not available and will throw
-  const isBuildTime = process.env.NODE_ENV === "production" && typeof window === "undefined";
-
-  if (isBuildTime) {
-    console.log("[getUserServer] Build-time context detected, returning null user");
-    return { user: null, isAuthenticated: false };
-  }
+  // Only skip authentication during static generation (build time)
+  // In production runtime, we need to attempt authentication normally
 
   const url = makeUrl("usersMe");
   console.log("[getUserServer] Fetching:", url);
@@ -44,8 +38,8 @@ export async function getUserServer(): Promise<{
   } catch (error) {
     console.error("[getUserServer] Error:", error);
     // If cookies() fails during static generation, return null gracefully
-    if (error instanceof Error && error.message.includes("cookies")) {
-      console.log("[getUserServer] Cookies not available (likely build-time), returning null user");
+    if (error instanceof Error && error.message.includes("Dynamic server usage")) {
+      console.log("[getUserServer] Static generation detected via error, returning null user");
       return { user: null, isAuthenticated: false };
     }
     return { user: null, isAuthenticated: false };
