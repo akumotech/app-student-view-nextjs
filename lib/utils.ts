@@ -82,6 +82,38 @@ export const endpoints = {
   adminDemoSessionSignups: "/api/v1/admin/demo-sessions/{session_id}/signups", // GET /api/v1/admin/demo-sessions/{session_id}/signups
   adminDemoSignupAdmin: "/api/v1/admin/demo-signups/{signup_id}/admin", // PUT /api/v1/admin/demo-signups/{signup_id}/admin
   adminDemoSessionsBulkCreate: "/api/v1/admin/demo-sessions/bulk-create", // POST /api/v1/admin/demo-sessions/bulk-create
+
+  // Certificate Management endpoints (Current Backend: /admin/...)
+  adminCertificates: "/api/v1/admin/certificates", // GET|POST /api/v1/admin/certificates
+  adminCertificateById: "/api/v1/admin/certificates/{certificate_id}", // PUT|DELETE /api/v1/admin/certificates/{certificate_id}
+
+  // Project Management endpoints
+  adminProjectsList: "/api/v1/admin/projects/", // GET /api/v1/admin/projects/
+  adminProjectsCreate: "/api/v1/admin/projects/", // POST /api/v1/admin/projects/
+  adminProjectById: "/api/v1/admin/projects/{project_id}", // GET|PUT|DELETE /api/v1/admin/projects/{project_id}
+  adminProjectStudents: "/api/v1/admin/projects/{project_id}/students", // GET|POST /api/v1/admin/projects/{project_id}/students
+  adminProjectStudentUpdate: "/api/v1/admin/projects/{project_id}/students/{student_id}", // PUT|DELETE /api/v1/admin/projects/{project_id}/students/{student_id}
+  adminProjectInterviews: "/api/v1/admin/projects/{project_id}/interviews", // GET|POST /api/v1/admin/projects/{project_id}/interviews
+  adminInterviewById: "/api/v1/admin/interviews/{interview_id}", // PUT /api/v1/admin/interviews/{interview_id}
+  studentsMyProject: "/api/v1/projects/students/me/project", // GET /api/v1/projects/students/me/project
+
+  // Interview Management endpoints
+  adminInterviewSessions: "/api/v1/admin/interviews/sessions", // GET|POST /api/v1/admin/interviews/sessions
+  adminInterviewSessionById: "/api/v1/admin/interviews/sessions/{session_id}", // GET|PUT|DELETE /api/v1/admin/interviews/sessions/{session_id}
+  adminInterviewSessionSlots: "/api/v1/admin/interviews/sessions/{session_id}/slots", // GET|POST /api/v1/admin/interviews/sessions/{session_id}/slots
+  adminInterviewSlotsAvailable: "/api/v1/admin/interviews/slots/available", // GET /api/v1/admin/interviews/slots/available
+  adminInterviewSlotById: "/api/v1/admin/interviews/slots/{slot_id}", // PUT|DELETE /api/v1/admin/interviews/slots/{slot_id}
+  adminInterviewSlotBook: "/api/v1/admin/interviews/slots/{slot_id}/book", // POST /api/v1/admin/interviews/slots/{slot_id}/book
+  adminStudentInterviews: "/api/v1/admin/interviews/students/me", // GET /api/v1/admin/interviews/students/me
+  adminStudentCompletedInterviews: "/api/v1/admin/interviews/students/me/completed", // GET /api/v1/admin/interviews/students/me/completed
+  adminBookedInterviews: "/api/v1/admin/interviews/booked", // GET /api/v1/admin/interviews/booked
+  adminInterviewReviewUpdate: "/api/v1/admin/interviews/{interview_id}/review", // PUT /api/v1/admin/interviews/{interview_id}/review
+
+  // Student Interview endpoints
+  studentInterviewSlotsAvailable: "/api/v1/interviews/slots/available", // GET /api/v1/interviews/slots/available
+  studentInterviewSlotBook: "/api/v1/interviews/slots/{slot_id}/book", // POST /api/v1/interviews/slots/{slot_id}/book
+  studentMyInterviews: "/api/v1/interviews/me", // GET /api/v1/interviews/me
+  studentMyCompletedInterviews: "/api/v1/interviews/me/completed", // GET /api/v1/interviews/me/completed
 } as const;
 
 export function makeUrl(path: keyof typeof endpoints, params?: Record<string, string | number>) {

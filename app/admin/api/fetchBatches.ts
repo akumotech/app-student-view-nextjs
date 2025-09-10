@@ -1,3 +1,5 @@
+"use server";
+
 import { cookies } from "next/headers";
 import { makeUrl } from "@/lib/utils";
 import type { BatchRead } from "../components/types";

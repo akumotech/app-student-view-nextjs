@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import Dashboard from "./dashboard";
 import { MainNav } from "@/components/dashboard-navbar";
 import { makeUrl } from "@/lib/utils";
+import ProjectOverview from "./components/ProjectOverview";
 
 export default function DashboardClientShell({
   user,
@@ -121,6 +122,13 @@ export default function DashboardClientShell({
             Please connect your WakaTime account using the &apos;Connect WakaTime&apos; button above
             to see your coding activity.
           </p>
+        )}
+
+        {/* Project Overview for Students */}
+        {isStudent && (
+          <div className="mb-6">
+            <ProjectOverview />
+          </div>
         )}
 
         {isLoadingUsageData && <p>Loading WakaTime dashboard data...</p>}

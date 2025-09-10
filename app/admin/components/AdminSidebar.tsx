@@ -15,6 +15,7 @@ import {
   Menu,
   Award,
   ClipboardPen,
+  MessageSquare,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
@@ -64,6 +65,12 @@ const navItems: NavItem[] = [
     href: "/admin/projects",
     icon: ClipboardPen,
     description: "Manage projects",
+  },
+  {
+    name: "Interviews",
+    href: "/admin/interviews",
+    icon: MessageSquare,
+    description: "Manage interview sessions",
   },
 ];
 

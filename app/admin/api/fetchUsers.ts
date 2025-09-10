@@ -25,7 +25,9 @@ export async function fetchUsers(): Promise<any[] | null> {
       return null;
     }
     const result = await res.json();
-    return result.data || result;
+    // Extract users array from AdminUsersList structure
+    const data = result.data || result;
+    return data.users || data;
   } catch (error) {
     console.error("[fetchUsers] Error:", error);
     return null;
