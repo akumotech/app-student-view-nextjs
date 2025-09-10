@@ -47,6 +47,7 @@ import { Badge } from "@/components/ui/badge";
 import { CertificateCard } from "@/components/ui/certificate-card";
 import { useAuth } from "@/lib/auth-context";
 import { createCertificate, updateCertificate, deleteCertificate } from "../api/certificateActions";
+import { sendGTMEvent } from "@next/third-parties/google";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -191,6 +192,7 @@ export default function CertificatesClientShell({
       credential_url: "",
       description: "",
     });
+    sendGTMEvent({ event: "buttonClicked", value: "addCertificate", user: user.name });
     setIsDialogOpen(true);
   };
 

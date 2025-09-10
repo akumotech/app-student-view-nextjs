@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { BackToTop } from "@/components/back-to-top";
 import { Toaster } from "@/components/ui/sonner";
+import { GoogleTagManager } from "@next/third-parties/google";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,9 +30,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <GoogleTagManager gtmId="G-L5K4YNE2R3" />
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
         <BackToTop />
         <Toaster position="bottom-right" richColors />
