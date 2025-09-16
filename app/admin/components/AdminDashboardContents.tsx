@@ -44,10 +44,10 @@ import {
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import DashboardStats from "./DashboardStats";
-import OverviewAnalytics from "./OverviewAnalytics";
-import TrendsChart from "./TrendsChart";
-import EngagementMetrics from "./EngagementMetrics";
-import CodingActivityDashboard from "./CodingActivityDashboard";
+import OverviewTab from "./OverviewTab";
+import TrendsTab from "./TrendsTab";
+import EngagementTab from "./EngagementTab";
+import CodingActivityTab from "./CodingActivityTab";
 import BatchSelector from "./BatchSelector";
 
 import type {
@@ -57,7 +57,6 @@ import type {
   NewlyCreatedBatchInfo,
   CertificateRead,
   DemoRead,
-  AnalyticsDashboardData,
 } from "./types";
 import "./admin-print.css";
 import { useAuth } from "@/lib/auth-context";
@@ -71,14 +70,12 @@ interface AdminDashboardContentsProps {
     page_size?: number;
   };
   batches: BatchRead[];
-  analytics?: AnalyticsDashboardData | null;
 }
 
 export default function AdminDashboardContents({
   stats,
   users,
   batches,
-  analytics,
 }: AdminDashboardContentsProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -252,83 +249,54 @@ export default function AdminDashboardContents({
           />
         </div>
 
-        {analytics ? (
-          <Tabs defaultValue="overview" className="space-y-8">
-            <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1 rounded-xl">
-              <TabsTrigger
-                value="overview"
-                className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg transition-all"
-              >
-                <BarChart3 className="h-4 w-4" />
-                Overview
-              </TabsTrigger>
-              <TabsTrigger
-                value="trends"
-                className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg transition-all"
-              >
-                <TrendingUp className="h-4 w-4" />
-                Trends
-              </TabsTrigger>
-              <TabsTrigger
-                value="engagement"
-                className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg transition-all"
-              >
-                <AlertTriangle className="h-4 w-4" />
-                Engagement
-              </TabsTrigger>
-              <TabsTrigger
-                value="coding"
-                className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg transition-all"
-              >
-                <Activity className="h-4 w-4" />
-                Coding Activity
-              </TabsTrigger>
-            </TabsList>
+        <Tabs defaultValue="overview" className="space-y-8">
+          <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1 rounded-xl">
+            <TabsTrigger
+              value="overview"
+              className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg transition-all"
+            >
+              <BarChart3 className="h-4 w-4" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger
+              value="trends"
+              className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg transition-all"
+            >
+              <TrendingUp className="h-4 w-4" />
+              Trends
+            </TabsTrigger>
+            <TabsTrigger
+              value="engagement"
+              className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg transition-all"
+            >
+              <AlertTriangle className="h-4 w-4" />
+              Engagement
+            </TabsTrigger>
+            <TabsTrigger
+              value="coding"
+              className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg transition-all"
+            >
+              <Activity className="h-4 w-4" />
+              Coding Activity
+            </TabsTrigger>
+          </TabsList>
 
-            <TabsContent value="overview" className="space-y-8">
-              <OverviewAnalytics stats={analytics.overview} />
-            </TabsContent>
+          <TabsContent value="overview" className="space-y-8">
+            <OverviewTab batchId={selectedBatchId?.toString()} />
+          </TabsContent>
 
-            <TabsContent value="trends" className="space-y-8">
-              <TrendsChart trends={analytics.trends} />
-            </TabsContent>
+          <TabsContent value="trends" className="space-y-8">
+            <TrendsTab batchId={selectedBatchId?.toString()} />
+          </TabsContent>
 
-            <TabsContent value="engagement" className="space-y-8">
-              <EngagementMetrics
-                engagement={analytics.engagement}
-                totalStudents={analytics.overview.total_students}
-              />
-            </TabsContent>
+          <TabsContent value="engagement" className="space-y-8">
+            <EngagementTab batchId={selectedBatchId?.toString()} />
+          </TabsContent>
 
-            <TabsContent value="coding" className="space-y-8">
-              <CodingActivityDashboard codingActivity={analytics.codingActivity} />
-            </TabsContent>
-          </Tabs>
-        ) : (
-          <Card className="border-orange-200/50 bg-gradient-to-br from-orange-50/50 to-orange-100/30">
-            <CardContent className="py-16">
-              <div className="text-center space-y-6">
-                <div className="p-4 bg-orange-100 rounded-full w-20 h-20 mx-auto flex items-center justify-center shadow-lg">
-                  <AlertTriangle className="h-10 w-10 text-orange-600" />
-                </div>
-                <div className="space-y-3">
-                  <h3 className="text-xl font-semibold text-orange-900">Analytics Unavailable</h3>
-                  <p className="text-orange-700/80 max-w-md mx-auto text-base">
-                    Analytics data is currently unavailable. This may be due to server connectivity
-                    or data processing issues. Please try refreshing the page.
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() => window.location.reload()}
-                  className="border-orange-300 text-orange-700 hover:bg-orange-50 hover:border-orange-400 transition-colors"
-                >
-                  Refresh Page
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+          <TabsContent value="coding" className="space-y-8">
+            <CodingActivityTab batchId={selectedBatchId?.toString()} />
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Legacy batch creation success message */}

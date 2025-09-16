@@ -16,6 +16,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -26,9 +33,17 @@ import {
   Search,
   CheckCircle,
   XCircle,
+  Eye,
+  Star,
+  TrendingUp,
 } from "lucide-react";
 import { makeUrl } from "@/lib/utils";
-import type { ProjectRead, BatchRead, StudentProjectAssignment } from "../../../components/types";
+import type {
+  ProjectRead,
+  BatchRead,
+  StudentProjectAssignment,
+  InterviewWithStudentDetails,
+} from "../../../components/types";
 
 interface Student {
   id: number;
@@ -60,6 +75,13 @@ export default function ProjectStudentsPage() {
   // Selection state
   const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Feedback dialog state
+  const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
+  const [selectedStudentForFeedback, setSelectedStudentForFeedback] =
+    useState<StudentProjectAssignment | null>(null);
+  const [studentInterviews, setStudentInterviews] = useState<InterviewWithStudentDetails[]>([]);
+  const [isLoadingInterviews, setIsLoadingInterviews] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -271,6 +293,45 @@ export default function ProjectStudentsPage() {
     }
   };
 
+  const handleViewFeedback = async (assignment: StudentProjectAssignment) => {
+    setSelectedStudentForFeedback(assignment);
+    setIsFeedbackDialogOpen(true);
+    setIsLoadingInterviews(true);
+
+    try {
+      // Fetch all completed interviews for this student
+      const response = await fetch(makeUrl("adminBookedInterviews"), {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.success && data.data) {
+        // Filter interviews for this specific student and project
+        const studentInterviews = data.data.interviews.filter(
+          (interview: InterviewWithStudentDetails) =>
+            interview.student_id === assignment.assignment.student_id &&
+            interview.project_id === projectId &&
+            interview.status === "completed",
+        );
+        setStudentInterviews(studentInterviews);
+      }
+    } catch (error) {
+      console.error("Error fetching student interviews:", error);
+      toast.error("Failed to load interview feedback");
+      setStudentInterviews([]);
+    } finally {
+      setIsLoadingInterviews(false);
+    }
+  };
+
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "active":
@@ -284,6 +345,27 @@ export default function ProjectStudentsPage() {
       default:
         return "bg-gray-100 text-gray-800";
     }
+  };
+
+  const calculateAverageRating = (interview: InterviewWithStudentDetails) => {
+    const ratings = [
+      interview.behavioral_rating,
+      interview.technical_rating,
+      interview.communication_rating,
+      interview.body_language_rating,
+      interview.professionalism_rating,
+      interview.about_you_rating,
+    ].filter((rating) => rating !== undefined && rating !== null);
+
+    if (ratings.length === 0) return "0";
+    return (ratings.reduce((sum, rating) => sum + (rating || 0), 0) / ratings.length).toFixed(1);
+  };
+
+  const getOverallPerformance = (averageRating: number) => {
+    if (averageRating >= 8) return { label: "Excellent", color: "text-green-600" };
+    if (averageRating >= 6) return { label: "Good", color: "text-blue-600" };
+    if (averageRating >= 4) return { label: "Fair", color: "text-yellow-600" };
+    return { label: "Needs Improvement", color: "text-red-600" };
   };
 
   // Filter available students based on search
@@ -473,10 +555,19 @@ export default function ProjectStudentsPage() {
                         <Button
                           variant="outline"
                           size="sm"
+                          onClick={() => handleViewFeedback(assignment)}
+                          title="View Interview Feedback"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => {
                             // TODO: Implement edit functionality
                             toast.info("Edit functionality coming soon");
                           }}
+                          title="Edit Student Assignment"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -484,6 +575,7 @@ export default function ProjectStudentsPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleRemoveStudent(assignment.assignment.student_id)}
+                          title="Remove Student from Project"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -496,6 +588,190 @@ export default function ProjectStudentsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Feedback Dialog */}
+      <Dialog open={isFeedbackDialogOpen} onOpenChange={setIsFeedbackDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              Interview Feedback - {selectedStudentForFeedback?.student?.user?.name || "Student"}
+            </DialogTitle>
+            <DialogDescription>
+              Review all completed interview feedback and ratings for this student
+            </DialogDescription>
+          </DialogHeader>
+
+          {isLoadingInterviews ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Loading interview feedback...</p>
+            </div>
+          ) : studentInterviews.length === 0 ? (
+            <div className="text-center py-8">
+              <XCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">No Interview Feedback</h3>
+              <p className="text-muted-foreground">
+                This student hasn't completed any interviews yet.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Overall Summary */}
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Overall Performance Summary
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {studentInterviews.length}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Interviews Completed</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">
+                      {(
+                        studentInterviews.reduce((sum, interview) => {
+                          const avg = parseFloat(calculateAverageRating(interview));
+                          return sum + avg;
+                        }, 0) / studentInterviews.length
+                      ).toFixed(1)}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Average Rating</div>
+                  </div>
+                  <div className="text-center">
+                    <div
+                      className={`text-2xl font-bold ${
+                        getOverallPerformance(
+                          studentInterviews.reduce((sum, interview) => {
+                            const avg = parseFloat(calculateAverageRating(interview));
+                            return sum + avg;
+                          }, 0) / studentInterviews.length,
+                        ).color
+                      }`}
+                    >
+                      {
+                        getOverallPerformance(
+                          studentInterviews.reduce((sum, interview) => {
+                            const avg = parseFloat(calculateAverageRating(interview));
+                            return sum + avg;
+                          }, 0) / studentInterviews.length,
+                        ).label
+                      }
+                    </div>
+                    <div className="text-sm text-muted-foreground">Overall Performance</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Individual Interview Details */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Interview Details</h3>
+                {studentInterviews.map((interview, index) => {
+                  const avgRating = calculateAverageRating(interview);
+                  const performance = getOverallPerformance(parseFloat(avgRating));
+
+                  return (
+                    <Card key={interview.id}>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <CardTitle className="text-base">
+                              Interview #{index + 1} - {interview.interview_type}
+                            </CardTitle>
+                            <CardDescription>
+                              Completed on {new Date(interview.updated_at).toLocaleDateString()}
+                            </CardDescription>
+                          </div>
+                          <div className="text-right">
+                            <div className={`text-2xl font-bold ${performance.color}`}>
+                              {avgRating}/10
+                            </div>
+                            <div className="text-sm text-muted-foreground">{performance.label}</div>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {/* Rating Breakdown */}
+                        <div>
+                          <h4 className="font-medium mb-2">Rating Breakdown</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            {interview.behavioral_rating && (
+                              <div className="flex justify-between">
+                                <span className="text-sm">Behavioral:</span>
+                                <span className="font-medium">
+                                  {interview.behavioral_rating}/10
+                                </span>
+                              </div>
+                            )}
+                            {interview.technical_rating && (
+                              <div className="flex justify-between">
+                                <span className="text-sm">Technical:</span>
+                                <span className="font-medium">{interview.technical_rating}/10</span>
+                              </div>
+                            )}
+                            {interview.communication_rating && (
+                              <div className="flex justify-between">
+                                <span className="text-sm">Communication:</span>
+                                <span className="font-medium">
+                                  {interview.communication_rating}/10
+                                </span>
+                              </div>
+                            )}
+                            {interview.body_language_rating && (
+                              <div className="flex justify-between">
+                                <span className="text-sm">Body Language:</span>
+                                <span className="font-medium">
+                                  {interview.body_language_rating}/10
+                                </span>
+                              </div>
+                            )}
+                            {interview.professionalism_rating && (
+                              <div className="flex justify-between">
+                                <span className="text-sm">Professionalism:</span>
+                                <span className="font-medium">
+                                  {interview.professionalism_rating}/10
+                                </span>
+                              </div>
+                            )}
+                            {interview.about_you_rating && (
+                              <div className="flex justify-between">
+                                <span className="text-sm">About You:</span>
+                                <span className="font-medium">{interview.about_you_rating}/10</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Feedback Comments */}
+                        {interview.feedback && (
+                          <div>
+                            <h4 className="font-medium mb-2">Feedback & Comments</h4>
+                            <div className="bg-muted/30 p-3 rounded-lg">
+                              <ul className="space-y-1">
+                                {interview.feedback
+                                  .split("\n")
+                                  .filter((line) => line.trim())
+                                  .map((line, idx) => (
+                                    <li key={idx} className="flex items-start gap-2">
+                                      <span className="text-muted-foreground mt-1">•</span>
+                                      <span className="text-sm">{line.trim()}</span>
+                                    </li>
+                                  ))}
+                              </ul>
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

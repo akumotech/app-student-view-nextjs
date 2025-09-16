@@ -36,6 +36,17 @@ export const endpoints = {
   studentsDemos: "/api/students/me/demos", // GET /api/students/me/demos
   studentsMyDemoSignups: "/api/students/me/demo-signups", // GET /api/students/me/demo-signups
 
+  // Resume content endpoints (OpenAPI: /api/students/me/resume/...)
+  studentsResumeEducation: "/api/students/me/resume/education", // GET|POST /api/students/me/resume/education
+  studentsResumeEducationById: "/api/students/me/resume/education/{education_id}", // PUT|DELETE /api/students/me/resume/education/{education_id}
+  studentsResumeExperience: "/api/students/me/resume/experience", // GET|POST /api/students/me/resume/experience
+  studentsResumeExperienceById: "/api/students/me/resume/experience/{experience_id}", // PUT|DELETE /api/students/me/resume/experience/{experience_id}
+  studentsResumeSkills: "/api/students/me/resume/skills", // GET|POST /api/students/me/resume/skills
+  studentsResumeSkillsById: "/api/students/me/resume/skills/{skill_id}", // PUT|DELETE /api/students/me/resume/skills/{skill_id}
+  studentsResumePublications: "/api/students/me/resume/publications", // GET|POST /api/students/me/resume/publications
+  studentsResumePublicationsById: "/api/students/me/resume/publications/{publication_id}", // PUT|DELETE /api/students/me/resume/publications/{publication_id}
+  // Certification endpoints removed - using existing certificate system
+
   // Student-specific endpoints (OpenAPI: /api/students/{student_id}/...)
   studentCertificates: "/api/students/{student_id}/certificates", // GET|POST /api/students/{student_id}/certificates
   studentCertificateById: "/api/students/{student_id}/certificates/{certificate_id}", // PUT|DELETE /api/students/{student_id}/certificates/{certificate_id}
@@ -88,8 +99,8 @@ export const endpoints = {
   adminCertificateById: "/api/v1/admin/certificates/{certificate_id}", // PUT|DELETE /api/v1/admin/certificates/{certificate_id}
 
   // Project Management endpoints
-  adminProjectsList: "/api/v1/admin/projects/", // GET /api/v1/admin/projects/
-  adminProjectsCreate: "/api/v1/admin/projects/", // POST /api/v1/admin/projects/
+  adminProjectsList: "/api/v1/admin/projects", // GET /api/v1/admin/projects
+  adminProjectsCreate: "/api/v1/admin/projects", // POST /api/v1/admin/projects
   adminProjectById: "/api/v1/admin/projects/{project_id}", // GET|PUT|DELETE /api/v1/admin/projects/{project_id}
   adminProjectStudents: "/api/v1/admin/projects/{project_id}/students", // GET|POST /api/v1/admin/projects/{project_id}/students
   adminProjectStudentUpdate: "/api/v1/admin/projects/{project_id}/students/{student_id}", // PUT|DELETE /api/v1/admin/projects/{project_id}/students/{student_id}

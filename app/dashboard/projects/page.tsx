@@ -55,6 +55,7 @@ import { Calendar, Clock, BookOpen, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import type { MyProjectData } from "@/app/dashboard/projects/api/fetchMyProject";
 import type { InterviewSlotRead, InterviewRead, InterviewType } from "@/app/admin/components/types";
+import ResumeContent from "./components/ResumeContent";
 
 export default function ProjectsPage() {
   const router = useRouter();
@@ -353,9 +354,10 @@ export default function ProjectsPage() {
 
         {projectData ? (
           <Tabs defaultValue="project" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="project">Project Details</TabsTrigger>
               <TabsTrigger value="interviews">Interviews</TabsTrigger>
+              <TabsTrigger value="resume">Resume Content</TabsTrigger>
             </TabsList>
 
             <TabsContent value="project" className="space-y-6">
@@ -781,6 +783,10 @@ export default function ProjectsPage() {
                   </Card>
                 </TabsContent>
               </Tabs>
+            </TabsContent>
+
+            <TabsContent value="resume" className="space-y-6">
+              <ResumeContent projectData={projectData} />
             </TabsContent>
           </Tabs>
         ) : (

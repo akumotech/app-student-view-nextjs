@@ -50,9 +50,11 @@ export default function AdminInterviewsPage() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [sessions, setSessions] = useState<InterviewSessionRead[]>([]);
   const [bookedInterviews, setBookedInterviews] = useState<InterviewWithStudentDetails[]>([]);
+  const [projects, setProjects] = useState<{ id: number; name: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [projectFilter, setProjectFilter] = useState<string>("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
@@ -75,6 +77,7 @@ export default function AdminInterviewsPage() {
     if (isAuthenticated && user?.role === "admin") {
       fetchSessions();
       fetchBookedInterviews();
+      fetchProjects();
     }
   }, [authLoading, isAuthenticated, user, router]);
 
@@ -126,6 +129,30 @@ export default function AdminInterviewsPage() {
     } catch (error) {
       console.error("Error fetching booked interviews:", error);
       toast.error("Failed to fetch booked interviews");
+    }
+  };
+
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch(makeUrl("adminProjects"), {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.success && data.data) {
+        setProjects(data.data.projects || []);
+      }
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      toast.error("Failed to fetch projects");
     }
   };
 
@@ -282,6 +309,13 @@ export default function AdminInterviewsPage() {
       (statusFilter === "inactive" && !session.is_active);
 
     return matchesSearch && matchesStatus;
+  });
+
+  const filteredBookedInterviews = bookedInterviews.filter((interview) => {
+    const matchesProject =
+      projectFilter === "all" || interview.project_id?.toString() === projectFilter;
+
+    return matchesProject;
   });
 
   if (authLoading || isLoading) {
@@ -469,18 +503,37 @@ export default function AdminInterviewsPage() {
 
         {/* Scheduled Interviews Table */}
         <div className="mt-4">
+          {/* Project Filter for Scheduled Interviews */}
+          <div className="mb-4">
+            <Select value={projectFilter} onValueChange={setProjectFilter}>
+              <SelectTrigger className="w-64">
+                <SelectValue placeholder="Filter by project" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Projects</SelectItem>
+                {projects.map((project) => (
+                  <SelectItem key={project.id} value={project.id.toString()}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <Card>
             <CardHeader>
               <CardTitle>Scheduled Interviews</CardTitle>
               <CardDescription>Manage and review scheduled interviews</CardDescription>
             </CardHeader>
             <CardContent>
-              {bookedInterviews.length === 0 ? (
+              {filteredBookedInterviews.length === 0 ? (
                 <div className="text-center py-8">
                   <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <h3 className="text-lg font-medium mb-2">No scheduled interviews found</h3>
                   <p className="text-muted-foreground">
-                    Interviews will appear here once students book time slots.
+                    {bookedInterviews.length === 0
+                      ? "Interviews will appear here once students book time slots."
+                      : "No interviews match your current project filter."}
                   </p>
                 </div>
               ) : (
@@ -495,7 +548,7 @@ export default function AdminInterviewsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {bookedInterviews.map((interview) => (
+                    {filteredBookedInterviews.map((interview) => (
                       <TableRow key={interview.id}>
                         <TableCell>
                           <div>
