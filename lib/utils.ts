@@ -99,8 +99,8 @@ export const endpoints = {
   adminCertificateById: "/api/v1/admin/certificates/{certificate_id}", // PUT|DELETE /api/v1/admin/certificates/{certificate_id}
 
   // Project Management endpoints
-  adminProjectsList: "/api/v1/admin/projects/", // GET /api/v1/admin/projects/
-  adminProjectsCreate: "/api/v1/admin/projects/", // POST /api/v1/admin/projects/
+  adminProjectsList: "/api/v1/admin/projects", // GET /api/v1/admin/projects
+  adminProjectsCreate: "/api/v1/admin/projects", // POST /api/v1/admin/projects
   adminProjectById: "/api/v1/admin/projects/{project_id}", // GET|PUT|DELETE /api/v1/admin/projects/{project_id}
   adminProjectStudents: "/api/v1/admin/projects/{project_id}/students", // GET|POST /api/v1/admin/projects/{project_id}/students
   adminProjectStudentUpdate: "/api/v1/admin/projects/{project_id}/students/{student_id}", // PUT|DELETE /api/v1/admin/projects/{project_id}/students/{student_id}
