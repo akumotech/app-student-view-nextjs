@@ -33,7 +33,6 @@ export default function BatchSelector({
         {batches.map((batch) => (
           <option key={batch.id} value={batch.id.toString()}>
             {batch.name}
-            {batch.registration_key_active ? "" : " (Inactive)"}
           </option>
         ))}
       </select>
