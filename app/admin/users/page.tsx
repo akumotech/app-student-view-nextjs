@@ -20,6 +20,7 @@ import { Edit, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import type { UserOverview } from "../components/types";
 import { makeUrl } from "@/lib/utils";
 import { fetchBatchStudents } from "../api/fetchBatchStudents";
+import { fetchUsers } from "../api/fetchUsers";
 import UserEditDialog from "../components/UserEditDialog";
 import StudentProfileDialog from "../components/StudentProfileDialog";
 
@@ -32,14 +33,13 @@ export default function UsersManagementPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [batchFilter, setBatchFilter] = useState<string>("all");
-  const [isLoadingBatch, setIsLoadingBatch] = useState(false);
   const [editingUser, setEditingUser] = useState<UserOverview | null>(null);
   const [isUserEditDialogOpen, setIsUserEditDialogOpen] = useState(false);
   const [studentProfile, setStudentProfile] = useState<UserOverview["student_detail"] | null>(null);
   const [batches, setBatches] = useState<any[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<UserOverview[]>([]);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -73,117 +73,87 @@ export default function UsersManagementPage() {
     }
   }, [isAuthenticated, user]);
 
-  // Fetch users
+  // Debounce search term
   useEffect(() => {
-    const fetchUsers = async () => {
-      setIsLoadingUsers(true);
-      try {
-        const response = await fetch(makeUrl("adminUsers"), {
-          credentials: "include",
-        });
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1); // Reset to first page when search changes
+    }, 300);
 
-        if (response.ok) {
-          const data = await response.json();
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
-          // Handle different response structures
-          let users = [];
-          if (data.data && Array.isArray(data.data.users)) {
-            // API returns { success: true, data: { users: [...], total_count: X } }
-            users = data.data.users;
-          } else if (Array.isArray(data.users)) {
-            // Direct users array
-            users = data.users;
-          } else if (Array.isArray(data)) {
-            // Data is already an array
-            users = data;
-          } else if (data && typeof data === "object") {
-            // If it's an object with a different structure, try to find users
-            users = Object.values(data).find((val) => Array.isArray(val)) || [];
-          }
-
-          setUserList(users);
-          // Handle nested total_count structure
-          const totalCount = data.data?.total_count || data.total_count || users.length;
-          setUsersTotal(totalCount);
-        } else {
-          console.error("Failed to fetch users:", response.status, response.statusText);
-          const errorText = await response.text();
-          console.error("Error response body:", errorText);
-          toast.error(`Failed to load users: ${response.status} ${response.statusText}`);
-          setUserList([]);
-          setUsersTotal(0);
-        }
-      } catch (error) {
-        console.error("Error fetching users:", error);
-        toast.error("Failed to load users");
-        setUserList([]);
-        setUsersTotal(0);
-      } finally {
-        setIsLoadingUsers(false);
-      }
-    };
-
-    if (isAuthenticated && user?.role === "admin") {
-      fetchUsers();
-    }
-  }, [isAuthenticated, user]);
-
-  // Filtering and pagination
+  // Reset page when filters change
   useEffect(() => {
-    if (!Array.isArray(userList)) {
-      setFilteredUsers([]);
-      return;
-    }
+    setCurrentPage(1);
+  }, [roleFilter, batchFilter]);
 
-    let filtered = [...userList]; // Create a copy to avoid mutating original
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (u) =>
-          u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          u.email.toLowerCase().includes(searchTerm.toLowerCase()),
-      );
-    }
-    if (roleFilter !== "all") {
-      filtered = filtered.filter((u) => u.role === roleFilter);
-    }
-    if (batchFilter !== "all") {
-      filtered = filtered.filter(
-        (u) =>
-          u.student_detail &&
-          u.student_detail.batch &&
-          String(u.student_detail.batch.id) === batchFilter,
-      );
-    }
-    setFilteredUsers(filtered);
-    setUsersTotal(filtered.length);
-  }, [searchTerm, roleFilter, batchFilter, userList]);
+  // Fetch users with server-side pagination and filtering
+  const loadUsers = async () => {
+    if (!isAuthenticated || user?.role !== "admin") return;
 
-  // Fetch users for selected batch
-  useEffect(() => {
-    if (batchFilter === "all") {
-      return;
-    }
-    setIsLoadingBatch(true);
-    fetchBatchStudents(batchFilter)
-      .then((batchUsers) => {
+    setIsLoadingUsers(true);
+    try {
+      // For batch filtering, use the existing fetchBatchStudents function
+      if (batchFilter !== "all") {
+        const batchUsers = await fetchBatchStudents(batchFilter);
         if (batchUsers) {
+          // Apply client-side search and role filtering for batch-specific users
           let filtered = batchUsers;
-          if (searchTerm) {
+          if (debouncedSearchTerm) {
             filtered = filtered.filter(
               (u) =>
-                u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                u.email.toLowerCase().includes(searchTerm.toLowerCase()),
+                u.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                u.email.toLowerCase().includes(debouncedSearchTerm.toLowerCase()),
             );
           }
           if (roleFilter !== "all") {
             filtered = filtered.filter((u) => u.role === roleFilter);
           }
-          setUserList(filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize));
+
+          // Apply client-side pagination for batch users
+          const startIndex = (currentPage - 1) * pageSize;
+          const endIndex = startIndex + pageSize;
+          const paginatedUsers = filtered.slice(startIndex, endIndex);
+
+          setUserList(paginatedUsers);
           setUsersTotal(filtered.length);
+        } else {
+          setUserList([]);
+          setUsersTotal(0);
         }
-      })
-      .finally(() => setIsLoadingBatch(false));
-  }, [batchFilter, searchTerm, roleFilter, currentPage, pageSize]);
+      } else {
+        // Use server-side pagination for all users
+        const result = await fetchUsers({
+          page: currentPage,
+          pageSize,
+          role: roleFilter !== "all" ? roleFilter : undefined,
+          search: debouncedSearchTerm || undefined,
+        });
+
+        if (result) {
+          setUserList(result.users);
+          setUsersTotal(result.totalCount);
+        } else {
+          toast.error("Failed to load users");
+          setUserList([]);
+          setUsersTotal(0);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast.error("Failed to load users");
+      setUserList([]);
+      setUsersTotal(0);
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  // Load users when filters or pagination changes
+  useEffect(() => {
+    loadUsers();
+  }, [isAuthenticated, user, currentPage, roleFilter, batchFilter, debouncedSearchTerm]);
 
   const totalPages = Math.ceil(usersTotal / pageSize);
 
@@ -309,6 +279,7 @@ export default function UsersManagementPage() {
                   setSearchTerm("");
                   setRoleFilter("all");
                   setBatchFilter("all");
+                  setCurrentPage(1);
                 }}
                 className="w-full"
               >
@@ -339,7 +310,7 @@ export default function UsersManagementPage() {
               </p>
               <Button onClick={() => window.location.reload()}>Retry</Button>
             </div>
-          ) : filteredUsers.length === 0 ? (
+          ) : userList.length === 0 ? (
             <div className="text-center py-10">
               <p className="text-muted-foreground mb-4">No users match the current filters.</p>
               <Button
@@ -348,6 +319,7 @@ export default function UsersManagementPage() {
                   setSearchTerm("");
                   setRoleFilter("all");
                   setBatchFilter("all");
+                  setCurrentPage(1);
                 }}
               >
                 Clear Filters
@@ -368,8 +340,8 @@ export default function UsersManagementPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {Array.isArray(filteredUsers) &&
-                    filteredUsers.map((user) => (
+                  {Array.isArray(userList) &&
+                    userList.map((user) => (
                       <TableRow
                         key={user.id}
                         className="cursor-pointer hover:bg-muted/50 transition-colors"
