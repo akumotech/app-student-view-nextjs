@@ -28,7 +28,7 @@ export default async function CertificatesPage() {
   return (
     <CertificatesClient
       initialCertificates={certificates}
-      initialUsers={users}
+      initialUsers={users.users}
       initialBatches={batches}
     />
   );
