@@ -2,8 +2,40 @@
 import { cookies } from "next/headers";
 import { makeUrl } from "@/lib/utils";
 
-export async function fetchUsers(): Promise<any[] | null> {
-  const url = makeUrl("adminUsers");
+interface FetchUsersParams {
+  page?: number;
+  pageSize?: number;
+  role?: string;
+  search?: string;
+}
+
+interface FetchUsersResponse {
+  users: any[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
+
+export async function fetchUsers(
+  params: FetchUsersParams = {},
+): Promise<FetchUsersResponse | null> {
+  const { page = 1, pageSize = 20, role, search } = params;
+
+  // Build query parameters
+  const queryParams = new URLSearchParams();
+  queryParams.append("page", page.toString());
+  queryParams.append("page_size", pageSize.toString());
+
+  if (role && role !== "all") {
+    queryParams.append("role", role);
+  }
+
+  if (search && search.trim()) {
+    queryParams.append("search", search.trim());
+  }
+
+  const url = `${makeUrl("adminUsers")}?${queryParams.toString()}`;
+
   try {
     const cookieStore = await cookies();
     const cookieHeader = cookieStore
@@ -25,9 +57,18 @@ export async function fetchUsers(): Promise<any[] | null> {
       return null;
     }
     const result = await res.json();
-    // Extract users array from AdminUsersList structure
+
+    // Extract data from the API response structure
     const data = result.data || result;
-    return data.users || data;
+    const users = data.users || data;
+    const totalCount = data.total_count || users.length;
+
+    return {
+      users: Array.isArray(users) ? users : [],
+      totalCount,
+      page: data.page || page,
+      pageSize: data.page_size || pageSize,
+    };
   } catch (error) {
     console.error("[fetchUsers] Error:", error);
     return null;
