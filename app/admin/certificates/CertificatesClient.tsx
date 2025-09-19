@@ -59,20 +59,44 @@ export default function CertificatesClient({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingCertificate, setEditingCertificate] = useState<Certificate | null>(null);
 
+  // Reset student filter when batch changes
+  useEffect(() => {
+    setSelectedStudentId(null);
+  }, [selectedBatchId]);
+
+  // Get students filtered by selected batch (for student dropdown)
+  const availableStudents = selectedBatchId
+    ? (users || []).filter((user) => user.student_detail?.batch?.id === selectedBatchId)
+    : [];
+
   // Filter certificates based on search and filters
   const filteredCertificates = (certificates || []).filter((cert) => {
+    // Search filter (works across all certificates, independent of batch/student filters)
     const matchesSearch =
+      !searchTerm ||
       cert.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       cert.issuer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       cert.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStudent = !selectedStudentId || cert.student_id === selectedStudentId;
-    const matchesBatch =
-      !selectedBatchId ||
-      (Array.isArray(users) &&
-        users.find((u) => u.id === cert.student_id)?.student_detail?.batch?.id === selectedBatchId);
+    // Sequential filtering: Batch first, then Student within that batch
+    if (selectedBatchId) {
+      // If batch is selected, check if certificate belongs to a student in that batch
+      const certUser = (users || []).find((u) => u.id === cert.student_id);
+      const matchesBatch = certUser?.student_detail?.batch?.id === selectedBatchId;
 
-    return matchesSearch && matchesStudent && matchesBatch;
+      if (!matchesBatch) return false;
+
+      // If student is also selected, check if certificate belongs to that specific student
+      if (selectedStudentId) {
+        const matchesStudent = cert.student_id === selectedStudentId;
+        return matchesSearch && matchesStudent;
+      }
+
+      return matchesSearch;
+    }
+
+    // If no batch selected, apply search only (show all certificates matching search)
+    return matchesSearch;
   });
 
   const refetchData = async () => {
@@ -234,14 +258,16 @@ export default function CertificatesClient({
                   setSelectedStudentId(e.target.value ? Number(e.target.value) : null)
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={!selectedBatchId}
               >
-                <option value="">All Students</option>
-                {Array.isArray(users) &&
-                  users.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.name} ({user.email})
-                    </option>
-                  ))}
+                <option value="">
+                  {selectedBatchId ? "All Students in Batch" : "Select a batch first"}
+                </option>
+                {availableStudents.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name} ({user.email})
+                  </option>
+                ))}
               </select>
             </div>
             <div>

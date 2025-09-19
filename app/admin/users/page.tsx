@@ -19,7 +19,6 @@ import { toast } from "sonner";
 import { Edit, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import type { UserOverview } from "../components/types";
 import { makeUrl } from "@/lib/utils";
-import { fetchBatchStudents } from "../api/fetchBatchStudents";
 import { fetchUsers } from "../api/fetchUsers";
 import UserEditDialog from "../components/UserEditDialog";
 import StudentProfileDialog from "../components/StudentProfileDialog";
@@ -56,12 +55,12 @@ export default function UsersManagementPage() {
   useEffect(() => {
     const fetchBatches = async () => {
       try {
-        const response = await fetch(makeUrl("batches"), {
+        const response = await fetch(makeUrl("adminBatches"), {
           credentials: "include",
         });
         if (response.ok) {
           const data = await response.json();
-          setBatches(data);
+          setBatches(data.success ? data.data : data);
         }
       } catch (error) {
         console.error("Error fetching batches:", error);
@@ -94,51 +93,38 @@ export default function UsersManagementPage() {
 
     setIsLoadingUsers(true);
     try {
-      // For batch filtering, use the existing fetchBatchStudents function
-      if (batchFilter !== "all") {
-        const batchUsers = await fetchBatchStudents(batchFilter);
-        if (batchUsers) {
-          // Apply client-side search and role filtering for batch-specific users
-          let filtered = batchUsers;
-          if (debouncedSearchTerm) {
-            filtered = filtered.filter(
-              (u) =>
-                u.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-                u.email.toLowerCase().includes(debouncedSearchTerm.toLowerCase()),
-            );
-          }
-          if (roleFilter !== "all") {
-            filtered = filtered.filter((u) => u.role === roleFilter);
-          }
+      // Use server-side pagination for all users (batch filtering will be client-side)
+      const result = await fetchUsers({
+        page: currentPage,
+        pageSize: batchFilter !== "all" ? 100 : pageSize, // Get more data when batch filtering
+        role: roleFilter !== "all" ? roleFilter : undefined,
+        search: debouncedSearchTerm || undefined,
+      });
 
-          // Apply client-side pagination for batch users
+      if (result) {
+        let filteredUsers = result.users;
+        let filteredTotal = result.totalCount;
+
+        // Apply client-side batch filtering if needed
+        if (batchFilter !== "all") {
+          const batchId = parseInt(batchFilter);
+          filteredUsers = filteredUsers.filter(
+            (user) => user.student_detail?.batch?.id === batchId,
+          );
+          filteredTotal = filteredUsers.length;
+
+          // Apply client-side pagination for batch-filtered users
           const startIndex = (currentPage - 1) * pageSize;
           const endIndex = startIndex + pageSize;
-          const paginatedUsers = filtered.slice(startIndex, endIndex);
-
-          setUserList(paginatedUsers);
-          setUsersTotal(filtered.length);
-        } else {
-          setUserList([]);
-          setUsersTotal(0);
+          filteredUsers = filteredUsers.slice(startIndex, endIndex);
         }
+
+        setUserList(filteredUsers);
+        setUsersTotal(filteredTotal);
       } else {
-        // Use server-side pagination for all users
-        const result = await fetchUsers({
-          page: currentPage,
-          pageSize,
-          role: roleFilter !== "all" ? roleFilter : undefined,
-          search: debouncedSearchTerm || undefined,
-        });
-
-        if (result) {
-          setUserList(result.users);
-          setUsersTotal(result.totalCount);
-        } else {
-          toast.error("Failed to load users");
-          setUserList([]);
-          setUsersTotal(0);
-        }
+        toast.error("Failed to load users");
+        setUserList([]);
+        setUsersTotal(0);
       }
     } catch (error) {
       console.error("Error fetching users:", error);

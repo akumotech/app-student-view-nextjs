@@ -26,6 +26,13 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Plus, ArrowLeft, Clock, Calendar, Edit, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import type {
@@ -366,6 +373,7 @@ export default function InterviewSlotsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Scheduled Time</TableHead>
+                    <TableHead>Interview Type</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead>Interviewee</TableHead>
@@ -377,6 +385,11 @@ export default function InterviewSlotsPage() {
                     <TableRow key={slot.id}>
                       <TableCell>
                         <div className="font-medium">{formatDateTime(slot.scheduled_at)}</div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="capitalize">
+                          {slot.interview_type}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge variant={slot.is_available ? "default" : "secondary"}>
@@ -442,11 +455,30 @@ function CreateSlotForm({ onSubmit }: { onSubmit: (data: InterviewSlotCreate) =>
     session_id: 0, // Will be set by parent
     scheduled_at: "",
     is_available: true,
+    interview_type: "initial",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate that the datetime is not in the past
+    const selectedDateTime = new Date(formData.scheduled_at);
+    const now = new Date();
+
+    if (selectedDateTime <= now) {
+      toast.error("Please select a future date and time");
+      return;
+    }
+
     onSubmit(formData);
+  };
+
+  // Get current datetime + 1 hour in the format required by datetime-local input
+  const getMinDateTime = () => {
+    const now = new Date();
+    const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000); // Add 1 hour
+    oneHourLater.setMinutes(oneHourLater.getMinutes() - oneHourLater.getTimezoneOffset());
+    return oneHourLater.toISOString().slice(0, 16);
   };
 
   return (
@@ -458,9 +490,35 @@ function CreateSlotForm({ onSubmit }: { onSubmit: (data: InterviewSlotCreate) =>
           type="datetime-local"
           value={formData.scheduled_at}
           onChange={(e) => setFormData({ ...formData, scheduled_at: e.target.value })}
+          min={getMinDateTime()}
           required
         />
+        <p className="text-sm text-muted-foreground mt-1">
+          Select a future date and time for this interview slot
+        </p>
       </div>
+
+      <div>
+        <Label htmlFor="interview_type">Interview Type *</Label>
+        <Select
+          value={formData.interview_type}
+          onValueChange={(value) => setFormData({ ...formData, interview_type: value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select interview type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="initial">Initial Interview</SelectItem>
+            <SelectItem value="technical">Technical Interview</SelectItem>
+            <SelectItem value="behavioral">Behavioral Interview</SelectItem>
+            <SelectItem value="final">Final Interview</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-sm text-muted-foreground mt-1">
+          Students will be automatically assigned this interview type when booking
+        </p>
+      </div>
+
       <div className="flex items-center space-x-2">
         <Switch
           id="is_available"
@@ -487,11 +545,32 @@ function EditSlotForm({
   const [formData, setFormData] = useState<InterviewSlotUpdate>({
     scheduled_at: new Date(slot.scheduled_at).toISOString().slice(0, 16),
     is_available: slot.is_available,
+    interview_type: slot.interview_type,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate that the datetime is not in the past
+    if (formData.scheduled_at) {
+      const selectedDateTime = new Date(formData.scheduled_at);
+      const now = new Date();
+
+      if (selectedDateTime <= now) {
+        toast.error("Please select a future date and time");
+        return;
+      }
+    }
+
     onSubmit(formData);
+  };
+
+  // Get current datetime + 1 hour in the format required by datetime-local input
+  const getMinDateTime = () => {
+    const now = new Date();
+    const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000); // Add 1 hour
+    oneHourLater.setMinutes(oneHourLater.getMinutes() - oneHourLater.getTimezoneOffset());
+    return oneHourLater.toISOString().slice(0, 16);
   };
 
   return (
@@ -503,9 +582,35 @@ function EditSlotForm({
           type="datetime-local"
           value={formData.scheduled_at}
           onChange={(e) => setFormData({ ...formData, scheduled_at: e.target.value })}
+          min={getMinDateTime()}
           required
         />
+        <p className="text-sm text-muted-foreground mt-1">
+          Select a future date and time for this interview slot
+        </p>
       </div>
+
+      <div>
+        <Label htmlFor="interview_type">Interview Type *</Label>
+        <Select
+          value={formData.interview_type}
+          onValueChange={(value) => setFormData({ ...formData, interview_type: value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select interview type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="initial">Initial Interview</SelectItem>
+            <SelectItem value="technical">Technical Interview</SelectItem>
+            <SelectItem value="behavioral">Behavioral Interview</SelectItem>
+            <SelectItem value="final">Final Interview</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-sm text-muted-foreground mt-1">
+          Students will be automatically assigned this interview type when booking
+        </p>
+      </div>
+
       <div className="flex items-center space-x-2">
         <Switch
           id="is_available"

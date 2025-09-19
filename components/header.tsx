@@ -19,7 +19,7 @@ export default function Header({ links, showNavbar = false }: HeaderProps) {
             <div className="size-8 rounded-full bg-primary flex items-center justify-center">
               <CheckCircle className="size-5 text-primary-foreground" />
             </div>
-            <span>CodeSight</span>
+            <span>aKumoSolutions</span>
           </Link>
         </div>
         {links && (

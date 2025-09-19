@@ -73,9 +73,10 @@ export const endpoints = {
   adminUsers: "/api/v1/admin/users", // GET /api/v1/admin/users
   adminUserById: "/api/v1/admin/users/{user_id}", // GET /api/v1/admin/users/{user_id}
   adminUserRole: "/api/v1/admin/users/{user_id}/role", // PUT /api/v1/admin/users/{user_id}/role
+  adminStudents: "/api/v1/admin/students", // GET /api/v1/admin/students
   adminStudentById: "/api/v1/admin/students/{student_id}", // PUT /api/v1/admin/students/{student_id}
   adminBatches: "/api/v1/admin/batches", // GET /api/v1/admin/batches
-  adminProjects: "/api/v1/admin/projects", // GET /api/v1/admin/projects
+  adminProjects: "/api/v1/projects", // GET /api/v1/projects
   adminStudentFull: "/api/v1/admin/students/{student_id}/full", // GET /api/v1/admin/students/{student_id}/full
 
   // Analytics endpoints (OpenAPI: /api/v1/admin/...)
@@ -99,11 +100,11 @@ export const endpoints = {
   adminCertificateById: "/api/v1/admin/certificates/{certificate_id}", // PUT|DELETE /api/v1/admin/certificates/{certificate_id}
 
   // Project Management endpoints
-  adminProjectsList: "/api/v1/admin/projects", // GET /api/v1/admin/projects
-  adminProjectsCreate: "/api/v1/admin/projects", // POST /api/v1/admin/projects
-  adminProjectById: "/api/v1/admin/projects/{project_id}", // GET|PUT|DELETE /api/v1/admin/projects/{project_id}
-  adminProjectStudents: "/api/v1/admin/projects/{project_id}/students", // GET|POST /api/v1/admin/projects/{project_id}/students
-  adminProjectStudentUpdate: "/api/v1/admin/projects/{project_id}/students/{student_id}", // PUT|DELETE /api/v1/admin/projects/{project_id}/students/{student_id}
+  adminProjectsList: "/api/v1/projects", // GET /api/v1/projects (for admin projects page)
+  adminProjectsCreate: "/api/v1/projects", // POST /api/v1/projects
+  adminProjectById: "/api/v1/projects/{project_id}", // GET|PUT|DELETE /api/v1/projects/{project_id}
+  adminProjectStudents: "/api/v1/projects/{project_id}/students", // GET|POST /api/v1/projects/{project_id}/students
+  adminProjectStudentUpdate: "/api/v1/projects/{project_id}/students/{student_id}", // PUT|DELETE /api/v1/projects/{project_id}/students/{student_id}
   adminProjectInterviews: "/api/v1/admin/projects/{project_id}/interviews", // GET|POST /api/v1/admin/projects/{project_id}/interviews
   adminInterviewById: "/api/v1/admin/interviews/{interview_id}", // PUT /api/v1/admin/interviews/{interview_id}
   studentsMyProject: "/api/v1/projects/students/me/project", // GET /api/v1/projects/students/me/project
@@ -115,10 +116,17 @@ export const endpoints = {
   adminInterviewSlotsAvailable: "/api/v1/admin/interviews/slots/available", // GET /api/v1/admin/interviews/slots/available
   adminInterviewSlotById: "/api/v1/admin/interviews/slots/{slot_id}", // PUT|DELETE /api/v1/admin/interviews/slots/{slot_id}
   adminInterviewSlotBook: "/api/v1/admin/interviews/slots/{slot_id}/book", // POST /api/v1/admin/interviews/slots/{slot_id}/book
-  adminStudentInterviews: "/api/v1/admin/interviews/students/me", // GET /api/v1/admin/interviews/students/me
   adminStudentCompletedInterviews: "/api/v1/admin/interviews/students/me/completed", // GET /api/v1/admin/interviews/students/me/completed
   adminBookedInterviews: "/api/v1/admin/interviews/booked", // GET /api/v1/admin/interviews/booked
   adminInterviewReviewUpdate: "/api/v1/admin/interviews/{interview_id}/review", // PUT /api/v1/admin/interviews/{interview_id}/review
+
+  // Admin student detail endpoints
+  adminStudentDetail: "/api/v1/admin/students/{student_id}", // GET /api/v1/admin/students/{student_id}
+  adminStudentInterviews: "/api/v1/admin/students/{student_id}/interviews", // GET /api/v1/admin/students/{student_id}/interviews
+  adminStudentResumeEducation: "/api/v1/admin/students/{student_id}/resume/education", // GET /api/v1/admin/students/{student_id}/resume/education
+  adminStudentResumeExperience: "/api/v1/admin/students/{student_id}/resume/experience", // GET /api/v1/admin/students/{student_id}/resume/experience
+  adminStudentResumeSkills: "/api/v1/admin/students/{student_id}/resume/skills", // GET /api/v1/admin/students/{student_id}/resume/skills
+  adminStudentResumePublications: "/api/v1/admin/students/{student_id}/resume/publications", // GET /api/v1/admin/students/{student_id}/resume/publications
 
   // Student Interview endpoints
   studentInterviewSlotsAvailable: "/api/v1/interviews/slots/available", // GET /api/v1/interviews/slots/available

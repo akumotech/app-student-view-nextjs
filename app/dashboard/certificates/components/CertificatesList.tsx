@@ -119,11 +119,30 @@ export default function CertificatesClientShell({
       const student_id = getStudentId();
       if (!student_id) throw new Error("No student ID found");
 
+      // Transform empty strings to undefined for optional fields
+      const transformedValues = {
+        ...values,
+        date_expired:
+          values.date_expired && values.date_expired.trim() !== ""
+            ? values.date_expired
+            : undefined,
+        credential_id:
+          values.credential_id && values.credential_id.trim() !== ""
+            ? values.credential_id
+            : undefined,
+        credential_url:
+          values.credential_url && values.credential_url.trim() !== ""
+            ? values.credential_url
+            : undefined,
+        description:
+          values.description && values.description.trim() !== "" ? values.description : undefined,
+      };
+
       let result;
       if (isEditMode && currentCertificateId) {
-        result = await updateCertificate(student_id, currentCertificateId, values);
+        result = await updateCertificate(student_id, currentCertificateId, transformedValues);
       } else {
-        result = await createCertificate(student_id, values);
+        result = await createCertificate(student_id, transformedValues);
       }
 
       if (result) {
@@ -146,13 +165,13 @@ export default function CertificatesClientShell({
     setIsEditMode(true);
     setCurrentCertificateId(certificate.id);
     form.reset({
-      name: certificate.name,
-      issuer: certificate.issuer,
+      name: certificate.name || "",
+      issuer: certificate.issuer || "",
       date_issued: certificate.date_issued ? certificate.date_issued.split("T")[0] : "",
       date_expired: certificate.date_expired ? certificate.date_expired.split("T")[0] : "",
-      credential_id: certificate.credential_id,
-      credential_url: certificate.credential_url,
-      description: certificate.description,
+      credential_id: certificate.credential_id || "",
+      credential_url: certificate.credential_url || "",
+      description: certificate.description || "",
     });
     setIsDialogOpen(true);
   };
@@ -263,7 +282,7 @@ export default function CertificatesClientShell({
                     name="date_expired"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Date Expired</FormLabel>
+                        <FormLabel>Date Expired (Optional)</FormLabel>
                         <FormControl>
                           <Input type="date" {...field} />
                         </FormControl>

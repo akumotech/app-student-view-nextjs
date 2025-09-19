@@ -172,7 +172,7 @@ export default function ProjectsPage() {
     }
   };
 
-  const handleBookSlot = async (slotId: number, interviewType: InterviewType) => {
+  const handleBookSlot = async (slotId: number) => {
     if (!projectData) {
       toast.error("No project data available");
       return;
@@ -187,7 +187,6 @@ export default function ProjectsPage() {
         },
         body: JSON.stringify({
           project_id: projectData.project.id,
-          interview_type: interviewType,
           status: "scheduled",
         }),
       });
@@ -394,7 +393,9 @@ export default function ProjectsPage() {
                           <TableHeader>
                             <TableRow>
                               <TableHead>Scheduled Time</TableHead>
-                              <TableHead>Session</TableHead>
+                              <TableHead>Interview Session</TableHead>
+                              <TableHead>Description</TableHead>
+                              <TableHead>Interviewer</TableHead>
                               <TableHead>Actions</TableHead>
                             </TableRow>
                           </TableHeader>
@@ -407,7 +408,24 @@ export default function ProjectsPage() {
                                   </div>
                                 </TableCell>
                                 <TableCell>
-                                  <Badge variant="outline">Session {slot.session_id}</Badge>
+                                  <div>
+                                    <div className="font-medium">
+                                      {slot.session_name || `Session ${slot.session_id}`}
+                                    </div>
+                                    <div className="text-sm text-muted-foreground capitalize">
+                                      {slot.interview_type} Interview
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="text-sm text-muted-foreground max-w-xs">
+                                    {slot.session_description || "No description available"}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="text-sm">
+                                    {slot.session_interviewer || "Not specified"}
+                                  </div>
                                 </TableCell>
                                 <TableCell>
                                   <Button
@@ -799,14 +817,15 @@ export default function ProjectsPage() {
             <DialogHeader>
               <DialogTitle>Book Interview Slot</DialogTitle>
               <DialogDescription>
-                Select the type of interview you want to book for this time slot.
+                Confirm your booking for this interview slot. The interview type has been
+                pre-selected by your instructor.
               </DialogDescription>
             </DialogHeader>
             {selectedSlot && (
               <BookingForm
                 key={selectedSlot.id}
                 slot={selectedSlot}
-                onBook={(interviewType) => handleBookSlot(selectedSlot.id, interviewType)}
+                onBook={() => handleBookSlot(selectedSlot.id)}
                 onCancel={() => {
                   setIsBookingDialogOpen(false);
                   setSelectedSlot(null);
@@ -827,11 +846,9 @@ function BookingForm({
   onCancel,
 }: {
   slot: InterviewSlotRead;
-  onBook: (interviewType: InterviewType) => void;
+  onBook: () => void;
   onCancel: () => void;
 }) {
-  const [selectedType, setSelectedType] = useState<InterviewType>("initial");
-
   const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleString("en-US", {
       year: "numeric",
@@ -842,10 +859,24 @@ function BookingForm({
     });
   };
 
+  const getInterviewTypeDisplay = (type: string) => {
+    switch (type) {
+      case "initial":
+        return "Initial Interview";
+      case "technical":
+        return "Technical Interview";
+      case "behavioral":
+        return "Behavioral Interview";
+      case "final":
+        return "Final Interview";
+      default:
+        return type;
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Booking interview with type:", selectedType);
-    onBook(selectedType);
+    onBook();
   };
 
   return (
@@ -858,22 +889,28 @@ function BookingForm({
       </div>
 
       <div>
-        <Label htmlFor="interview_type">Interview Type *</Label>
-        <Select
-          value={selectedType}
-          onValueChange={(value) => setSelectedType(value as InterviewType)}
-          required
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select interview type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="initial">Initial Interview</SelectItem>
-            <SelectItem value="technical">Technical Interview</SelectItem>
-            <SelectItem value="behavioral">Behavioral Interview</SelectItem>
-            <SelectItem value="final">Final Interview</SelectItem>
-          </SelectContent>
-        </Select>
+        <Label>Interview Session</Label>
+        <div className="p-3 bg-muted rounded-md">
+          <div className="font-medium">{slot.session_name || `Session ${slot.session_id}`}</div>
+          {slot.session_description && (
+            <div className="text-sm text-muted-foreground mt-1">{slot.session_description}</div>
+          )}
+          {slot.session_interviewer && (
+            <div className="text-sm text-muted-foreground mt-1">
+              Interviewer: {slot.session_interviewer}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <Label>Interview Type</Label>
+        <div className="p-3 bg-muted rounded-md">
+          <div className="font-medium">{getInterviewTypeDisplay(slot.interview_type)}</div>
+          <p className="text-sm text-muted-foreground mt-1">
+            This interview type has been pre-selected by your instructor
+          </p>
+        </div>
       </div>
 
       <div className="flex justify-end gap-2">

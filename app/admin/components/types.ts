@@ -297,21 +297,28 @@ export interface InterviewSlotRead {
   session_id: number;
   scheduled_at: string;
   is_available: boolean;
+  interview_type: string;
   created_at: string;
   updated_at: string;
   student_name?: string;
   student_email?: string;
+  session_name?: string;
+  session_description?: string;
+  session_interviewer?: string;
+  session_is_active?: boolean;
 }
 
 export interface InterviewSlotCreate {
   session_id: number;
   scheduled_at: string;
   is_available?: boolean;
+  interview_type: string;
 }
 
 export interface InterviewSlotUpdate {
   scheduled_at?: string;
   is_available?: boolean;
+  interview_type?: string;
 }
 
 // Extended types with relationships
